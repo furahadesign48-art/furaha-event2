@@ -81,6 +81,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [currentTemplate, setCurrentTemplate] = useState<TemplateData | null>(selectedTemplate || null);
   const [tables, setTables] = useState<Table[]>([]);
   const [isLoadingTables, setIsLoadingTables] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // États pour la gestion des invités
   const [showInviteModal, setShowInviteModal] = useState(false);
