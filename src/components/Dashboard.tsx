@@ -28,6 +28,8 @@ import TemplateCustomization from './TemplateCustomization';
 import TableManagement from './TableManagement';
 import { useTemplates } from '../hooks/useTemplates';
 import { UserData } from '../hooks/useAuth';
+import { collection, doc, setDoc, getDocs, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 interface TemplateData {
   id: string;
@@ -73,11 +75,12 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => {
-  const { userInvites, createInvite, updateInvite, deleteInvite, isLoading } = useTemplates();
+  const { userInvites, createInvite, updateInvite, deleteInvite, isLoading: templatesLoading } = useTemplates();
   const [activeTab, setActiveTab] = useState('overview');
   const [showCustomization, setShowCustomization] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState<TemplateData | null>(selectedTemplate || null);
   const [tables, setTables] = useState<Table[]>([]);
+  const [isLoadingTables, setIsLoadingTables] = useState(false);
   
   // États pour la gestion des invités
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -90,6 +93,73 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     boissons: '',
     voeux: ''
   });
+
+  // Charger les tables depuis Firestore
+  const loadTables = async () => {
+    if (!userData?.id) return;
+    
+    try {
+      setIsLoadingTables(true);
+      const tablesRef = collection(db, 'users', userData.id, 'Tables');
+      const querySnapshot = await getDocs(tablesRef);
+      
+      const loadedTables: Table[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        loadedTables.push({
+          id: parseInt(doc.id.replace('table_', '')),
+          name: data.name,
+          seats: data.seats,
+          assignedGuests: data.assignedGuests || []
+        });
+      });
+      
+      setTables(loadedTables.sort((a, b) => a.id - b.id));
+    } catch (error) {
+      console.error('Erreur lors du chargement des tables:', error);
+    } finally {
+      setIsLoadingTables(false);
+    }
+  };
+
+  // Sauvegarder une table dans Firestore
+  const saveTableToFirestore = async (table: Table) => {
+    if (!userData?.id) return;
+    
+    try {
+      const tableRef = doc(db, 'users', userData.id, 'Tables', `table_${table.id}`);
+      await setDoc(tableRef, {
+        name: table.name,
+        seats: table.seats,
+        assignedGuests: table.assignedGuests,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde de la table:', error);
+      throw error;
+    }
+  };
+
+  // Supprimer une table de Firestore
+  const deleteTableFromFirestore = async (tableId: number) => {
+    if (!userData?.id) return;
+    
+    try {
+      const tableRef = doc(db, 'users', userData.id, 'Tables', `table_${tableId}`);
+      await deleteDoc(tableRef);
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la table:', error);
+      throw error;
+    }
+  };
+
+  // Charger les tables au montage du composant
+  useEffect(() => {
+    if (userData?.id) {
+      loadTables();
+    }
+  }, [userData?.id]);
 
   // Charger les invités depuis Firestore
   const guests: Guest[] = userInvites.map(invite => ({
@@ -748,7 +818,13 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   );
 
   const renderTables = () => (
-    <TableManagement tables={tables} setTables={setTables} />
+    <TableManagement 
+      tables={tables} 
+      setTables={setTables}
+      onSaveTable={saveTableToFirestore}
+      onDeleteTable={deleteTableFromFirestore}
+      isLoading={isLoadingTables}
+    />
   );
 
   const renderProfile = () => (

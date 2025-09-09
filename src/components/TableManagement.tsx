@@ -22,9 +22,13 @@ interface TableFormData {
 interface TableManagementProps {
   tables: Table[];
   setTables: React.Dispatch<React.SetStateAction<Table[]>>;
+  onSaveTable?: (table: Table) => Promise<void>;
+  onDeleteTable?: (tableId: number) => Promise<void>;
+  isLoading?: boolean;
 }
 
-const TableManagement = ({ tables, setTables }: TableManagementProps) => {
+const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoading }: TableManagementProps) => {
+  const [isSaving, setIsSaving] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
@@ -59,16 +63,22 @@ const TableManagement = ({ tables, setTables }: TableManagementProps) => {
     setSelectedTable(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    setIsSaving(true);
+    
+    try {
     if (editingTable) {
       // Modifier une table existante
+      const updatedTable = { ...editingTable, name: formData.name, seats: formData.seats };
       setTables(tables.map(table => 
-        table.id === editingTable.id 
-          ? { ...table, name: formData.name, seats: formData.seats }
-          : table
+        table.id === editingTable.id ? updatedTable : table
       ));
+      
+      if (onSaveTable) {
+        await onSaveTable(updatedTable);
+      }
     } else {
       // Ajouter une nouvelle table
       const newTable: Table = {
@@ -78,14 +88,39 @@ const TableManagement = ({ tables, setTables }: TableManagementProps) => {
         assignedGuests: []
       };
       setTables([...tables, newTable]);
+      
+      if (onSaveTable) {
+        await onSaveTable(newTable);
+      }
+    }
+    
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      alert('Erreur lors de la sauvegarde de la table');
+    } finally {
+      setIsSaving(false);
     }
     
     closeModal();
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette table ?')) {
+      try {
+        setIsSaving(true);
       setTables(tables.filter(table => table.id !== id));
+        
+        if (onDeleteTable) {
+          await onDeleteTable(id);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        alert('Erreur lors de la suppression de la table');
+        // Recharger les tables en cas d'erreur
+        window.location.reload();
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -399,9 +434,17 @@ const TableManagement = ({ tables, setTables }: TableManagementProps) => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105"
+                  disabled={isSaving}
+                  className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
-                  {editingTable ? 'Modifier' : 'Ajouter'}
+                  {isSaving ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                      Sauvegarde...
+                    </div>
+                  ) : (
+                    editingTable ? 'Modifier' : 'Ajouter'
+                  )}
                 </button>
               </div>
             </form>
