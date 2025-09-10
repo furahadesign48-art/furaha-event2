@@ -728,40 +728,8 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                       }}
                     >
                       <Camera className="h-3 w-3 inline mr-1" />
-                            
-                            {qrCodeDataUrl ? (
-                              <div className="bg-white rounded-lg p-2 inline-block">
-                                <img 
-                                  src={qrCodeDataUrl} 
-                                  alt="QR Code Invité" 
-                                  className="w-16 h-16"
-                                />
-                              </div>
-                            ) : (
-                              <div className="bg-white rounded-lg p-2 inline-block">
-                                <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-md flex items-center justify-center">
-                                  <QrCode className="h-8 w-8" style={{ color: primaryColor }} />
-                                </div>
-                              </div>
-                            )}
-                  borderColor: `${primaryColor}30`
-                }}>
-                              Scannez pour voir les infos
-                    <QrCode className="h-3 w-3 mr-1" />
-                          <span className="font-bold text-slate-900">{selectedDrink || 'Aucune'}</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowQRInfo(false);
-                        }}
-                        className="w-full mt-2 bg-slate-600 text-white py-1 rounded text-xs font-medium"
-                      >
-                        Fermer
-                      </button>
-                    </div>
-                  )}
+                      Photo
+                    </button>
                 </div>
               </div>
             </div>
