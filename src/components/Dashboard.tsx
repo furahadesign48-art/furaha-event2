@@ -21,7 +21,10 @@ import {
   GraduationCap,
   X,
   Save,
-  Check
+  Check,
+  MessageCircle,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 import UserProfile from './UserProfile';
 import TemplateCustomization from './TemplateCustomization';
@@ -397,6 +400,35 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     }
   };
 
+  const handleShareWhatsApp = (guest: Guest) => {
+    const message = `Bonjour ${guest.nom}, vous êtes invité(e) à notre événement ! Voici votre invitation personnalisée : ${window.location.origin}/invitation/${guest.id}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const handleShareEmail = (guest: Guest) => {
+    const subject = `Invitation à notre événement`;
+    const body = `Bonjour ${guest.nom},\n\nVous êtes invité(e) à notre événement !\n\nVoici votre invitation personnalisée :\n${window.location.origin}/invitation/${guest.id}\n\nNous espérons vous voir bientôt !\n\nCordialement`;
+    const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoUrl;
+  };
+
+  const handleCopyLink = async (guest: Guest) => {
+    const invitationUrl = `${window.location.origin}/invitation/${guest.id}`;
+    try {
+      await navigator.clipboard.writeText(invitationUrl);
+      alert('Lien copié dans le presse-papiers !');
+    } catch (error) {
+      // Fallback pour les navigateurs qui ne supportent pas l'API clipboard
+      const textArea = document.createElement('textarea');
+      textArea.value = invitationUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Lien copié dans le presse-papiers !');
+    }
+  };
   const getEtatColor = (etat: string) => {
     switch (etat) {
       case 'couple':
@@ -751,6 +783,27 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                   <div></div>
                   <div className="flex justify-end space-x-2">
                     <button
+                      onClick={() => handleShareWhatsApp(guest)}
+                      className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                      title="Partager sur WhatsApp"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleShareEmail(guest)}
+                      className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                      title="Envoyer par email"
+                    >
+                      <Mail className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleCopyLink(guest)}
+                      className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                      title="Copier le lien"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </button>
+                    <button
                       onClick={() => openInviteModal(guest)}
                       className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all duration-200 transform hover:scale-110"
                       title="Modifier"
@@ -878,7 +931,31 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                   <select
                     value={inviteFormData.etat}
                     onChange={(e) => setInviteFormData({ 
-                      ...inviteFormData, 
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <button
+                    onClick={() => handleShareWhatsApp(guest)}
+                    className="bg-green-100 text-green-700 px-3 py-2 rounded-lg hover:bg-green-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-1" />
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={() => handleShareEmail(guest)}
+                    className="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <Mail className="h-4 w-4 mr-1" />
+                    Email
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => handleCopyLink(guest)}
+                    className="bg-purple-100 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <Copy className="h-4 w-4 mr-1" />
+                    Copier
+                  </button>
                       etat: e.target.value as 'simple' | 'couple'
                     })}
                     className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
