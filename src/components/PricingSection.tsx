@@ -20,11 +20,12 @@ const PricingSection = () => {
     },
     {
       name: 'Standard',
-      price: '19€',
+      price: '100$',
       period: '/mois',
       icon: Crown,
       features: [
-        'Invitations illimitées',
+        '200 invitations maximum',
+        '1 mois de validité',
         'Tous les modèles premium',
         'Personnalisation avancée',
         'Statistiques détaillées',
@@ -36,16 +37,17 @@ const PricingSection = () => {
     },
     {
       name: 'Premium',
-      price: '49€',
+      price: '200$',
       period: '/mois',
       icon: Gem,
       features: [
-        'Tout du Standard',
-        'Design sur mesure',
-        'Branding personnalisé',
-        'API accès',
-        'Support dédié 24/7',
-        'Intégrations avancées'
+        'Invitations illimitées',
+        '1 mois de validité',
+        'Tous les modèles premium',
+        'Personnalisation avancée',
+        'Statistiques détaillées',
+        'Support prioritaire',
+        'Design sur mesure'
       ],
       popular: false,
       buttonText: 'Choisir Premium',

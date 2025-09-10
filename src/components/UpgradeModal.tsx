@@ -14,11 +14,12 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
   const plans = [
     {
       name: 'Standard',
-      price: '19€',
+      price: '100$',
       period: '/mois',
       icon: Crown,
       features: [
-        'Invitations illimitées',
+        '200 invitations maximum',
+        '1 mois de validité',
         'Tous les modèles premium',
         'Personnalisation avancée',
         'Statistiques détaillées',
@@ -30,16 +31,17 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
     },
     {
       name: 'Premium',
-      price: '49€',
+      price: '200$',
       period: '/mois',
       icon: Sparkles,
       features: [
-        'Tout du Standard',
-        'Design sur mesure',
-        'Branding personnalisé',
-        'API accès',
-        'Support dédié 24/7',
-        'Intégrations avancées'
+        'Invitations illimitées',
+        '1 mois de validité',
+        'Tous les modèles premium',
+        'Personnalisation avancée',
+        'Statistiques détaillées',
+        'Support prioritaire',
+        'Design sur mesure'
       ],
       popular: false,
       buttonText: 'Choisir Premium',
@@ -55,7 +57,7 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-luxury max-w-4xl w-full animate-slide-up relative overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-luxury max-w-2xl w-full animate-slide-up relative overflow-hidden">
         {/* Background decorative elements */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-200/20 to-purple-200/20 rounded-full blur-2xl"></div>
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-rose-200/20 to-amber-200/20 rounded-full blur-2xl"></div>
@@ -105,7 +107,7 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
           </div>
 
           {/* Plans */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             {plans.map((plan, index) => {
               const IconComponent = plan.icon;
               return (
@@ -125,7 +127,7 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
                     </div>
                   )}
 
-                  <div className="text-center mb-6">
+                  <div className="flex items-center mb-6">
                     <div className="flex justify-center mb-4">
                       <div className={`p-3 rounded-full ${
                         plan.popular 
@@ -140,19 +142,21 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
                       </div>
                     </div>
                     
-                    <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-2">
-                      {plan.name}
-                    </h3>
-                    
-                    <div className="flex items-baseline justify-center mb-4">
-                      <span className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 bg-clip-text text-transparent">
-                        {plan.price}
-                      </span>
-                      <span className="text-slate-500 ml-1">{plan.period}</span>
+                    <div className="ml-4 flex-1">
+                      <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-2">
+                        {plan.name}
+                      </h3>
+                      
+                      <div className="flex items-baseline">
+                        <span className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 bg-clip-text text-transparent">
+                          {plan.price}
+                        </span>
+                        <span className="text-slate-500 ml-1">{plan.period}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <ul className="space-y-3 mb-6">
+                  <ul className="space-y-2 mb-6">
                     {plan.features.map((feature, idx) => (
                       <li key={idx} className="flex items-center">
                         <div className="relative mr-3 flex-shrink-0">
