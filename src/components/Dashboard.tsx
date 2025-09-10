@@ -1053,6 +1053,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     <TableManagement 
       tables={tables} 
       setTables={setTables}
+      guests={guests}
       onSaveTable={saveTableToFirestore}
       onDeleteTable={deleteTableFromFirestore}
       isLoading={isLoadingTables}

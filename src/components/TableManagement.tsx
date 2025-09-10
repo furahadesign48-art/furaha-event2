@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, Users, X, Eye } from 'lucide-react';
+import { useTemplates } from '../hooks/useTemplates';
 
 interface Guest {
   id: number;
@@ -22,12 +23,20 @@ interface TableFormData {
 interface TableManagementProps {
   tables: Table[];
   setTables: React.Dispatch<React.SetStateAction<Table[]>>;
+  guests?: Array<{
+    id: string;
+    nom: string;
+    table: string;
+    etat: 'simple' | 'couple';
+    confirmed: boolean;
+  }>;
   onSaveTable?: (table: Table) => Promise<void>;
   onDeleteTable?: (tableId: number) => Promise<void>;
   isLoading?: boolean;
 }
 
-const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoading }: TableManagementProps) => {
+const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDeleteTable, isLoading }: TableManagementProps) => {
+  const { userInvites } = useTemplates();
   const [isSaving, setIsSaving] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,6 +44,22 @@ const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoad
   const [editingTable, setEditingTable] = useState<Table | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [formData, setFormData] = useState<TableFormData>({ name: '', seats: 8 });
+
+  // Utiliser les invités réels depuis le hook
+  const realGuests = userInvites.length > 0 ? userInvites : guests;
+
+  // Fonction pour obtenir les invités assignés à une table
+  const getGuestsForTable = (tableName: string) => {
+    return realGuests.filter(guest => guest.table === tableName);
+  };
+
+  // Fonction pour calculer les places occupées par table
+  const getOccupiedSeats = (tableName: string) => {
+    const tableGuests = getGuestsForTable(tableName);
+    return tableGuests.reduce((total, guest) => {
+      return total + (guest.etat === 'couple' ? 2 : 1);
+    }, 0);
+  };
 
   const openModal = (table?: Table) => {
     if (table) {
@@ -54,7 +79,19 @@ const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoad
   };
 
   const openGuestModal = (table: Table) => {
-    setSelectedTable(table);
+    // Mettre à jour la table avec les invités réels
+    const realTableGuests = getGuestsForTable(table.name).map(guest => ({
+      id: parseInt(guest.id.replace(/\D/g, '')) || Math.random(),
+      name: guest.nom,
+      status: guest.confirmed ? 'confirmed' : 'pending' as 'confirmed' | 'pending' | 'declined'
+    }));
+    
+    const updatedTable = {
+      ...table,
+      assignedGuests: realTableGuests
+    };
+    
+    setSelectedTable(updatedTable);
     setIsGuestModalOpen(true);
   };
 
@@ -152,9 +189,13 @@ const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoad
     }
   };
 
+  // Calculer les statistiques avec les données réelles
   const totalTables = tables.length;
   const totalSeats = tables.reduce((sum, table) => sum + table.seats, 0);
-  const totalAssignedGuests = tables.reduce((sum, table) => sum + table.assignedGuests.length, 0);
+  const totalAssignedGuests = realGuests.length;
+  const totalOccupiedSeats = realGuests.reduce((total, guest) => {
+    return total + (guest.etat === 'couple' ? 2 : 1);
+  }, 0);
 
   return (
     <div className="animate-fade-in">
@@ -203,8 +244,8 @@ const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoad
                 <Users className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <p className="text-rose-700 text-sm font-medium">Places Libres</p>
-                <p className="text-2xl font-bold text-rose-900">{totalSeats - totalAssignedGuests}</p>
+                <p className="text-rose-700 text-sm font-medium">Places Occupées</p>
+                <p className="text-2xl font-bold text-rose-900">{totalOccupiedSeats}</p>
               </div>
             </div>
           </div>
@@ -243,6 +284,12 @@ const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoad
         {/* Corps du tableau */}
         <div className="divide-y divide-neutral-200/50">
           {tables.map((table, index) => (
+            (() => {
+              const tableGuests = getGuestsForTable(table.name);
+              const occupiedSeats = getOccupiedSeats(table.name);
+              const availableSeats = table.seats - occupiedSeats;
+              
+              return (
             <div
               key={table.id}
               className="animate-slide-up hover:bg-gradient-to-r hover:from-neutral-50/50 hover:to-amber-50/30 transition-all duration-300"
@@ -258,22 +305,32 @@ const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoad
                   </span>
                 </div>
                 <div className="text-slate-600">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
-                    {table.assignedGuests.length} / {table.seats}
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
+                    occupiedSeats > table.seats 
+                      ? 'bg-rose-100 text-rose-800' 
+                      : 'bg-purple-100 text-purple-800'
+                  }`}>
+                    {occupiedSeats} / {table.seats} places
+                  </span>
+                  {tableGuests.length > 0 && (
+                    <div className="text-xs text-slate-500 mt-1">
+                      {tableGuests.length} invité{tableGuests.length > 1 ? 's' : ''}
+                    </div>
+                  )}
                   </span>
                 </div>
                 <div>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
-                    table.assignedGuests.length === table.seats 
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                    occupiedSeats >= table.seats 
                       ? 'bg-emerald-100 text-emerald-800' 
-                      : table.assignedGuests.length > 0 
+                      : occupiedSeats > 0 
                         ? 'bg-amber-100 text-amber-800' 
                         : 'bg-neutral-100 text-neutral-800'
                   }`}>
-                    {table.assignedGuests.length === table.seats 
-                      ? 'Complète' 
-                      : table.assignedGuests.length > 0 
-                        ? 'Partielle' 
+                    {occupiedSeats >= table.seats 
+                      ? 'Complète'
+                      : occupiedSeats > 0 
+                        ? `${availableSeats} libre${availableSeats > 1 ? 's' : ''}` 
                         : 'Vide'}
                   </span>
                 </div>
@@ -313,23 +370,32 @@ const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoad
                         <span className="text-slate-600 text-sm">{table.seats} places</span>
                       </div>
                       <div className="flex items-center">
-                        <span className="text-purple-600 text-sm font-medium">
-                          {table.assignedGuests.length} assignés
+                        <span className={`text-sm font-medium ${
+                          occupiedSeats > table.seats ? 'text-rose-600' : 'text-purple-600'
+                        }`}>
+                          {occupiedSeats} / {table.seats} occupées
                         </span>
                       </div>
+                      {tableGuests.length > 0 && (
+                        <div className="flex items-center">
+                          <span className="text-emerald-600 text-sm font-medium">
+                            {tableGuests.length} invité{tableGuests.length > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-                    table.assignedGuests.length === table.seats 
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    occupiedSeats >= table.seats 
                       ? 'bg-emerald-100 text-emerald-800' 
-                      : table.assignedGuests.length > 0 
+                      : occupiedSeats > 0 
                         ? 'bg-amber-100 text-amber-800' 
                         : 'bg-neutral-100 text-neutral-800'
                   }`}>
-                    {table.assignedGuests.length === table.seats 
+                    {occupiedSeats >= table.seats 
                       ? 'Complète' 
-                      : table.assignedGuests.length > 0 
-                        ? 'Partielle' 
+                      : occupiedSeats > 0 
+                        ? `${availableSeats} libre${availableSeats > 1 ? 's' : ''}` 
                         : 'Vide'}
                   </span>
                 </div>
@@ -358,6 +424,8 @@ const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoad
                 </div>
               </div>
             </div>
+              );
+            })()
           ))}
         </div>
 
@@ -478,24 +546,41 @@ const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoad
             </div>
 
             <div className="p-6 overflow-y-auto max-h-96">
-              {selectedTable.assignedGuests.length > 0 ? (
+              {selectedTable && getGuestsForTable(selectedTable.name).length > 0 ? (
                 <div className="space-y-3">
-                  {selectedTable.assignedGuests.map((guest, index) => (
+                  {getGuestsForTable(selectedTable.name).map((guest, index) => (
                     <div
                       key={guest.id}
                       className="flex items-center justify-between p-4 bg-gradient-to-r from-neutral-50 to-amber-50/30 rounded-xl border border-neutral-200/50 hover:shadow-md transition-all duration-200 animate-slide-up"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg">
-                          {guest.name.split(' ').map(n => n[0]).join('')}
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg ${
+                          guest.etat === 'couple' 
+                            ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
+                            : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                        }`}>
+                          {guest.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
                         </div>
                         <div className="ml-3">
-                          <p className="font-medium text-slate-900">{guest.name}</p>
+                          <p className="font-medium text-slate-900">{guest.nom}</p>
+                          <div className="flex items-center space-x-2">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              guest.etat === 'couple' 
+                                ? 'bg-pink-100 text-pink-800' 
+                                : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {guest.etat === 'couple' ? 'Couple (2 places)' : 'Simple (1 place)'}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(guest.status)}`}>
-                        {getStatusText(guest.status)}
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        guest.confirmed 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {guest.confirmed ? 'Confirmé' : 'En attente'}
                       </span>
                     </div>
                   ))}
@@ -509,28 +594,52 @@ const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoad
               )}
             </div>
 
-            {selectedTable.assignedGuests.length > 0 && (
+            {selectedTable && getGuestsForTable(selectedTable.name).length > 0 && (
               <div className="p-6 border-t border-neutral-200/50 bg-gradient-to-r from-neutral-50 to-amber-50/30">
+                {(() => {
+                  const tableGuests = getGuestsForTable(selectedTable.name);
+                  const confirmedGuests = tableGuests.filter(g => g.confirmed);
+                  const pendingGuests = tableGuests.filter(g => !g.confirmed);
+                  const occupiedSeats = getOccupiedSeats(selectedTable.name);
+                  
+                  return (
+                    <>
+                      <div className="mb-4 text-center">
+                        <h4 className="font-semibold text-slate-900 mb-2">Résumé de la table</h4>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-slate-600">Places occupées</p>
+                            <p className="text-lg font-bold text-slate-900">{occupiedSeats} / {selectedTable.seats}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-600">Places libres</p>
+                            <p className="text-lg font-bold text-slate-900">{selectedTable.seats - occupiedSeats}</p>
+                          </div>
+                        </div>
+                      </div>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <p className="text-sm text-emerald-700 font-medium">Confirmés</p>
                     <p className="text-lg font-bold text-emerald-900">
-                      {selectedTable.assignedGuests.filter(g => g.status === 'confirmed').length}
+                        {confirmedGuests.length}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-amber-700 font-medium">En attente</p>
                     <p className="text-lg font-bold text-amber-900">
-                      {selectedTable.assignedGuests.filter(g => g.status === 'pending').length}
+                        {pendingGuests.length}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-rose-700 font-medium">Déclinés</p>
+                      <p className="text-sm text-slate-700 font-medium">Total invités</p>
                     <p className="text-lg font-bold text-rose-900">
-                      {selectedTable.assignedGuests.filter(g => g.status === 'declined').length}
+                        {tableGuests.length}
                     </p>
                   </div>
                 </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
           </div>
