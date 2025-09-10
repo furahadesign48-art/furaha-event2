@@ -728,49 +728,26 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                       }}
                     >
                       <Camera className="h-3 w-3 inline mr-1" />
-                      Photo
-                    </button>
-                  </div>
-                </div>
-
-                {/* QR Code */}
-                <div className="backdrop-blur-sm rounded-xl p-3 border" style={{ 
-                  background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
+                            
+                            {qrCodeDataUrl ? (
+                              <div className="bg-white rounded-lg p-2 inline-block">
+                                <img 
+                                  src={qrCodeDataUrl} 
+                                  alt="QR Code Invité" 
+                                  className="w-16 h-16"
+                                />
+                              </div>
+                            ) : (
+                              <div className="bg-white rounded-lg p-2 inline-block">
+                                <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-md flex items-center justify-center">
+                                  <QrCode className="h-8 w-8" style={{ color: primaryColor }} />
+                                </div>
+                              </div>
+                            )}
                   borderColor: `${primaryColor}30`
                 }}>
-                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
+                              Scannez pour voir les infos
                     <QrCode className="h-3 w-3 mr-1" />
-                    QR Code Invité
-                  </h3>
-                  <div 
-                    className="bg-white rounded-lg p-2 inline-block cursor-pointer hover:scale-105 transition-transform duration-300"
-                    onClick={() => setShowQRInfo(!showQRInfo)}
-                  >
-                    <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-md flex items-center justify-center">
-                      <QrCode className="h-8 w-8" style={{ color: primaryColor }} />
-                    </div>
-                  </div>
-                  
-                  <p className="text-center mt-2 text-xs" style={{ color: `${primaryColor}cc` }}>
-                    Cliquez pour scanner
-                  </p>
-                  
-                  {showQRInfo && (
-                    <div className="mt-3 bg-white/95 backdrop-blur-sm rounded-lg p-2 animate-slide-up">
-                      <div className="text-center mb-2">
-                        <h4 className="font-bold text-slate-900 text-xs">Informations</h4>
-                      </div>
-                      <div className="space-y-1 text-xs">
-                        <div className="flex justify-between items-center p-1 bg-slate-50 rounded">
-                          <span className="font-medium text-slate-700">Nom:</span>
-                          <span className="font-bold text-slate-900">[Invité]</span>
-                        </div>
-                        <div className="flex justify-between items-center p-1 bg-slate-50 rounded">
-                          <span className="font-medium text-slate-700">Table:</span>
-                          <span className="font-bold text-slate-900">[Table]</span>
-                        </div>
-                        <div className="flex justify-between items-center p-1 bg-slate-50 rounded">
-                          <span className="font-medium text-slate-700">Boisson:</span>
                           <span className="font-bold text-slate-900">{selectedDrink || 'Aucune'}</span>
                         </div>
                       </div>
