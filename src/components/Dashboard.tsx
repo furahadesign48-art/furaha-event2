@@ -931,31 +931,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                   <select
                     value={inviteFormData.etat}
                     onChange={(e) => setInviteFormData({ 
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  <button
-                    onClick={() => handleShareWhatsApp(guest)}
-                    className="bg-green-100 text-green-700 px-3 py-2 rounded-lg hover:bg-green-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-1" />
-                    WhatsApp
-                  </button>
-                  <button
-                    onClick={() => handleShareEmail(guest)}
-                    className="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                  >
-                    <Mail className="h-4 w-4 mr-1" />
-                    Email
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => handleCopyLink(guest)}
-                    className="bg-purple-100 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                  >
-                    <Copy className="h-4 w-4 mr-1" />
-                    Copier
-                  </button>
+                      ...inviteFormData,
                       etat: e.target.value as 'simple' | 'couple'
                     })}
                     className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
