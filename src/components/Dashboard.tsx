@@ -856,20 +856,27 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                   
                   <div className="grid grid-cols-2 gap-2">
                     <button
+                      onClick={() => handlePreviewInvitation(guest)}
+                      className="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Voir
+                    </button>
+                    <button
                       onClick={() => openInviteModal(guest)}
                       className="bg-amber-100 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
                     >
                       <Edit className="h-4 w-4 mr-1" />
                       Modifier
                     </button>
-                    <button
-                      onClick={() => handleDeleteInvite(guest.id)}
-                      className="bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Supprimer
-                    </button>
                   </div>
+                  <button
+                    onClick={() => handleDeleteInvite(guest.id)}
+                    className="w-full bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-sm mt-2"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Supprimer
+                  </button>
                 </div>
               </div>
             ))
