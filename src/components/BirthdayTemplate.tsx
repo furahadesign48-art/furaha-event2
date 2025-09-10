@@ -126,42 +126,26 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
 
             <button
               onClick={() => setShowPreview(!showPreview)}
-              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-full hover:from-purple-600 hover:to-purple-700 transition-all duration-300 font-semibold shadow-glow-purple transform hover:scale-105"
-            >
-              {showPreview ? 'Masquer' : 'Prévisualiser'}
-            </button>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto">
+                            
+                            {qrCodeDataUrl ? (
+                              <div className="bg-white rounded-xl p-3 inline-block">
+                                <img 
+                                  src={qrCodeDataUrl} 
+                                  alt="QR Code Invité" 
+                                  className="w-24 h-24"
+                                />
+                              </div>
+                            ) : (
+                              <div className="bg-white rounded-xl p-4 inline-block">
+                                <div className="w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg flex items-center justify-center">
+                                  <QrCode className="h-12 w-12 text-purple-400" />
+                                </div>
+                              </div>
+                            )}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Template Preview */}
-            <div className="animate-fade-in">
+                              Scannez pour voir les infos
               <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-3xl shadow-luxury border border-purple-500/20 overflow-hidden">
-                {/* Invitation Content */}
-                <div className="relative h-[700px] overflow-y-auto">
-                          {/* Background Image */}
-                          <div className="absolute inset-0">
-                            <img
-                              src={templateData.backgroundImage}
-                              alt="Birthday Background"
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"></div>
-                            <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-transparent to-purple-900/20"></div>
-                          </div>
-
-                          {/* Content */}
-                          <div className="relative z-10 p-6 text-center text-white">
-                            {/* Decorative Header */}
-                            <div className="mb-6">
-                              <div className="flex justify-center items-center mb-4">
-                                <div className="relative">
-                                  <Gift className="h-12 w-12 text-purple-400 animate-glow drop-shadow-2xl" />
-                                  <div className="absolute inset-0 animate-ping">
-                                    <Gift className="h-12 w-12 text-purple-300 opacity-30" />
-                                  </div>
-                                </div>
                               </div>
                               
                               <div className="w-24 h-px bg-gradient-to-r from-transparent via-purple-400 to-transparent mx-auto mb-4"></div>
@@ -362,17 +346,6 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
 
                 {/* Features */}
                 <div className="mb-8">
-                  <h3 className="text-xl font-semibold text-purple-400 mb-4 flex items-center">
-                    <Star className="h-5 w-5 mr-2" />
-                    Fonctionnalités incluses
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {templateData.features.map((feature, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center text-neutral-300 animate-slide-up"
-                        style={{ animationDelay: `${index * 0.1}s` }}
-                      >
                         <div className="w-2 h-2 bg-purple-400 rounded-full mr-3 flex-shrink-0 animate-pulse"></div>
                         <span className="text-sm">{feature}</span>
                       </div>
