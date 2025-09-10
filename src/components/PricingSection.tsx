@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Star, Crown, Gem } from 'lucide-react';
+import { Check, Star, Crown, Gem, Zap } from 'lucide-react';
 
 const PricingSection = () => {
   const plans = [
@@ -9,7 +9,7 @@ const PricingSection = () => {
       period: '/mois',
       icon: Star,
       features: [
-        '3 invitations par mois',
+        '5 invitations maximum',
         'Modèles de base',
         'Support par email',
         'Export PDF'
@@ -104,6 +104,14 @@ const PricingSection = () => {
                   </div>
                 )}
 
+                {/* Badge de limitation pour le plan gratuit */}
+                {index === 0 && (
+                  <div className="absolute -top-4 right-4">
+                    <span className="bg-gradient-to-r from-rose-500 to-rose-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
+                      Limité
+                    </span>
+                  </div>
+                )}
                 <div className="text-center mb-8">
                   <div className="flex justify-center mb-4">
                     <div className={`p-4 rounded-full ${
@@ -150,10 +158,13 @@ const PricingSection = () => {
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 hover:from-amber-600 hover:to-amber-700 shadow-glow-amber' 
                     : index === 2 
                       ? 'bg-gradient-to-r from-slate-900 to-purple-900 text-neutral-50 hover:from-purple-900 hover:to-slate-800 shadow-glow-purple' 
-                      : 'bg-gradient-to-r from-neutral-100 to-slate-100 text-slate-900 hover:from-slate-100 hover:to-neutral-200'
+                      : 'bg-gradient-to-r from-neutral-100 to-slate-100 text-slate-900 hover:from-slate-100 hover:to-neutral-200 cursor-default opacity-75'
                 }`}>
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-1000"></div>
-                  {plan.buttonText}
+                  <span className="relative flex items-center justify-center">
+                    {index === 0 && <Zap className="h-4 w-4 mr-2" />}
+                    {plan.buttonText}
+                  </span>
                 </button>
               </div>
             );

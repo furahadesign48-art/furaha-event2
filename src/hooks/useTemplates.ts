@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { TemplateService, UserModelService, UserModel, TemplateData, InviteService, Invite } from '../services/templateService';
 import { useAuth } from './useAuth';
+import { useSubscription } from './useSubscription';
 
 export const useTemplates = () => {
   const { user } = useAuth();
+  const { canCreateInvite, updateInviteCount } = useSubscription();
   const [defaultTemplates, setDefaultTemplates] = useState<TemplateData[]>([]);
   const [userModels, setUserModels] = useState<UserModel[]>([]);
   const [userInvites, setUserInvites] = useState<Invite[]>([]);
@@ -200,6 +202,11 @@ export const useTemplates = () => {
       return null;
     }
 
+    // Vérifier la limite d'invitations
+    if (!canCreateInvite()) {
+      setError('Limite d\'invitations atteinte. Passez au plan premium pour continuer.');
+      return null;
+    }
     try {
       setIsLoading(true);
       setError(null);

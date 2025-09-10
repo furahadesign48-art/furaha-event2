@@ -29,7 +29,9 @@ import {
 import UserProfile from './UserProfile';
 import TemplateCustomization from './TemplateCustomization';
 import TableManagement from './TableManagement';
+import UpgradeModal from './UpgradeModal';
 import { useTemplates } from '../hooks/useTemplates';
+import { useSubscription } from '../hooks/useSubscription';
 import { UserData } from '../hooks/useAuth';
 import { collection, doc, setDoc, getDocs, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -85,6 +87,13 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     updateUserModel,
     isLoading: templatesLoading 
   } = useTemplates();
+  const { 
+    subscription, 
+    canCreateInvite, 
+    getRemainingInvites, 
+    updateInviteCount,
+    isLoading: subscriptionLoading 
+  } = useSubscription();
   const [activeTab, setActiveTab] = useState('overview');
   const [showCustomization, setShowCustomization] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState<TemplateData | null>(selectedTemplate || null);
@@ -97,6 +106,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   
   // États pour la gestion des invités
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [editingInvite, setEditingInvite] = useState<Guest | null>(null);
   const [inviteFormData, setInviteFormData] = useState({
     nom: '',
@@ -225,6 +235,13 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     setAvailableTables(tables);
   }, [tables]);
 
+  // Mettre à jour le compteur d'invitations quand les invités changent
+  useEffect(() => {
+    if (subscription && userInvites.length !== subscription.currentInvites) {
+      updateInviteCount(userInvites.length);
+    }
+  }, [userInvites.length, subscription, updateInviteCount]);
+
   // Charger les invités depuis Firestore
   const guests: Guest[] = userInvites.map(invite => ({
     id: invite.id,
@@ -347,6 +364,12 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   };
 
   const openInviteModal = (invite?: Guest) => {
+    // Vérifier la limite d'invitations pour les nouveaux invités
+    if (!invite && !canCreateInvite()) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     if (invite) {
       setEditingInvite(invite);
       setInviteFormData({
@@ -381,6 +404,12 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Vérifier la limite pour les nouveaux invités
+    if (!editingInvite && !canCreateInvite()) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     try {
       if (editingInvite) {
         // Modifier un invité existant
@@ -514,6 +543,46 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
       {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Ajout d'une carte pour l'abonnement */}
+        <div className={`rounded-2xl p-6 border shadow-lg ${
+          subscription?.plan === 'free' 
+            ? 'bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200/50' 
+            : 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200/50'
+        }`}>
+          <div className="flex items-center">
+            <div className={`p-3 rounded-xl ${
+              subscription?.plan === 'free' 
+                ? 'bg-amber-500 shadow-glow-amber' 
+                : 'bg-emerald-500'
+            }`}>
+              <Crown className="h-6 w-6 text-white" />
+            </div>
+            <div className="ml-4">
+              <p className={`text-sm font-medium ${
+                subscription?.plan === 'free' ? 'text-amber-700' : 'text-emerald-700'
+              }`}>
+                Plan {subscription?.plan === 'free' ? 'Gratuit' : subscription?.plan}
+              </p>
+              <p className={`text-2xl font-bold ${
+                subscription?.plan === 'free' ? 'text-amber-900' : 'text-emerald-900'
+              }`}>
+                {subscription?.plan === 'free' 
+                  ? `${getRemainingInvites()}/5` 
+                  : '∞'
+                }
+              </p>
+            </div>
+          </div>
+          {subscription?.plan === 'free' && getRemainingInvites() <= 2 && (
+            <button
+              onClick={() => setShowUpgradeModal(true)}
+              className="w-full mt-3 bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition-all duration-300 font-medium text-sm"
+            >
+              Passer au Premium
+            </button>
+          )}
+        </div>
+
         <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg">
           <div className="flex items-center">
             <div className="p-3 bg-amber-500 rounded-xl shadow-glow-amber">
@@ -1046,6 +1115,14 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
           </div>
         </div>
       )}
+
+      {/* Modal de mise à niveau */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        currentPlan={subscription?.plan || 'free'}
+        remainingInvites={getRemainingInvites()}
+      />
     </div>
   );
 

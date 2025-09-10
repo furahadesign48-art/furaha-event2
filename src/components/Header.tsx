@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X, Crown, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from './AuthContext';
+import { useSubscription } from '../hooks/useSubscription';
 
 
 interface HeaderProps {
@@ -9,6 +10,7 @@ interface HeaderProps {
 
 const Header = ({ onLogin }: HeaderProps) => {
   const { user, isAuthenticated, logout } = useAuth();
+  const { subscription, getRemainingInvites } = useSubscription();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -115,6 +117,25 @@ const Header = ({ onLogin }: HeaderProps) => {
                         Mon Dashboard
                       </button>
                       
+                      {/* Affichage du plan et des invitations restantes */}
+                      {subscription && (
+                        <div className="px-4 py-2 bg-gradient-to-r from-amber-50 to-amber-100 mx-2 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-xs font-medium text-amber-800">
+                                Plan {subscription.plan === 'free' ? 'Gratuit' : subscription.plan}
+                              </p>
+                              {subscription.plan === 'free' && (
+                                <p className="text-xs text-amber-600">
+                                  {getRemainingInvites()} invitations restantes
+                                </p>
+                              )}
+                            </div>
+                            <Crown className="h-4 w-4 text-amber-600" />
+                          </div>
+                        </div>
+                      )}
+                      
                       <hr className="my-2 border-neutral-200/50" />
                       
                       <button
@@ -178,6 +199,11 @@ const Header = ({ onLogin }: HeaderProps) => {
                     <div>
                       <p className="font-semibold text-slate-900 text-sm">{user.firstName} {user.lastName}</p>
                       <p className="text-xs text-slate-600">{user.email}</p>
+                      {subscription?.plan === 'free' && (
+                        <p className="text-xs text-amber-600">
+                          {getRemainingInvites()}/5 invitations
+                        </p>
+                      )}
                     </div>
                   </div>
                   

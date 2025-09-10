@@ -478,6 +478,48 @@ export class InviteService {
   }
 }
 
+// Service pour les abonnements
+export class SubscriptionService {
+  private static readonly SUBSCRIPTIONS_COLLECTION = 'subscriptions';
+
+  static async createSubscription(userId: string, plan: 'free' | 'standard' | 'premium') {
+    try {
+      const subscriptionRef = doc(db, this.SUBSCRIPTIONS_COLLECTION, userId);
+      const inviteLimit = plan === 'free' ? 5 : 999999;
+      
+      const subscriptionData = {
+        userId,
+        plan,
+        status: 'active',
+        inviteLimit,
+        currentInvites: 0,
+        startDate: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      await setDoc(subscriptionRef, subscriptionData);
+      console.log('Abonnement créé:', userId);
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'abonnement:', error);
+      throw new Error('Impossible de créer l\'abonnement');
+    }
+  }
+
+  static async updateSubscription(userId: string, updates: any) {
+    try {
+      const subscriptionRef = doc(db, this.SUBSCRIPTIONS_COLLECTION, userId);
+      await updateDoc(subscriptionRef, {
+        ...updates,
+        updatedAt: serverTimestamp()
+      });
+      console.log('Abonnement mis à jour:', userId);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de l\'abonnement:', error);
+      throw new Error('Impossible de mettre à jour l\'abonnement');
+    }
+  }
+}
 // Fonction utilitaire pour initialiser les templates par défaut
 export const initializeDefaultTemplates = async (): Promise<void> => {
   try {
