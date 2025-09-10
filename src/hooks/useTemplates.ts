@@ -202,15 +202,22 @@ export const useTemplates = () => {
       return null;
     }
 
-    // Vérifier la limite d'invitations
-    if (!canCreateInvite()) {
-      setError('Limite d\'invitations atteinte. Passez au plan premium pour continuer.');
+    // Vérifier la limite d'invitations de manière stricte
+    const currentCount = userInvites.length;
+    if (subscription?.plan === 'free' && currentCount >= 5) {
+      setError('Limite de 5 invitations atteinte pour le plan gratuit. Passez au plan premium pour continuer.');
       return null;
     }
+
     try {
       setIsLoading(true);
       setError(null);
       const inviteId = await InviteService.createInvite(user.id, inviteData);
+      
+      // Mettre à jour le compteur d'abonnement
+      if (subscription) {
+        await updateInviteCount(currentCount + 1);
+      }
       
       // Recharger les invités
       await loadUserInvites();
