@@ -960,10 +960,14 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                     className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50"
                   >
                     <option value="">Sélectionner une table</option>
-                    {availableTables.map((table) => (
-                      <option key={table.id} value={table.name}>
-                        {table.name}
-                      </option>
+                    {availableTables.map((table) => {
+                      const assignedCount = guests.filter(guest => guest.table === table.name).length;
+                      const availableSeats = table.seats - assignedCount;
+                      return (
+                        <option key={table.id} value={table.name}>
+                          {table.name} ({availableSeats}/{table.seats})
+                        </option>
+                      );
                     ))}
                   </select>
                 </div>
