@@ -75,7 +75,15 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => {
-  const { userInvites, createInvite, updateInvite, deleteInvite, isLoading: templatesLoading } = useTemplates();
+  const { 
+    userInvites, 
+    userModels, 
+    createInvite, 
+    updateInvite, 
+    deleteInvite, 
+    updateUserModel,
+    isLoading: templatesLoading 
+  } = useTemplates();
   const [activeTab, setActiveTab] = useState('overview');
   const [showCustomization, setShowCustomization] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState<TemplateData | null>(selectedTemplate || null);
@@ -183,9 +191,14 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   ];
 
   const handleCustomizeTemplate = () => {
+    console.log('Modèles utilisateur disponibles:', userModels);
+    console.log('Template actuel:', currentTemplate);
+    
     if (currentTemplate && userModels.length > 0) {
       // Utiliser le premier modèle utilisateur disponible
       const userModel = userModels[0];
+      console.log('Utilisation du modèle utilisateur:', userModel);
+      
       setUserTemplateForCustomization({
         id: userModel.id,
         name: userModel.name,
@@ -198,7 +211,8 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         eventLocation: userModel.eventLocation,
         drinkOptions: userModel.drinkOptions,
         features: userModel.features,
-        colors: userModel.customizations?.colors
+        colors: userModel.customizations?.colors,
+        isPersonalized: true
       });
       setShowCustomization(true);
     } else if (currentTemplate) {
@@ -209,6 +223,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   };
 
   const handleSaveCustomization = (customizedTemplate: TemplateData) => {
+    console.log('Sauvegarde de la personnalisation:', customizedTemplate);
     // Sauvegarder les modifications dans le modèle utilisateur
     if (userTemplateForCustomization && userModels.length > 0) {
       const userModel = userModels[0];
@@ -227,6 +242,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         }
       });
     }
+    
     setCurrentTemplate(customizedTemplate);
     setUserTemplateForCustomization(null);
     setShowCustomization(false);
@@ -434,7 +450,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
               <button
                 onClick={handleCustomizeTemplate}
                 className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-2 rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center shadow-glow-amber transform hover:scale-105"
-                disabled={!currentTemplate}
+                disabled={!currentTemplate && userModels.length === 0}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Personnaliser
