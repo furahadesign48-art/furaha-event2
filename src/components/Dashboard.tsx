@@ -521,7 +521,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             </div>
             <div className="ml-4">
               <p className="text-amber-700 text-sm font-medium">Total Invités</p>
-              <p className="text-2xl font-bold text-amber-900">{guests.length}</p>
+              <p className="text-2xl font-bold text-amber-900">{guests.reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}</p>
             </div>
           </div>
         </div>
@@ -534,7 +534,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             <div className="ml-4">
               <p className="text-emerald-700 text-sm font-medium">Confirmés</p>
               <p className="text-2xl font-bold text-emerald-900">
-                {guests.filter(g => g.confirmed).length}
+                {guests.filter(g => g.confirmed).reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}
               </p>
             </div>
           </div>
@@ -548,7 +548,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             <div className="ml-4">
               <p className="text-purple-700 text-sm font-medium">En attente</p>
               <p className="text-2xl font-bold text-purple-900">
-                {guests.filter(g => !g.confirmed).length}
+                {guests.filter(g => !g.confirmed).reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}
               </p>
             </div>
           </div>
@@ -716,7 +716,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             </div>
             <div className="ml-4">
               <p className="text-amber-700 text-sm font-medium">Total Invités</p>
-              <p className="text-2xl font-bold text-amber-900">{guests.length}</p>
+              <p className="text-2xl font-bold text-amber-900">{guests.reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}</p>
             </div>
           </div>
         </div>
@@ -729,7 +729,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             <div className="ml-4">
               <p className="text-emerald-700 text-sm font-medium">Confirmés</p>
               <p className="text-2xl font-bold text-emerald-900">
-                {guests.filter(g => g.confirmed).length}
+                {guests.filter(g => g.confirmed).reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}
               </p>
             </div>
           </div>
@@ -743,7 +743,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             <div className="ml-4">
               <p className="text-purple-700 text-sm font-medium">En attente</p>
               <p className="text-2xl font-bold text-purple-900">
-                {guests.filter(g => !g.confirmed).length}
+                {guests.filter(g => !g.confirmed).reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}
               </p>
             </div>
           </div>
