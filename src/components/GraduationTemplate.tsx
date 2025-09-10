@@ -18,6 +18,7 @@ const GraduationTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Gradu
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showQRInfo, setShowQRInfo] = useState(false);
 
   const templateData = {
     id: 'graduation-achievement-premium',
@@ -291,20 +292,53 @@ const GraduationTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Gradu
                                 <QrCode className="h-4 w-4 mr-2" />
                                 QR Code Invité
                               </h3>
-                              <div className="bg-white rounded-xl p-4 inline-block">
+                              <div 
+                                className="bg-white rounded-xl p-4 inline-block cursor-pointer hover:scale-105 transition-transform duration-300"
+                                onClick={() => setShowQRInfo(!showQRInfo)}
+                              >
                                 <div className="w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg flex items-center justify-center">
                                   <QrCode className="h-12 w-12 text-emerald-400" />
                                 </div>
                               </div>
-                              <div className="mt-3 space-y-1">
-                                <p className="text-emerald-200 text-xs font-semibold">Informations invité:</p>
-                                <div className="text-emerald-300 text-xs space-y-1">
-                                  <p><span className="font-medium">Nom:</span> [Nom de l'invité]</p>
-                                  <p><span className="font-medium">Place:</span> [Numéro de place]</p>
-                                  <p><span className="font-medium">Boisson:</span> {selectedDrink || 'Non sélectionnée'}</p>
-                                  <p><span className="font-medium">Code:</span> GRAD-2024-001</p>
+                              
+                              <p className="text-center mt-3 text-emerald-300 text-xs">
+                                Cliquez pour scanner
+                              </p>
+                              
+                              {showQRInfo && (
+                                <div className="mt-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 animate-slide-up">
+                                  <div className="text-center mb-3">
+                                    <h4 className="font-bold text-slate-900 text-sm">Informations Invité</h4>
+                                  </div>
+                                  <div className="space-y-2 text-xs">
+                                    <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
+                                      <span className="font-medium text-slate-700">Nom:</span>
+                                      <span className="font-bold text-slate-900">[Nom de l'invité]</span>
+                                    </div>
+                                    <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
+                                      <span className="font-medium text-slate-700">Place:</span>
+                                      <span className="font-bold text-slate-900">[Numéro de place]</span>
+                                    </div>
+                                    <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
+                                      <span className="font-medium text-slate-700">Boisson:</span>
+                                      <span className="font-bold text-slate-900">{selectedDrink || 'Non sélectionnée'}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
+                                      <span className="font-medium text-slate-700">Code:</span>
+                                      <span className="font-bold text-slate-900 font-mono">GRAD-2024-001</span>
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowQRInfo(false);
+                                    }}
+                                    className="w-full mt-3 bg-slate-600 text-white py-1 rounded-lg hover:bg-slate-700 transition-all duration-300 text-xs font-medium"
+                                  >
+                                    Fermer
+                                  </button>
                                 </div>
-                              </div>
+                              )}
                             </div>
                           </div>
                         </div>

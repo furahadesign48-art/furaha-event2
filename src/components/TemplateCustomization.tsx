@@ -51,6 +51,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   const [secondaryColor, setSecondaryColor] = useState('#d97706'); // amber-600
   const [accentColor, setAccentColor] = useState('#f43f5e'); // rose-500
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showQRInfo, setShowQRInfo] = useState(false);
 
   const tabs = [
     { id: 'general', label: 'Général', icon: Type },
@@ -741,19 +742,49 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                     <QrCode className="h-3 w-3 mr-1" />
                     QR Code Invité
                   </h3>
-                  <div className="bg-white rounded-lg p-2 inline-block">
+                  <div 
+                    className="bg-white rounded-lg p-2 inline-block cursor-pointer hover:scale-105 transition-transform duration-300"
+                    onClick={() => setShowQRInfo(!showQRInfo)}
+                  >
                     <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-md flex items-center justify-center">
                       <QrCode className="h-8 w-8" style={{ color: primaryColor }} />
                     </div>
                   </div>
-                  <div className="mt-2 space-y-1">
-                    <p className="text-xs font-semibold" style={{ color: `${primaryColor}dd` }}>Infos invité:</p>
-                    <div className="text-xs space-y-0.5" style={{ color: `${primaryColor}cc` }}>
-                      <p><span className="font-medium">Nom:</span> [Invité]</p>
-                      <p><span className="font-medium">Table:</span> [Table]</p>
-                      <p><span className="font-medium">Boisson:</span> {selectedDrink || 'Aucune'}</p>
+                  
+                  <p className="text-center mt-2 text-xs" style={{ color: `${primaryColor}cc` }}>
+                    Cliquez pour scanner
+                  </p>
+                  
+                  {showQRInfo && (
+                    <div className="mt-3 bg-white/95 backdrop-blur-sm rounded-lg p-2 animate-slide-up">
+                      <div className="text-center mb-2">
+                        <h4 className="font-bold text-slate-900 text-xs">Informations</h4>
+                      </div>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between items-center p-1 bg-slate-50 rounded">
+                          <span className="font-medium text-slate-700">Nom:</span>
+                          <span className="font-bold text-slate-900">[Invité]</span>
+                        </div>
+                        <div className="flex justify-between items-center p-1 bg-slate-50 rounded">
+                          <span className="font-medium text-slate-700">Table:</span>
+                          <span className="font-bold text-slate-900">[Table]</span>
+                        </div>
+                        <div className="flex justify-between items-center p-1 bg-slate-50 rounded">
+                          <span className="font-medium text-slate-700">Boisson:</span>
+                          <span className="font-bold text-slate-900">{selectedDrink || 'Aucune'}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowQRInfo(false);
+                        }}
+                        className="w-full mt-2 bg-slate-600 text-white py-1 rounded text-xs font-medium"
+                      >
+                        Fermer
+                      </button>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -28,6 +28,7 @@ const InvitationPreview = () => {
   const [selectedDrink, setSelectedDrink] = useState('');
   const [guestMessage, setGuestMessage] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [showQRInfo, setShowQRInfo] = useState(false);
 
   useEffect(() => {
     const loadInvitationData = async () => {
@@ -481,7 +482,10 @@ const InvitationPreview = () => {
                       <QrCode className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
                       QR Code Invité
                     </h3>
-                    <div className="bg-white rounded-xl p-6 inline-block">
+                    <div 
+                      className="bg-white rounded-xl p-6 inline-block cursor-pointer hover:scale-105 transition-transform duration-300"
+                      onClick={() => setShowQRInfo(!showQRInfo)}
+                    >
                       <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg flex items-center justify-center">
                         <QrCode 
                           className="h-16 w-16 sm:h-20 sm:w-20" 
@@ -489,7 +493,75 @@ const InvitationPreview = () => {
                         />
                       </div>
                     </div>
-                    <div className="mt-4 space-y-2">
+                    
+                    <p className="text-center mt-4 text-sm" style={{ color: `${colors.primary}cc` }}>
+                      Cliquez sur le QR code pour voir les informations
+                    </p>
+                    
+                    {showQRInfo && (
+                      <div className="mt-6 bg-white/90 backdrop-blur-sm rounded-xl p-4 animate-slide-up">
+                        <div className="text-center mb-4">
+                          <h4 className="font-bold text-slate-900 text-lg">Informations de l'invité</h4>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg">
+                            <div className="flex items-center">
+                              <User className="h-5 w-5 text-slate-600 mr-3" />
+                              <span className="font-medium text-slate-700">Nom</span>
+                            </div>
+                            <span className="font-bold text-slate-900">{invite.nom}</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg">
+                            <div className="flex items-center">
+                              <MapPin className="h-5 w-5 text-slate-600 mr-3" />
+                              <span className="font-medium text-slate-700">
+                                {userModel.category === 'graduation' ? 'Place' : 'Table'}
+                              </span>
+                            </div>
+                            <span className="font-bold text-slate-900">{invite.table || 'Non assigné'}</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg">
+                            <div className="flex items-center">
+                              <Wine className="h-5 w-5 text-slate-600 mr-3" />
+                              <span className="font-medium text-slate-700">Boisson</span>
+                            </div>
+                            <span className="font-bold text-slate-900">{selectedDrink || 'Non sélectionnée'}</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg">
+                            <div className="flex items-center">
+                              <QrCode className="h-5 w-5 text-slate-600 mr-3" />
+                              <span className="font-medium text-slate-700">Code</span>
+                            </div>
+                            <span className="font-bold text-slate-900 font-mono text-sm">{invite.id.toUpperCase()}</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg">
+                            <div className="flex items-center">
+                              {isConfirmed ? (
+                                <Check className="h-5 w-5 text-emerald-600 mr-3" />
+                              ) : (
+                                <X className="h-5 w-5 text-rose-600 mr-3" />
+                              )}
+                              <span className="font-medium text-slate-700">Statut</span>
+                            </div>
+                            <span className={`font-bold ${isConfirmed ? 'text-emerald-600' : 'text-rose-600'}`}>
+                              {isConfirmed ? 'Confirmé' : 'En attente'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <button
+                          onClick={() => setShowQRInfo(false)}
+                          className="w-full mt-4 bg-slate-600 text-white py-2 rounded-lg hover:bg-slate-700 transition-all duration-300 font-medium"
+                        >
+                          Fermer
+                        </button>
+                      </div>
+                    )}
+                  </div>
                       <p 
                         className="text-sm sm:text-base font-semibold" 
                         style={{ color: `${colors.primary}dd` }}
