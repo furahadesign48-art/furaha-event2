@@ -916,7 +916,6 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       {/* Modal pour ajouter/modifier un invité */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-md w-full animate-slide-up relative">
             {/* Header simple */}
             <div className="p-6 pb-4">
@@ -936,6 +935,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             <form onSubmit={handleInviteSubmit} className="px-6 pb-6">
               <div className="space-y-4">
                 {/* Nom complet */}
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Nom complet
                   </label>
@@ -946,30 +946,48 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                     className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50"
                     placeholder="Ex: Jean Dupont"
                     required
-                  </div>
+                  />
                 </div>
+
                 {/* Numéro de table */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Table
+                  </label>
+                  <select
+                    value={inviteFormData.table}
+                    onChange={(e) => setInviteFormData({ ...inviteFormData, table: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50"
+                  >
+                    <option value="">Sélectionner une table</option>
+                    {availableTables.map((table) => (
+                      <option key={table.id} value={table.name}>
+                        {table.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 {/* Statut */}
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-3">
                     État
                   </label>
                   <div className="grid grid-cols-2 gap-3">
-                  <div className="grid grid-cols-2 gap-3">
+                    <button
                       type="button"
                       onClick={() => setInviteFormData({ ...inviteFormData, etat: 'simple' })}
                       className={`p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
                         inviteFormData.etat === 'simple'
                           ? 'border-amber-500 bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800 shadow-glow-amber'
-                          ? 'bg-green-100 text-green-800 border-green-300'
                           : 'bg-gray-100 text-gray-600 border-gray-300 hover:border-green-300'
+                      }`}
                     >
                       <div className="flex flex-col items-center">
-                      <div className="flex items-center justify-center space-x-2">
-                        <User className="h-4 w-4" />
-                        <span className="font-medium">Simple</span>
+                        <div className="flex items-center justify-center space-x-2">
+                          <User className="h-4 w-4" />
+                          <span className="font-medium">Simple</span>
+                        </div>
                       </div>
                     </button>
                     
@@ -989,11 +1007,15 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                       </div>
                     </button>
                   </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 mt-6">
                 <button
                   type="button"
                   onClick={closeInviteModal}
                   className="flex-1 px-6 py-4 border-2 border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 hover:border-neutral-400 transition-all duration-300 font-semibold transform hover:scale-105"
-              <div className="flex space-x-3 mt-6">
+                >
                   Annuler
                 </button>
                 <button
@@ -1006,7 +1028,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                     <div className="relative flex items-center justify-center">
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
                       Sauvegarde...
-                  className="flex-1 bg-orange-500 text-white px-6 py-3 rounded-2xl hover:bg-orange-600 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    </div>
                   ) : (
                     <span className="relative flex items-center justify-center">
                       <Save className="h-4 w-4 inline mr-2" />
@@ -1070,14 +1092,24 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-40 h-40 bg-gradient-to-r from-amber-200/10 to-purple-200/10 rounded-full blur-3xl animate-float"></div>
-                  {isLoading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                      Ajout...
-                    </div>
-                  ) : (
-                    'Ajouter'
-                  )}
+        <div className="absolute bottom-20 right-20 w-60 h-60 bg-gradient-to-r from-rose-200/10 to-amber-200/10 rounded-full blur-3xl animate-float-delayed"></div>
+      </div>
+
+      <div className="relative z-10">
+        {/* Header */}
+        <header className="bg-white/80 backdrop-blur-xl border-b border-neutral-200/50 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-rose-500 rounded-xl flex items-center justify-center shadow-glow-amber">
+                    <Sparkles className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="hidden md:block">
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                      InviteElegance
+                    </h1>
+                  </div>
                 </div>
                 <div className="hidden md:block w-px h-6 bg-neutral-300"></div>
                 <div className="hidden md:block">
