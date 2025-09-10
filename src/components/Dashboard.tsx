@@ -962,11 +962,10 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                   >
                     <option value="">Sélectionner une table</option>
                     {availableTables.map((table) => {
-                      const assignedCount = guests.filter(guest => guest.table === table.name).length;
-                      const availableSeats = table.seats - assignedCount;
+                      const occupiedSeats = guests.filter(guest => guest.table === table.name).length;
                       return (
                         <option key={table.id} value={table.name}>
-                          {table.name} ({availableSeats}/{table.seats})
+                          {table.name} ({occupiedSeats}/{table.seats})
                         </option>
                       );
                     })}
