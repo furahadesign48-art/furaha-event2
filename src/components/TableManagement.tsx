@@ -317,7 +317,6 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
                       {tableGuests.length} invité{tableGuests.length > 1 ? 's' : ''}
                     </div>
                   )}
-                  </span>
                 </div>
                 <div>
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
