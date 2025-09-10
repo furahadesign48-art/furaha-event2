@@ -57,10 +57,8 @@ export interface Invite {
   id: string;
   nom: string;
   table: string;
-  statut: 'pending' | 'confirmed' | 'declined';
+  etat: 'simple' | 'couple';
   confirmed: boolean;
-  boissons: string;
-  voeux: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

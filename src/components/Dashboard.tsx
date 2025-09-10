@@ -55,10 +55,8 @@ interface Guest {
   id: string;
   nom: string;
   table: string;
-  statut: 'pending' | 'confirmed' | 'declined';
+  etat: 'simple' | 'couple';
   confirmed: boolean;
-  boissons: string;
-  voeux: string;
 }
 
 interface Table {
@@ -99,10 +97,8 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [inviteFormData, setInviteFormData] = useState({
     nom: '',
     table: '',
-    statut: 'pending' as 'pending' | 'confirmed' | 'declined',
+    etat: 'simple' as 'simple' | 'couple',
     confirmed: false,
-    boissons: '',
-    voeux: ''
   });
 
   // Charger les tables depuis Firestore
@@ -225,10 +221,8 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     id: invite.id,
     nom: invite.nom,
     table: invite.table,
-    statut: invite.statut,
+    etat: invite.etat,
     confirmed: invite.confirmed,
-    boissons: invite.boissons,
-    voeux: invite.voeux
   }));
 
   const tabs = [
@@ -348,20 +342,16 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       setInviteFormData({
         nom: invite.nom,
         table: invite.table,
-        statut: invite.statut,
+        etat: invite.etat,
         confirmed: invite.confirmed,
-        boissons: invite.boissons,
-        voeux: invite.voeux
       });
     } else {
       setEditingInvite(null);
       setInviteFormData({
         nom: '',
         table: '',
-        statut: 'pending',
+        etat: 'simple',
         confirmed: false,
-        boissons: '',
-        voeux: ''
       });
     }
     setShowInviteModal(true);
@@ -373,10 +363,8 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     setInviteFormData({
       nom: '',
       table: '',
-      statut: 'pending',
+      etat: 'simple',
       confirmed: false,
-      boissons: '',
-      voeux: ''
     });
   };
 
@@ -409,27 +397,23 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'bg-emerald-100 text-emerald-800';
-      case 'pending':
-        return 'bg-amber-100 text-amber-800';
-      case 'declined':
-        return 'bg-rose-100 text-rose-800';
+  const getEtatColor = (etat: string) => {
+    switch (etat) {
+      case 'couple':
+        return 'bg-purple-100 text-purple-800';
+      case 'simple':
+        return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-neutral-100 text-neutral-800';
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'Confirmé';
-      case 'pending':
-        return 'En attente';
-      case 'declined':
-        return 'Décliné';
+  const getEtatText = (etat: string) => {
+    switch (etat) {
+      case 'couple':
+        return 'Couple';
+      case 'simple':
+        return 'Simple';
       default:
         return 'Inconnu';
     }
@@ -495,7 +479,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             <div className="ml-4">
               <p className="text-emerald-700 text-sm font-medium">Confirmés</p>
               <p className="text-2xl font-bold text-emerald-900">
-                {guests.filter(g => g.statut === 'confirmed').length}
+                {guests.filter(g => g.confirmed).length}
               </p>
             </div>
           </div>
@@ -509,7 +493,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             <div className="ml-4">
               <p className="text-purple-700 text-sm font-medium">En attente</p>
               <p className="text-2xl font-bold text-purple-900">
-                {guests.filter(g => g.statut === 'pending').length}
+                {guests.filter(g => !g.confirmed).length}
               </p>
             </div>
           </div>
@@ -523,7 +507,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             <div className="ml-4">
               <p className="text-rose-700 text-sm font-medium">Déclinés</p>
               <p className="text-2xl font-bold text-rose-900">
-                {guests.filter(g => g.statut === 'declined').length}
+                0
               </p>
             </div>
           </div>
@@ -690,7 +674,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             <div className="ml-4">
               <p className="text-emerald-700 text-sm font-medium">Confirmés</p>
               <p className="text-2xl font-bold text-emerald-900">
-                {guests.filter(g => g.statut === 'confirmed').length}
+                {guests.filter(g => g.confirmed).length}
               </p>
             </div>
           </div>
@@ -704,7 +688,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             <div className="ml-4">
               <p className="text-purple-700 text-sm font-medium">En attente</p>
               <p className="text-2xl font-bold text-purple-900">
-                {guests.filter(g => g.statut === 'pending').length}
+                {guests.filter(g => !g.confirmed).length}
               </p>
             </div>
           </div>
@@ -718,7 +702,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             <div className="ml-4">
               <p className="text-rose-700 text-sm font-medium">Déclinés</p>
               <p className="text-2xl font-bold text-rose-900">
-                {guests.filter(g => g.statut === 'declined').length}
+                0
               </p>
             </div>
           </div>
@@ -731,9 +715,9 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         <div className="hidden md:grid md:grid-cols-6 gap-4 p-6 bg-gradient-to-r from-neutral-50 to-amber-50/30 border-b border-neutral-200/50">
           <div className="font-semibold text-slate-700">Nom</div>
           <div className="font-semibold text-slate-700">Table</div>
-          <div className="font-semibold text-slate-700">Statut</div>
-          <div className="font-semibold text-slate-700">Boisson</div>
-          <div className="font-semibold text-slate-700">Vœux</div>
+          <div className="font-semibold text-slate-700">État</div>
+          <div className="font-semibold text-slate-700">Confirmé</div>
+          <div className="font-semibold text-slate-700"></div>
           <div className="font-semibold text-slate-700 text-right">Actions</div>
         </div>
 
@@ -755,16 +739,16 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                     </span>
                   </div>
                   <div>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(guest.statut)}`}>
-                      {getStatusText(guest.statut)}
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getEtatColor(guest.etat)}`}>
+                      {getEtatText(guest.etat)}
                     </span>
                   </div>
-                  <div className="text-slate-600 text-sm">
-                    {guest.boissons || 'Non spécifié'}
+                  <div>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${guest.confirmed ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                      {guest.confirmed ? 'Oui' : 'Non'}
+                    </span>
                   </div>
-                  <div className="text-slate-600 text-sm">
-                    {guest.voeux ? (guest.voeux.length > 30 ? guest.voeux.substring(0, 30) + '...' : guest.voeux) : 'Aucun'}
-                  </div>
+                  <div></div>
                   <div className="flex justify-end space-x-2">
                     <button
                       onClick={() => openInviteModal(guest)}
@@ -790,27 +774,20 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                       <h4 className="font-medium text-slate-900 text-lg">{guest.nom}</h4>
                       <div className="flex items-center mt-1 space-x-3">
                         <span className="text-slate-600 text-sm">Table: {guest.table || 'Non assigné'}</span>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(guest.statut)}`}>
-                          {getStatusText(guest.statut)}
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getEtatColor(guest.etat)}`}>
+                          {getEtatText(guest.etat)}
                         </span>
                       </div>
                     </div>
                   </div>
                   
-                  {(guest.boissons || guest.voeux) && (
+                  <div className="mb-3">
                     <div className="mb-3 space-y-1">
-                      {guest.boissons && (
                         <p className="text-sm text-slate-600">
-                          <span className="font-medium">Boisson:</span> {guest.boissons}
+                          <span className="font-medium">Confirmé:</span> {guest.confirmed ? 'Oui' : 'Non'}
                         </p>
-                      )}
-                      {guest.voeux && (
-                        <p className="text-sm text-slate-600">
-                          <span className="font-medium">Vœux:</span> {guest.voeux.length > 50 ? guest.voeux.substring(0, 50) + '...' : guest.voeux}
-                        </p>
-                      )}
                     </div>
-                  )}
+                  </div>
                   
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -896,47 +873,19 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Statut
+                    État
                   </label>
                   <select
-                    value={inviteFormData.statut}
+                    value={inviteFormData.etat}
                     onChange={(e) => setInviteFormData({ 
                       ...inviteFormData, 
-                      statut: e.target.value as 'pending' | 'confirmed' | 'declined',
-                      confirmed: e.target.value === 'confirmed'
+                      etat: e.target.value as 'simple' | 'couple'
                     })}
                     className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
                   >
-                    <option value="pending">En attente</option>
-                    <option value="confirmed">Confirmé</option>
-                    <option value="declined">Décliné</option>
+                    <option value="simple">Simple</option>
+                    <option value="couple">Couple</option>
                   </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Choix de boisson
-                  </label>
-                  <input
-                    type="text"
-                    value={inviteFormData.boissons}
-                    onChange={(e) => setInviteFormData({ ...inviteFormData, boissons: e.target.value })}
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                    placeholder="Ex: Champagne"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Vœux / Message
-                  </label>
-                  <textarea
-                    value={inviteFormData.voeux}
-                    onChange={(e) => setInviteFormData({ ...inviteFormData, voeux: e.target.value })}
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 resize-none"
-                    rows={3}
-                    placeholder="Message de l'invité..."
-                  />
                 </div>
               </div>
 
