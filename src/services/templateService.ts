@@ -302,14 +302,16 @@ export class InviteService {
   // Créer un invité
   static async createInvite(userId: string, inviteData: Omit<Invite, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
-      // Vérification côté service - compter les invités existants
+      // VÉRIFICATION CÔTÉ SERVEUR - Compter les invités existants
       const existingInvites = await this.getUserInvites(userId);
+      console.log('Vérification serveur:', { userId, existingCount: existingInvites.length });
       
-      // Pour les utilisateurs gratuits, vérifier la limite de 5
-      // Note: Idéalement, on devrait vérifier l'abonnement ici aussi
+      // BLOCAGE STRICT: Vérifier la limite de 5 pour tous les utilisateurs par défaut
+      // (En production, vous devriez vérifier l'abonnement depuis Firestore)
       if (existingInvites.length >= 5) {
-        // On laisse passer pour les plans payants, mais on log pour debug
-        console.warn(`Utilisateur ${userId} a ${existingInvites.length} invités, création d'un nouveau`);
+        const errorMsg = `BLOCAGE SERVEUR: Utilisateur ${userId} a déjà ${existingInvites.length} invités (limite: 5)`;
+        console.error(errorMsg);
+        throw new Error('Limite de 5 invitations atteinte. Passez au plan premium pour continuer.');
       }
       
       const inviteId = `invite_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

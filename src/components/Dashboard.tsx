@@ -404,9 +404,27 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Vérification stricte de la limite AVANT toute action
+    const currentCount = userInvites.length;
+    if (subscription?.plan === 'free' && currentCount >= 5) {
+      setShowUpgradeModal(true);
+      setShowInviteModal(false);
+      alert('Limite de 5 invitations atteinte pour le plan gratuit. Veuillez passer au plan premium.');
+      return;
+    }
+
     // Vérifier la limite pour les nouveaux invités
     if (!editingInvite && !canCreateInvite()) {
       setShowUpgradeModal(true);
+      return;
+    }
+    
+    // Double vérification juste avant la création
+    if (subscription?.plan === 'free' && userInvites.length >= 5) {
+      setIsSubmitting(false);
+      setShowUpgradeModal(true);
+      setShowInviteModal(false);
+      alert('Limite de 5 invitations atteinte. Impossible de créer plus d\'invités en mode gratuit.');
       return;
     }
 

@@ -202,10 +202,20 @@ export const useTemplates = () => {
       return null;
     }
 
-    // Vérifier la limite d'invitations de manière stricte
+    // Vérification TRIPLE de la limite d'invitations
     const currentCount = userInvites.length;
+    console.log('Vérification limite:', { plan: subscription?.plan, currentCount, limit: 5 });
+    
     if (subscription?.plan === 'free' && currentCount >= 5) {
-      setError('Limite de 5 invitations atteinte pour le plan gratuit. Passez au plan premium pour continuer.');
+      const errorMsg = `LIMITE ATTEINTE: ${currentCount}/5 invitations utilisées. Passez au plan premium pour continuer.`;
+      setError(errorMsg);
+      console.error(errorMsg);
+      return null;
+    }
+
+    // Vérification supplémentaire avec canCreateInvite
+    if (!canCreateInvite()) {
+      setError('Impossible de créer plus d\'invitations avec votre plan actuel.');
       return null;
     }
 
