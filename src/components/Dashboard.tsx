@@ -429,6 +429,11 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       alert('Lien copié dans le presse-papiers !');
     }
   };
+
+  const handlePreviewInvitation = (guest: Guest) => {
+    const invitationUrl = `/invitation/${guest.id}`;
+    window.open(invitationUrl, '_blank');
+  };
   const getEtatColor = (etat: string) => {
     switch (etat) {
       case 'couple':
@@ -782,6 +787,13 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                   </div>
                   <div></div>
                   <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={() => handlePreviewInvitation(guest)}
+                      className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                      title="Prévisualiser l'invitation"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </button>
                     <button
                       onClick={() => handleShareWhatsApp(guest)}
                       className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 transform hover:scale-110"

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import NewHeroSection from './components/NewHeroSection';
@@ -11,6 +12,7 @@ import WeddingTemplate from './components/WeddingTemplate';
 import BirthdayTemplate from './components/BirthdayTemplate';
 import GraduationTemplate from './components/GraduationTemplate';
 import AuthModal from './components/AuthModal';
+import InvitationPreview from './components/InvitationPreview';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -151,7 +153,10 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <Routes>
+        <Route path="/" element={<AppContent />} />
+        <Route path="/invitation/:inviteId" element={<InvitationPreview />} />
+      </Routes>
     </AuthProvider>
   );
 }

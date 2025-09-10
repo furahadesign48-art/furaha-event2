@@ -352,7 +352,7 @@ export class InviteService {
   }
 
   // Récupérer un invité spécifique
-  static async getInvite(userId: string, inviteId: string): Promise<Invite | null> {
+  static async getInvite(userId: string, inviteId: string): Promise<(Invite & { userId: string }) | null> {
     try {
       const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'Invites', inviteId);
       const inviteDoc = await getDoc(inviteRef);
@@ -360,13 +360,32 @@ export class InviteService {
       if (inviteDoc.exists()) {
         return {
           id: inviteDoc.id,
+          userId: userId,
           ...inviteDoc.data()
-        } as Invite;
+        } as (Invite & { userId: string });
       }
       
       return null;
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'invité:', error);
+      throw new Error('Impossible de récupérer l\'invité');
+    }
+  }
+
+  // Nouvelle méthode pour récupérer un invité par ID global (recherche dans tous les utilisateurs)
+  static async getInviteGlobal(inviteId: string): Promise<(Invite & { userId: string }) | null> {
+    try {
+      // Cette méthode nécessiterait une collection globale d'invitations
+      // Pour l'instant, nous utiliserons une approche simplifiée
+      // En production, vous devriez avoir une collection 'globalInvitations' qui mappe inviteId -> userId
+      
+      // Approche temporaire : essayer avec un userId par défaut ou implémenter une recherche
+      console.warn('getInviteGlobal: Implémentation temporaire - utilisez une collection globale en production');
+      
+      // Retourner null pour forcer l'utilisation de la méthode avec userId
+      return null;
+    } catch (error) {
+      console.error('Erreur lors de la récupération globale de l\'invité:', error);
       throw new Error('Impossible de récupérer l\'invité');
     }
   }
