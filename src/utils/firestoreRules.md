@@ -43,6 +43,12 @@ service cloud.firestore {
     match /invitations/{invitationId} {
       allow read, write: if request.auth != null;
     }
+    
+    // Règles pour les références globales d'invitations
+    match /globalInvitations/{invitationId} {
+      allow read: if true; // Lecture publique pour permettre l'accès aux invitations
+      allow write: if request.auth != null; // Seuls les utilisateurs authentifiés peuvent créer/modifier
+    }
   }
 }
 ```

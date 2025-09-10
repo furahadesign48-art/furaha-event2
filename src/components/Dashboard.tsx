@@ -401,14 +401,16 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   };
 
   const handleShareWhatsApp = (guest: Guest) => {
-    const message = `Bonjour ${guest.nom}, vous êtes invité(e) à notre événement ! Voici votre invitation personnalisée : ${window.location.origin}/invitation/${guest.id}`;
+    const invitationUrl = `${window.location.origin}/invitation/${guest.id}`;
+    const message = `Bonjour ${guest.nom}, vous êtes invité(e) à notre événement ! Voici votre invitation personnalisée : ${invitationUrl}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   const handleShareEmail = (guest: Guest) => {
+    const invitationUrl = `${window.location.origin}/invitation/${guest.id}`;
     const subject = `Invitation à notre événement`;
-    const body = `Bonjour ${guest.nom},\n\nVous êtes invité(e) à notre événement !\n\nVoici votre invitation personnalisée :\n${window.location.origin}/invitation/${guest.id}\n\nNous espérons vous voir bientôt !\n\nCordialement`;
+    const body = `Bonjour ${guest.nom},\n\nVous êtes invité(e) à notre événement !\n\nVoici votre invitation personnalisée :\n${invitationUrl}\n\nNous espérons vous voir bientôt !\n\nCordialement`;
     const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailtoUrl;
   };
@@ -431,7 +433,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   };
 
   const handlePreviewInvitation = (guest: Guest) => {
-    const invitationUrl = `/invitation/${guest.id}`;
+    const invitationUrl = `${window.location.origin}/invitation/${guest.id}`;
     window.open(invitationUrl, '_blank');
   };
   const getEtatColor = (etat: string) => {

@@ -315,6 +315,14 @@ export class InviteService {
       const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'Invites', inviteId);
       await setDoc(inviteRef, invite);
       
+      // Créer une référence globale pour faciliter la récupération
+      const globalInviteRef = doc(db, 'globalInvitations', inviteId);
+      await setDoc(globalInviteRef, {
+        userId: userId,
+        inviteId: inviteId,
+        createdAt: serverTimestamp()
+      });
+      
       console.log('Invité créé:', inviteId);
       return inviteId;
     } catch (error) {
@@ -375,14 +383,19 @@ export class InviteService {
   // Nouvelle méthode pour récupérer un invité par ID global (recherche dans tous les utilisateurs)
   static async getInviteGlobal(inviteId: string): Promise<(Invite & { userId: string }) | null> {
     try {
-      // Cette méthode nécessiterait une collection globale d'invitations
-      // Pour l'instant, nous utiliserons une approche simplifiée
-      // En production, vous devriez avoir une collection 'globalInvitations' qui mappe inviteId -> userId
+      // Créer une collection globale d'invitations pour mapper inviteId -> userId
+      const globalInviteRef = doc(db, 'globalInvitations', inviteId);
+      const globalInviteDoc = await getDoc(globalInviteRef);
       
-      // Approche temporaire : essayer avec un userId par défaut ou implémenter une recherche
-      console.warn('getInviteGlobal: Implémentation temporaire - utilisez une collection globale en production');
+      if (globalInviteDoc.exists()) {
+        const globalData = globalInviteDoc.data();
+        const userId = globalData.userId;
+        
+        // Récupérer l'invitation complète
+        const inviteData = await this.getInvite(userId, inviteId);
+        return inviteData;
+      }
       
-      // Retourner null pour forcer l'utilisation de la méthode avec userId
       return null;
     } catch (error) {
       console.error('Erreur lors de la récupération globale de l\'invité:', error);
@@ -417,6 +430,11 @@ export class InviteService {
     try {
       const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'Invites', inviteId);
       await deleteDoc(inviteRef);
+      
+      // Supprimer aussi la référence globale
+      const globalInviteRef = doc(db, 'globalInvitations', inviteId);
+      await deleteDoc(globalInviteRef);
+      
       console.log('Invité supprimé:', inviteId);
     } catch (error) {
       console.error('Erreur lors de la suppression de l\'invité:', error);

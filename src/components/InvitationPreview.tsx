@@ -40,15 +40,8 @@ const InvitationPreview = () => {
       try {
         setIsLoading(true);
         
-        // Extraire l'ID utilisateur de l'ID d'invitation (format: invite_timestamp_randomstring)
-        // Pour cet exemple, nous devrons chercher dans toutes les collections d'utilisateurs
-        // ou avoir une structure différente. Pour l'instant, utilisons un ID utilisateur fixe
-        // En production, vous devriez avoir une collection globale d'invitations avec userId
-        
-        // Simulation de récupération - à adapter selon votre structure de données
-        const userId = 'user123'; // À remplacer par la vraie logique
-        
-        const inviteData = await InviteService.getInvite(userId, inviteId);
+        // Utiliser la méthode globale pour récupérer l'invitation
+        const inviteData = await InviteService.getInviteGlobal(inviteId);
         if (!inviteData) {
           setError('Invitation non trouvée');
           setIsLoading(false);
@@ -59,7 +52,7 @@ const InvitationPreview = () => {
         setIsConfirmed(inviteData.confirmed);
         
         // Récupérer le modèle utilisateur associé
-        const userModels = await UserModelService.getUserModels(userId);
+        const userModels = await UserModelService.getUserModels(inviteData.userId);
         if (userModels.length > 0) {
           setUserModel(userModels[0]); // Prendre le premier modèle
         } else {
