@@ -541,18 +541,8 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
             <p className="text-neutral-300 text-sm">Vos modifications apparaissent instantanément</p>
           </div>
           <div className="relative bg-black rounded-2xl overflow-hidden shadow-inner mx-auto w-full max-w-xs">
-            {/* Status Bar */}
-            <div className="bg-gradient-to-r from-slate-900 to-slate-800 h-6 flex items-center justify-between px-4 text-amber-400 text-xs">
-              <span>9:41</span>
-              <div className="flex space-x-1">
-                <div className="w-1 h-1 bg-amber-400 rounded-full animate-pulse"></div>
-                <div className="w-1 h-1 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-                <div className="w-1 h-1 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
-              </div>
-            </div>
-            
             {/* Invitation Content */}
-            <div className="relative h-[480px] overflow-y-auto">
+            <div className="relative h-[500px] overflow-y-auto">
               {/* Background Image */}
               <div className="absolute inset-0">
                 <img

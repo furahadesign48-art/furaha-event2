@@ -232,21 +232,9 @@ const InvitationPreview = () => {
 
       <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-md mx-auto">
-          {/* Mobile Frame */}
-          <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2.5rem] p-4 shadow-luxury border border-amber-500/30">
-            <div className="relative bg-black rounded-[2rem] overflow-hidden shadow-inner">
-              {/* Status Bar */}
-              <div className="bg-gradient-to-r from-slate-900 to-slate-800 h-6 flex items-center justify-between px-6 text-amber-400 text-xs">
-                <span>9:41</span>
-                <div className="flex space-x-1">
-                  <div className="w-1 h-1 bg-amber-400 rounded-full animate-pulse"></div>
-                  <div className="w-1 h-1 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-                  <div className="w-1 h-1 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
-                </div>
-              </div>
-              
-              {/* Invitation Content */}
-              <div className="relative h-[700px] overflow-y-auto">
+          {/* Invitation Content */}
+          <div className="relative bg-black rounded-2xl overflow-hidden shadow-luxury border border-amber-500/30">
+            <div className="relative h-[700px] overflow-y-auto">
                 {/* Background Image */}
                 <div className="absolute inset-0">
                   <img
@@ -507,7 +495,6 @@ const InvitationPreview = () => {
                   </div>
                 </div>
               </div>
-            </div>
           </div>
         </div>
       </div>

@@ -137,23 +137,8 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
             {/* Template Preview */}
             <div className="animate-fade-in">
               <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-3xl shadow-luxury border border-purple-500/20 overflow-hidden">
-                {/* Mobile Frame */}
-                <div className="p-6">
-                  <div className="relative mx-auto max-w-sm">
-                    <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2.5rem] p-4 shadow-luxury border border-purple-500/30">
-                      <div className="relative bg-black rounded-[2rem] overflow-hidden shadow-inner">
-                        {/* Status Bar */}
-                        <div className="bg-gradient-to-r from-slate-900 to-slate-800 h-6 flex items-center justify-between px-6 text-purple-400 text-xs">
-                          <span>9:41</span>
-                          <div className="flex space-x-1">
-                            <div className="w-1 h-1 bg-purple-400 rounded-full animate-pulse"></div>
-                            <div className="w-1 h-1 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-                            <div className="w-1 h-1 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
-                          </div>
-                        </div>
-                        
-                        {/* Invitation Content */}
-                        <div className="relative h-[600px] overflow-y-auto">
+                {/* Invitation Content */}
+                <div className="relative h-[700px] overflow-y-auto">
                           {/* Background Image */}
                           <div className="absolute inset-0">
                             <img
@@ -315,10 +300,6 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
