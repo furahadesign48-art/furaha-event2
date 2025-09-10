@@ -149,6 +149,7 @@ const InvitationPreview = () => {
       updateQRCode();
     }
   }, [selectedDrink, invite, userModel]);
+  
   const handleConfirmation = async () => {
     if (!invite || !userModel) return;
     
@@ -296,7 +297,7 @@ const InvitationPreview = () => {
 
   return (
 <div className="min-h-screen relative overflow-hidden">
-  {/* Haut avec l’image nette (agrandie + overlay sombre) */}
+  {/* Haut avec l'image nette (agrandie + overlay sombre) */}
   <div className="absolute top-0 left-0 w-full">
     <img
       src={userModel.backgroundImage}
@@ -311,7 +312,7 @@ const InvitationPreview = () => {
     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-transparent"></div>
   </div>
 
-  {/* Bas avec l’image floutée + overlay sombre */}
+  {/* Bas avec l'image floutée + overlay sombre */}
   <div className="absolute w-full top-[750px] sm:top-[850px] md:top-[950px] lg:top-[1050px] bottom-0 overflow-hidden">
     <img
       src={userModel.backgroundImage}
@@ -523,17 +524,60 @@ const InvitationPreview = () => {
                       >
                         <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 inline mr-3" />
                         Envoyer le message
-                   <p className="text-center mt-4 text-sm text-white">
-                     Scannez ce QR code pour voir les informations
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* QR Code Section */}
+                  {qrCodeDataUrl && (
+                    <div 
+                      className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
+                      style={{ 
+                        background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
+                        borderColor: `${colors.primary}30`
+                      }}
+                    >
+                      <h3 
+                        className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
+                        style={{ color: `${colors.primary}cc` }}
+                      >
+                        <QrCode className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                        Votre QR Code
+                      </h3>
+                      
+                      <div className="bg-white rounded-xl p-4 mb-4">
+                        <img 
+                          src={qrCodeDataUrl} 
+                          alt="QR Code" 
+                          className="w-full max-w-[200px] mx-auto"
+                        />
+                      </div>
+                      
+                      <button
+                        onClick={() => setShowQRInfo(!showQRInfo)}
                         className="w-full py-4 rounded-xl text-base sm:text-lg font-semibold transition-all duration-300"
                         style={{ 
-                   <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-3">
-                     <p className="text-xs text-white/80 text-center">
-                       Ce QR code contient vos informations personnelles :<br/>
-                       Nom, {userModel.category === 'graduation' ? 'Place' : 'Table'}, Boisson, Code d'invitation
-                     </p>
-                   </div>
-                  </div>
+                          background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
+                          color: '#1e293b'
+                        }}
+                      >
+                        {showQRInfo ? 'Masquer les infos' : 'Voir les informations'}
+                      </button>
+                      
+                      {showQRInfo && (
+                        <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-3">
+                          <p className="text-xs text-white/80 text-center">
+                            Ce QR code contient vos informations personnelles :<br/>
+                            Nom, {userModel.category === 'graduation' ? 'Place' : 'Table'}, Boisson, Code d'invitation
+                          </p>
+                        </div>
+                      )}
+                      
+                      <p className="text-center mt-4 text-sm text-white">
+                        Scannez ce QR code pour voir les informations
+                      </p>
+                    </div>
+                  )}
           </div>
         </div>
       </div>
