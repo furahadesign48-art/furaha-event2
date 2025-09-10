@@ -92,7 +92,16 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   };
 
   const handleSave = () => {
-    onSave(customTemplate);
+    // Sauvegarder avec les couleurs personnalisées
+    const templateWithColors = {
+      ...customTemplate,
+      colors: {
+        primary: primaryColor,
+        secondary: secondaryColor,
+        accent: accentColor
+      }
+    };
+    onSave(templateWithColors);
     alert('Template sauvegardé avec succès !');
   };
 

@@ -287,9 +287,10 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             eventLocation: customizedTemplate.eventLocation,
             drinkOptions: customizedTemplate.drinkOptions,
             backgroundImage: customizedTemplate.backgroundImage,
+            colors: customizedTemplate.colors,
             customizations: {
               ...userModel.customizations,
-              colors: customizedTemplate.colors
+              colors: customizedTemplate.colors || userModel.customizations?.colors
             }
           });
           

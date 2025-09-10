@@ -220,7 +220,8 @@ const InvitationPreview = () => {
   }
 
   const IconComponent = getIconForCategory(userModel.category);
-  const colors = userModel.customizations?.colors || getColorScheme(userModel.category);
+  // Utiliser les couleurs personnalisées si elles existent, sinon les couleurs par défaut
+  const colors = userModel.colors || userModel.customizations?.colors || getColorScheme(userModel.category);
 
   return (
 <div className="min-h-screen relative overflow-hidden">
