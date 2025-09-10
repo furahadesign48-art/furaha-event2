@@ -9,6 +9,23 @@ service cloud.firestore {
     // Règles pour la collection users
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Sous-collection invites
+      match /invites/{inviteId} {
+        allow read: if true; // Lecture publique pour permettre l'accès aux invitations
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Sous-collection UserModel
+      match /UserModel/{modelId} {
+        allow read: if true; // Lecture publique pour permettre l'accès aux modèles d'invitation
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Sous-collection Tables
+      match /Tables/{tableId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
     
     // Règles pour les templates par défaut (lecture seule pour tous les utilisateurs authentifiés)
@@ -42,12 +59,6 @@ service cloud.firestore {
     
     match /invitations/{invitationId} {
       allow read, write: if request.auth != null;
-    }
-    
-    // Règles pour les références globales d'invitations
-    match /globalInvitations/{invitationId} {
-      allow read: if true; // Lecture publique pour permettre l'accès aux invitations
-      allow write: if request.auth != null; // Seuls les utilisateurs authentifiés peuvent créer/modifier
     }
   }
 }

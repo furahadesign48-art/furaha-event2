@@ -39,9 +39,12 @@ const InvitationPreview = () => {
 
       try {
         setIsLoading(true);
+        console.log('Chargement de l\'invitation:', inviteId);
         
         // Utiliser la méthode globale pour récupérer l'invitation
         const inviteData = await InviteService.getInviteGlobal(inviteId);
+        console.log('Données d\'invitation récupérées:', inviteData);
+        
         if (!inviteData) {
           setError('Invitation non trouvée');
           setIsLoading(false);
@@ -50,11 +53,16 @@ const InvitationPreview = () => {
         
         setInvite(inviteData);
         setIsConfirmed(inviteData.confirmed);
+        console.log('Invitation définie:', inviteData);
         
         // Récupérer le modèle utilisateur associé
+        console.log('Récupération des modèles pour l\'utilisateur:', inviteData.userId);
         const userModels = await UserModelService.getUserModels(inviteData.userId);
+        console.log('Modèles utilisateur récupérés:', userModels);
+        
         if (userModels.length > 0) {
           setUserModel(userModels[0]); // Prendre le premier modèle
+          console.log('Modèle utilisateur défini:', userModels[0]);
         } else {
           setError('Modèle d\'invitation non trouvé');
         }
@@ -92,7 +100,7 @@ const InvitationPreview = () => {
     }
     
     try {
-      await InviteService.updateInvite(userModel.userId, invite.id, {
+      await InviteService.updateInviteResponse(userModel.userId, invite.id, {
         message: guestMessage
       });
       alert('Message envoyé avec succès !');
@@ -107,7 +115,7 @@ const InvitationPreview = () => {
     if (!invite || !userModel) return;
     
     try {
-      await InviteService.updateInvite(userModel.userId, invite.id, {
+      await InviteService.updateInviteResponse(userModel.userId, invite.id, {
         selectedDrink: drink
       });
       setSelectedDrink(drink);

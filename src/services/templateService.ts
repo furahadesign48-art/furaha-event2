@@ -303,6 +303,7 @@ export class InviteService {
   static async createInvite(userId: string, inviteData: Omit<Invite, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
       const inviteId = `invite_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      console.log('Création de l\'invitation avec ID:', inviteId, 'pour l\'utilisateur:', userId);
       
       const invite: Invite = {
         id: inviteId,
@@ -311,19 +312,11 @@ export class InviteService {
         updatedAt: serverTimestamp() as Timestamp
       };
 
-      // Sauvegarder dans users/{userId}/Invites/{inviteId}
-      const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'Invites', inviteId);
+      // Sauvegarder dans users/{userId}/invites/{inviteId}
+      const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'invites', inviteId);
       await setDoc(inviteRef, invite);
       
-      // Créer une référence globale pour faciliter la récupération
-      const globalInviteRef = doc(db, 'globalInvitations', inviteId);
-      await setDoc(globalInviteRef, {
-        userId: userId,
-        inviteId: inviteId,
-        createdAt: serverTimestamp()
-      });
-      
-      console.log('Invité créé:', inviteId);
+      console.log('Invitation créée avec succès:', inviteId);
       return inviteId;
     } catch (error) {
       console.error('Erreur lors de la création de l\'invité:', error);
@@ -335,7 +328,7 @@ export class InviteService {
   static async getUserInvites(userId: string): Promise<Invite[]> {
     try {
       console.log('Chargement des invités pour l\'utilisateur:', userId);
-      const invitesRef = collection(db, this.USERS_COLLECTION, userId, 'Invites');
+      const invitesRef = collection(db, this.USERS_COLLECTION, userId, 'invites');
       const querySnapshot = await getDocs(invitesRef);
       
       const invites: Invite[] = [];
@@ -362,7 +355,7 @@ export class InviteService {
   // Récupérer un invité spécifique
   static async getInvite(userId: string, inviteId: string): Promise<(Invite & { userId: string }) | null> {
     try {
-      const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'Invites', inviteId);
+      const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'invites', inviteId);
       const inviteDoc = await getDoc(inviteRef);
       
       if (inviteDoc.exists()) {
@@ -383,19 +376,36 @@ export class InviteService {
   // Nouvelle méthode pour récupérer un invité par ID global (recherche dans tous les utilisateurs)
   static async getInviteGlobal(inviteId: string): Promise<(Invite & { userId: string }) | null> {
     try {
-      // Créer une collection globale d'invitations pour mapper inviteId -> userId
-      const globalInviteRef = doc(db, 'globalInvitations', inviteId);
-      const globalInviteDoc = await getDoc(globalInviteRef);
+      console.log('Recherche de l\'invitation:', inviteId);
       
-      if (globalInviteDoc.exists()) {
-        const globalData = globalInviteDoc.data();
-        const userId = globalData.userId;
+      // Rechercher dans tous les utilisateurs (méthode temporaire pour debug)
+      const usersRef = collection(db, this.USERS_COLLECTION);
+      const usersSnapshot = await getDocs(usersRef);
+      
+      for (const userDoc of usersSnapshot.docs) {
+        const userId = userDoc.id;
+        console.log('Vérification utilisateur:', userId);
         
-        // Récupérer l'invitation complète
-        const inviteData = await this.getInvite(userId, inviteId);
-        return inviteData;
+        try {
+          const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'invites', inviteId);
+          const inviteDoc = await getDoc(inviteRef);
+          
+          if (inviteDoc.exists()) {
+            console.log('Invitation trouvée pour l\'utilisateur:', userId);
+            const inviteData = inviteDoc.data();
+            return {
+              id: inviteDoc.id,
+              userId: userId,
+              ...inviteData
+            } as (Invite & { userId: string });
+          }
+        } catch (error) {
+          console.log('Erreur lors de la vérification pour l\'utilisateur', userId, ':', error);
+          continue;
+        }
       }
       
+      console.log('Invitation non trouvée dans tous les utilisateurs');
       return null;
     } catch (error) {
       console.error('Erreur lors de la récupération globale de l\'invité:', error);
@@ -410,7 +420,7 @@ export class InviteService {
     updates: Partial<Invite>
   ): Promise<void> {
     try {
-      const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'Invites', inviteId);
+      const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'invites', inviteId);
       
       const updateData = {
         ...updates,
@@ -428,12 +438,8 @@ export class InviteService {
   // Supprimer un invité
   static async deleteInvite(userId: string, inviteId: string): Promise<void> {
     try {
-      const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'Invites', inviteId);
+      const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'invites', inviteId);
       await deleteDoc(inviteRef);
-      
-      // Supprimer aussi la référence globale
-      const globalInviteRef = doc(db, 'globalInvitations', inviteId);
-      await deleteDoc(globalInviteRef);
       
       console.log('Invité supprimé:', inviteId);
     } catch (error) {
@@ -451,10 +457,12 @@ export class InviteService {
       statut?: 'pending' | 'confirmed' | 'declined';
       boissons?: string;
       voeux?: string;
+      selectedDrink?: string;
+      message?: string;
     }
   ): Promise<void> {
     try {
-      const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'Invites', inviteId);
+      const inviteRef = doc(db, this.USERS_COLLECTION, userId, 'invites', inviteId);
       
       const updateData = {
         ...responseData,

@@ -401,14 +401,18 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   };
 
   const handleShareWhatsApp = (guest: Guest) => {
-    const invitationUrl = `${window.location.origin}/invitation/${guest.id}`;
+    const baseUrl = window.location.origin;
+    const invitationUrl = `${baseUrl}/invitation/${guest.id}`;
+    console.log('URL d\'invitation WhatsApp:', invitationUrl);
     const message = `Bonjour ${guest.nom}, vous êtes invité(e) à notre événement ! Voici votre invitation personnalisée : ${invitationUrl}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   const handleShareEmail = (guest: Guest) => {
-    const invitationUrl = `${window.location.origin}/invitation/${guest.id}`;
+    const baseUrl = window.location.origin;
+    const invitationUrl = `${baseUrl}/invitation/${guest.id}`;
+    console.log('URL d\'invitation Email:', invitationUrl);
     const subject = `Invitation à notre événement`;
     const body = `Bonjour ${guest.nom},\n\nVous êtes invité(e) à notre événement !\n\nVoici votre invitation personnalisée :\n${invitationUrl}\n\nNous espérons vous voir bientôt !\n\nCordialement`;
     const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -416,7 +420,9 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   };
 
   const handleCopyLink = async (guest: Guest) => {
-    const invitationUrl = `${window.location.origin}/invitation/${guest.id}`;
+    const baseUrl = window.location.origin;
+    const invitationUrl = `${baseUrl}/invitation/${guest.id}`;
+    console.log('URL d\'invitation à copier:', invitationUrl);
     try {
       await navigator.clipboard.writeText(invitationUrl);
       alert('Lien copié dans le presse-papiers !');
@@ -433,7 +439,9 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   };
 
   const handlePreviewInvitation = (guest: Guest) => {
-    const invitationUrl = `${window.location.origin}/invitation/${guest.id}`;
+    const baseUrl = window.location.origin;
+    const invitationUrl = `${baseUrl}/invitation/${guest.id}`;
+    console.log('URL d\'invitation pour prévisualisation:', invitationUrl);
     window.open(invitationUrl, '_blank');
   };
   const getEtatColor = (etat: string) => {
