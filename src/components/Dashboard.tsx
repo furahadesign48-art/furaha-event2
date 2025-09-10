@@ -916,132 +916,60 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       {/* Modal pour ajouter/modifier un invité */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-3xl shadow-luxury max-w-lg w-full animate-slide-up relative overflow-hidden max-h-[90vh] overflow-y-auto">
-            {/* Background decorative elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-200/20 to-purple-200/20 rounded-full blur-2xl"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-rose-200/20 to-amber-200/20 rounded-full blur-2xl"></div>
-            
-            <div className="relative p-6 sm:p-8 border-b border-neutral-200/50 bg-gradient-to-r from-neutral-50 to-amber-50/30">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-md w-full animate-slide-up relative">
+            {/* Header simple */}
+            <div className="p-6 pb-4">
               <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <div className="relative mr-4">
-                    <div className="p-3 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl shadow-glow-amber">
-                      <Users className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="absolute -top-1 -right-1">
-                      <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                      {editingInvite ? 'Modifier l\'invité' : 'Nouvel invité'}
-                    </h3>
-                    <p className="text-slate-600 text-sm mt-1">
-                      {editingInvite ? 'Modifiez les informations de l\'invité' : 'Ajoutez un nouvel invité à votre événement'}
-                    </p>
-                  </div>
-                </div>
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Ajouter un invité
+                </h3>
                 <button
-                  onClick={closeInviteModal}
-                  className="p-2 hover:bg-neutral-100 rounded-xl transition-all duration-200 transform hover:scale-110"
+                  onClick={() => setShowInviteModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                 >
-                  <X className="h-5 w-5 text-neutral-500" />
+                  <X className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
             </div>
 
-            <form onSubmit={handleInviteSubmit} className="relative p-6 sm:p-8">
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3 flex items-center">
-                    <User className="h-4 w-4 mr-2 text-amber-600" />
-                    Nom complet *
+            <form onSubmit={handleInviteSubmit} className="px-6 pb-6">
+              <div className="space-y-4">
+                {/* Nom complet */}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nom complet
                   </label>
                   <input
                     type="text"
                     value={inviteFormData.nom}
                     onChange={(e) => setInviteFormData({ ...inviteFormData, nom: e.target.value })}
-                    className="w-full px-4 py-4 border-2 border-neutral-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 text-base placeholder-neutral-400 hover:border-amber-300 bg-gradient-to-r from-neutral-50 to-amber-50/30"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50"
                     placeholder="Ex: Jean Dupont"
                     required
-                  />
-                  <div className="mt-2 text-xs text-slate-500 flex items-center">
-                    <Sparkles className="h-3 w-3 mr-1 text-amber-500" />
-                    Saisissez le nom complet de votre invité
                   </div>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3 flex items-center">
-                    <MapPin className="h-4 w-4 mr-2 text-amber-600" />
-                    Numéro de table
-                  </label>
-                  <input
-                    type="text"
-                    value={inviteFormData.table}
-                    onChange={(e) => setInviteFormData({ ...inviteFormData, table: e.target.value })}
-                    list="tables-list"
-                    className="w-full px-4 py-4 border-2 border-neutral-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 text-base placeholder-neutral-400 hover:border-amber-300 bg-gradient-to-r from-neutral-50 to-amber-50/30"
-                    placeholder="Sélectionnez ou tapez une table"
-                  />
-                  <datalist id="tables-list">
-                    {availableTables.map((table) => (
-                      <option key={table.id} value={table.name} />
-                    ))}
-                  </datalist>
-                  {availableTables.length > 0 && (
-                    <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200/50">
-                      <div className="flex items-center mb-3">
-                        <MapPin className="h-4 w-4 text-purple-600 mr-2" />
-                        <p className="text-sm font-semibold text-purple-800">Tables disponibles</p>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {availableTables.map((table) => (
-                          <button
-                            key={table.id}
-                            type="button"
-                            onClick={() => setInviteFormData({ ...inviteFormData, table: table.name })}
-                            className="group relative px-3 py-2 bg-white border border-purple-200 rounded-lg text-xs font-medium text-purple-800 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md"
-                          >
-                            <div className="flex flex-col items-center">
-                              <span className="font-semibold">{table.name}</span>
-                              <span className="text-purple-600 text-xs mt-1">
-                                {table.assignedGuests.length}/{table.seats} places
-                              </span>
-                            </div>
-                            {table.assignedGuests.length >= table.seats && (
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full"></div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="mt-3 text-xs text-purple-600 flex items-center">
-                        <Sparkles className="h-3 w-3 mr-1" />
-                        Cliquez sur une table pour la sélectionner rapidement
-                      </div>
-                    </div>
-                  )}
+                {/* Numéro de table */}
+                  </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3 flex items-center">
-                    <Users className="h-4 w-4 mr-2 text-amber-600" />
+                {/* Statut */}
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
                     État
                   </label>
                   <div className="grid grid-cols-2 gap-3">
-                    <button
+                  <div className="grid grid-cols-2 gap-3">
                       type="button"
                       onClick={() => setInviteFormData({ ...inviteFormData, etat: 'simple' })}
                       className={`p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
                         inviteFormData.etat === 'simple'
                           ? 'border-amber-500 bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800 shadow-glow-amber'
-                          : 'border-neutral-200 bg-white text-slate-600 hover:border-amber-300 hover:bg-amber-50'
-                      }`}
+                          ? 'bg-green-100 text-green-800 border-green-300'
+                          : 'bg-gray-100 text-gray-600 border-gray-300 hover:border-green-300'
                     >
                       <div className="flex flex-col items-center">
-                        <User className="h-6 w-6 mb-2" />
-                        <span className="font-semibold text-sm">Simple</span>
-                        <span className="text-xs mt-1 opacity-75">1 personne</span>
+                      <div className="flex items-center justify-center space-x-2">
+                        <User className="h-4 w-4" />
+                        <span className="font-medium">Simple</span>
                       </div>
                     </button>
                     
@@ -1050,39 +978,35 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                       onClick={() => setInviteFormData({ ...inviteFormData, etat: 'couple' })}
                       className={`p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
                         inviteFormData.etat === 'couple'
-                          ? 'border-purple-500 bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 shadow-glow-purple'
-                          : 'border-neutral-200 bg-white text-slate-600 hover:border-purple-300 hover:bg-purple-50'
+                          ? 'bg-pink-100 text-pink-800 border-pink-300'
+                          : 'bg-gray-100 text-gray-600 border-gray-300 hover:border-pink-300'
                       }`}
                     >
-                      <div className="flex flex-col items-center">
-                        <Users className="h-6 w-6 mb-2" />
-                        <span className="font-semibold text-sm">Couple</span>
+                      <div className="flex items-center justify-center space-x-2">
+                        <Heart className="h-4 w-4" />
+                        <span className="font-medium">Couple</span>
                         <span className="text-xs mt-1 opacity-75">2 personnes</span>
                       </div>
                     </button>
                   </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 mt-8 pt-6 border-t border-neutral-200/50">
                 <button
                   type="button"
                   onClick={closeInviteModal}
                   className="flex-1 px-6 py-4 border-2 border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 hover:border-neutral-400 transition-all duration-300 font-semibold transform hover:scale-105"
-                >
+              <div className="flex space-x-3 mt-6">
                   Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-slate-900 px-6 py-4 rounded-xl hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 transition-all duration-500 font-bold shadow-glow-amber hover:shadow-luxury transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden group"
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-2xl hover:bg-gray-300 transition-all duration-200 font-medium"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                   {isLoading ? (
                     <div className="relative flex items-center justify-center">
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
                       Sauvegarde...
-                    </div>
+                  className="flex-1 bg-orange-500 text-white px-6 py-3 rounded-2xl hover:bg-orange-600 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   ) : (
                     <span className="relative flex items-center justify-center">
                       <Save className="h-4 w-4 inline mr-2" />
@@ -1146,20 +1070,14 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-40 h-40 bg-gradient-to-r from-amber-200/10 to-purple-200/10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-20 right-20 w-32 h-32 bg-gradient-to-r from-rose-200/10 to-amber-200/10 rounded-full blur-3xl animate-bounce-slow"></div>
-      </div>
-
-      <div className="relative z-10">
-        {/* Header */}
-        <header className="bg-white/80 backdrop-blur-xl shadow-luxury border-b border-neutral-200/50 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Crown className="h-8 w-8 text-amber-500 animate-glow" />
-                  <span className="text-xl font-bold bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 bg-clip-text text-transparent">
-                    Furaha-Event
-                  </span>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                      Ajout...
+                    </div>
+                  ) : (
+                    'Ajouter'
+                  )}
                 </div>
                 <div className="hidden md:block w-px h-6 bg-neutral-300"></div>
                 <div className="hidden md:block">
