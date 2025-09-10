@@ -574,7 +574,6 @@ const InvitationPreview = () => {
                         <p><span className="font-medium">Boisson:</span> {selectedDrink || 'Non sélectionnée'}</p>
                         <p><span className="font-medium">Code:</span> {invite.id.toUpperCase()}</p>
                       </div>
-                    </div>
                   </div>
           </div>
         </div>
