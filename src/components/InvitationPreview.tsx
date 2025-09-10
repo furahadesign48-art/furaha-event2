@@ -523,59 +523,10 @@ const InvitationPreview = () => {
                       >
                         <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 inline mr-3" />
                         Envoyer le message
-                      </button>
-                      <button 
-                        className="w-full py-4 rounded-xl text-base sm:text-lg font-semibold transition-all duration-300"
-                        style={{ 
-                          background: `linear-gradient(to right, ${colors.secondary}, ${colors.primary})`,
-                          color: '#1e293b'
-                        }}
-                      >
-                        <Camera className="h-5 w-5 sm:h-6 sm:w-6 inline mr-3" />
-                        Ajouter une photo
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* QR Code */}
-                  <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-sm mx-auto" 
-                    style={{ 
-                      background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                      borderColor: `${colors.primary}30`
-                    }}
-                  >
-                    <h3 
-                      className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
-                      style={{ color: `${colors.primary}cc` }}
-                    >
-                      <QrCode className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
-                      QR Code Invité
-                    </h3>
-                   
-                   {qrCodeDataUrl ? (
-                     <div className="bg-white rounded-xl p-4 inline-block">
-                       <img 
-                         src={qrCodeDataUrl} 
-                         alt="QR Code Invité" 
-                         className="w-32 h-32 sm:w-40 sm:h-40"
-                       />
-                     </div>
-                   ) : (
-                     <div className="bg-white rounded-xl p-6 inline-block">
-                       <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg flex items-center justify-center">
-                         <QrCode 
-                           className="h-16 w-16 sm:h-20 sm:w-20" 
-                           style={{ color: colors.primary }} 
-                         />
-                       </div>
-                     </div>
-                   )}
-                    
                    <p className="text-center mt-4 text-sm text-white">
                      Scannez ce QR code pour voir les informations
-                    </p>
-                    
+                        className="w-full py-4 rounded-xl text-base sm:text-lg font-semibold transition-all duration-300"
+                        style={{ 
                    <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-3">
                      <p className="text-xs text-white/80 text-center">
                        Ce QR code contient vos informations personnelles :<br/>
