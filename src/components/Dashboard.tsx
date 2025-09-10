@@ -959,11 +959,23 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                   </div>
                   <button
                     onClick={() => handleDeleteInvite(guest.id)}
+                    disabled={subscription?.plan === 'free' && userInvites.length >= 5}
                     className="w-full bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-sm mt-2"
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
                     Supprimer
                   </button>
+                  
+                  {/* Bouton upgrade si limite atteinte */}
+                  {subscription?.plan === 'free' && userInvites.length >= 5 && (
+                    <button
+                      onClick={() => setShowUpgradeModal(true)}
+                      className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center shadow-lg transform hover:scale-105"
+                    >
+                      <Crown className="h-5 w-5 mr-2" />
+                      Passer au Premium
+                    </button>
+                  )}
                 </div>
               </div>
             ))

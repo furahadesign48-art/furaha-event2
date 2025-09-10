@@ -99,7 +99,7 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
                 Passez au niveau supérieur !
               </h3>
               <p className="text-slate-600">
-                Débloquez des invitations illimitées et accédez à toutes les fonctionnalités premium
+                Vous avez atteint la limite de 5 invitations gratuites
               </p>
             </div>
           </div>

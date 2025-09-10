@@ -90,12 +90,18 @@ export const useSubscription = () => {
 
   const canCreateInvite = () => {
     if (!subscription) return false;
-    return subscription.currentInvites < subscription.inviteLimit;
+    if (subscription.plan === 'free') {
+      return subscription.currentInvites < 5;
+    }
+    return true; // Plans payants = illimité
   };
 
   const getRemainingInvites = () => {
     if (!subscription) return 0;
-    return Math.max(0, subscription.inviteLimit - subscription.currentInvites);
+    if (subscription.plan === 'free') {
+      return Math.max(0, 5 - subscription.currentInvites);
+    }
+    return 999999; // Plans payants = illimité
   };
 
   const upgradeToPremium = async (plan: 'standard' | 'premium') => {
