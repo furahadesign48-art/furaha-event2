@@ -223,23 +223,25 @@ const InvitationPreview = () => {
   const colors = userModel.customizations?.colors || getColorScheme(userModel.category);
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Background decorative elements */}
-      {/* Background Image */}
-      <div className="absolute inset-0">
-        <img
-          src={userModel.backgroundImage}
-          alt="Event Background"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"></div>
-        <div 
-          className="absolute inset-0" 
-          style={{ 
-            background: `linear-gradient(to right, ${colors.primary}20, transparent, ${colors.primary}20)` 
-          }}
-        ></div>
-      </div>
+ <div className="min-h-screen relative overflow-hidden">
+  {/* Background Image */}
+  <div className="absolute top-0 left-0 w-full">
+    <img
+      src={userModel.backgroundImage}
+      alt="Event Background"
+      className="w-full object-cover 
+                 h-[300px] sm:h-[400px] md:h-[500px] lg:h-full"
+    />
+    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"></div>
+    <div 
+      className="absolute inset-0" 
+      style={{ 
+        background: `linear-gradient(to right, ${colors.primary}20, transparent, ${colors.primary}20)` 
+      }}
+    ></div>
+  </div>
+</div>
+
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
