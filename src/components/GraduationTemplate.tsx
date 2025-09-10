@@ -296,7 +296,15 @@ const GraduationTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Gradu
                                   <QrCode className="h-12 w-12 text-emerald-400" />
                                 </div>
                               </div>
-                              <p className="text-emerald-300 text-xs mt-2">Code unique: GRAD-2024-001</p>
+                              <div className="mt-3 space-y-1">
+                                <p className="text-emerald-200 text-xs font-semibold">Informations invité:</p>
+                                <div className="text-emerald-300 text-xs space-y-1">
+                                  <p><span className="font-medium">Nom:</span> [Nom de l'invité]</p>
+                                  <p><span className="font-medium">Place:</span> [Numéro de place]</p>
+                                  <p><span className="font-medium">Boisson:</span> {selectedDrink || 'Non sélectionnée'}</p>
+                                  <p><span className="font-medium">Code:</span> GRAD-2024-001</p>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>

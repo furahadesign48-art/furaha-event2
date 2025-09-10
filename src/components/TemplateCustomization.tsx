@@ -746,7 +746,14 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                       <QrCode className="h-8 w-8" style={{ color: primaryColor }} />
                     </div>
                   </div>
-                  <p className="text-xs mt-1" style={{ color: `${primaryColor}dd` }}>WED-2024-001</p>
+                  <div className="mt-2 space-y-1">
+                    <p className="text-xs font-semibold" style={{ color: `${primaryColor}dd` }}>Infos invité:</p>
+                    <div className="text-xs space-y-0.5" style={{ color: `${primaryColor}cc` }}>
+                      <p><span className="font-medium">Nom:</span> [Invité]</p>
+                      <p><span className="font-medium">Table:</span> [Table]</p>
+                      <p><span className="font-medium">Boisson:</span> {selectedDrink || 'Aucune'}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

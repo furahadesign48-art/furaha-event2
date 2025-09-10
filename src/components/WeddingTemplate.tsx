@@ -294,7 +294,15 @@ const WeddingTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: WeddingT
                                   <QrCode className="h-12 w-12 text-amber-400" />
                                 </div>
                               </div>
-                              <p className="text-amber-300 text-xs mt-2">Code unique: WED-2024-001</p>
+                              <div className="mt-3 space-y-1">
+                                <p className="text-amber-200 text-xs font-semibold">Informations invité:</p>
+                                <div className="text-amber-300 text-xs space-y-1">
+                                  <p><span className="font-medium">Nom:</span> [Nom de l'invité]</p>
+                                  <p><span className="font-medium">Table:</span> [Numéro de table]</p>
+                                  <p><span className="font-medium">Boisson:</span> {selectedDrink || 'Non sélectionnée'}</p>
+                                  <p><span className="font-medium">Code:</span> WED-2024-001</p>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
