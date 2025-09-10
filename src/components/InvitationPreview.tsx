@@ -240,7 +240,7 @@ const InvitationPreview = () => {
       }}
     ></div>
   </div>
-</div>
+
 
 
       {/* Content */}
