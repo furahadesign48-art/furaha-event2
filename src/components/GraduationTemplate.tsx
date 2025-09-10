@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GraduationCap, Calendar, MapPin, Users, BookOpen, Camera, MessageCircle, QrCode, ArrowLeft, Check, Star, Sparkles, Award } from 'lucide-react';
+import { GraduationCap, Calendar, MapPin, Users, BookOpen, Camera, MessageCircle, QrCode, ArrowLeft, Check, Star, Sparkles, Award, User, Eye } from 'lucide-react';
 import AuthModal from './AuthModal';
 import { useTemplates } from '../hooks/useTemplates';
 import { useAuth } from './AuthContext';
@@ -290,20 +290,25 @@ const GraduationTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Gradu
                           </div>
                           <div className="space-y-2 text-xs">
                             <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
-                              <span className="font-medium text-slate-700">Nom:</span>
+                              <div className="flex items-center">
+                                <User className="h-3 w-3 text-slate-600 mr-2" />
+                                <span className="font-medium text-slate-700">Nom:</span>
+                              </div>
                               <span className="font-bold text-slate-900">[Nom de l'invité]</span>
                             </div>
                             <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
-                              <span className="font-medium text-slate-700">Place:</span>
+                              <div className="flex items-center">
+                                <MapPin className="h-3 w-3 text-slate-600 mr-2" />
+                                <span className="font-medium text-slate-700">Place:</span>
+                              </div>
                               <span className="font-bold text-slate-900">[Numéro de place]</span>
                             </div>
                             <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
-                              <span className="font-medium text-slate-700">Boisson:</span>
+                              <div className="flex items-center">
+                                <Wine className="h-3 w-3 text-slate-600 mr-2" />
+                                <span className="font-medium text-slate-700">Boisson:</span>
+                              </div>
                               <span className="font-bold text-slate-900">{selectedDrink || 'Non sélectionnée'}</span>
-                            </div>
-                            <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
-                              <span className="font-medium text-slate-700">Code:</span>
-                              <span className="font-bold text-slate-900 font-mono">GRAD-2024-001</span>
                             </div>
                           </div>
                           <button
