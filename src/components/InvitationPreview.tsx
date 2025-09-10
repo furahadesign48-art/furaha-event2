@@ -224,7 +224,7 @@ const InvitationPreview = () => {
 
   return (
 <div className="min-h-screen relative overflow-hidden">
-  {/* Haut avec l’image nette (plus grande) */}
+  {/* Haut avec l’image nette (agrandie) */}
   <div className="absolute top-0 left-0 w-full">
     <img
       src={userModel.backgroundImage}
@@ -233,12 +233,12 @@ const InvitationPreview = () => {
                  h-[600px] sm:h-[700px] md:h-[800px] lg:h-[900px] 
                  scale-125"
     />
-    {/* Gradient sombre sur l'image principale */}
+    {/* Gradient sombre pour transition */}
     <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-transparent"></div>
   </div>
 
-  {/* Bas avec l’image floutée + assombrie */}
-  <div className="absolute w-full top-[800px] sm:top-[900px] bottom-0 overflow-hidden">
+  {/* Bas avec l’image floutée qui remonte un peu */}
+  <div className="absolute w-full top-[600px] sm:top-[700px] md:top-[750px] lg:top-[800px] bottom-0 overflow-hidden">
     <img
       src={userModel.backgroundImage}
       alt="Event Background Blurred"
@@ -247,12 +247,6 @@ const InvitationPreview = () => {
     {/* Overlay sombre pour lisibilité */}
     <div className="absolute inset-0 bg-black/60"></div>
   </div>
-
-
-
-
-
-
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
