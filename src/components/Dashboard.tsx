@@ -451,6 +451,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     console.log('URL d\'invitation pour prévisualisation:', invitationUrl);
     window.open(invitationUrl, '_blank');
   };
+  
   const getEtatColor = (etat: string) => {
     switch (etat) {
       case 'couple':
@@ -968,7 +969,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                           {table.name} ({availableSeats}/{table.seats})
                         </option>
                       );
-                    ))}
+                    })}
                   </select>
                 </div>
 
