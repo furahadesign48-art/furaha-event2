@@ -91,6 +91,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [isLoadingTables, setIsLoadingTables] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [userTemplateForCustomization, setUserTemplateForCustomization] = useState<TemplateData | null>(null);
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
   
   // États pour la gestion des invités
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -164,6 +165,54 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     }
   };
 
+  // Charger le template actuel depuis les modèles utilisateur
+  const loadCurrentTemplate = async () => {
+    if (!userData?.id || userModels.length === 0) return;
+    
+    try {
+      setIsLoadingTemplate(true);
+      // Prendre le premier modèle utilisateur comme template actuel
+      const userModel = userModels[0];
+      const templateData: TemplateData = {
+        id: userModel.id,
+        name: userModel.name,
+        category: userModel.category,
+        backgroundImage: userModel.backgroundImage,
+        title: userModel.title,
+        invitationText: userModel.invitationText,
+        eventDate: userModel.eventDate,
+        eventTime: userModel.eventTime,
+        eventLocation: userModel.eventLocation,
+        drinkOptions: userModel.drinkOptions,
+        features: userModel.features,
+        colors: userModel.customizations?.colors,
+        isPersonalized: true,
+        createdAt: userModel.createdAt?.toDate().toISOString()
+      };
+      
+      setCurrentTemplate(templateData);
+      console.log('Template actuel chargé depuis Firebase:', templateData);
+    } catch (error) {
+      console.error('Erreur lors du chargement du template actuel:', error);
+    } finally {
+      setIsLoadingTemplate(false);
+    }
+  };
+
+  // Charger le template actuel quand les modèles utilisateur changent
+  useEffect(() => {
+    if (userModels.length > 0 && !currentTemplate) {
+      loadCurrentTemplate();
+    }
+  }, [userModels, userData?.id]);
+
+  // Charger le template sélectionné au montage
+  useEffect(() => {
+    if (selectedTemplate && !currentTemplate) {
+      setCurrentTemplate(selectedTemplate);
+    }
+  }, [selectedTemplate]);
+
   // Charger les tables au montage du composant
   useEffect(() => {
     if (userData?.id) {
@@ -224,28 +273,73 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
   const handleSaveCustomization = (customizedTemplate: TemplateData) => {
     console.log('Sauvegarde de la personnalisation:', customizedTemplate);
-    // Sauvegarder les modifications dans le modèle utilisateur
-    if (userTemplateForCustomization && userModels.length > 0) {
-      const userModel = userModels[0];
-      updateUserModel(userModel.id, {
-        name: customizedTemplate.name,
-        title: customizedTemplate.title,
-        invitationText: customizedTemplate.invitationText,
-        eventDate: customizedTemplate.eventDate,
-        eventTime: customizedTemplate.eventTime,
-        eventLocation: customizedTemplate.eventLocation,
-        drinkOptions: customizedTemplate.drinkOptions,
-        backgroundImage: customizedTemplate.backgroundImage,
-        customizations: {
-          ...userModel.customizations,
-          colors: customizedTemplate.colors
-        }
-      });
-    }
     
-    setCurrentTemplate(customizedTemplate);
+    const saveCustomization = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Sauvegarder les modifications dans le modèle utilisateur
+        if (userTemplateForCustomization && userModels.length > 0) {
+          const userModel = userModels[0];
+          await updateUserModel(userModel.id, {
+            name: customizedTemplate.name,
+            title: customizedTemplate.title,
+            invitationText: customizedTemplate.invitationText,
+            eventDate: customizedTemplate.eventDate,
+            eventTime: customizedTemplate.eventTime,
+            eventLocation: customizedTemplate.eventLocation,
+            drinkOptions: customizedTemplate.drinkOptions,
+            backgroundImage: customizedTemplate.backgroundImage,
+            customizations: {
+              ...userModel.customizations,
+              colors: customizedTemplate.colors
+            }
+          });
+          
+          console.log('Modèle utilisateur mis à jour dans Firebase');
+        }
+        
+        // Mettre à jour le template actuel dans l'état local
+        setCurrentTemplate(customizedTemplate);
+        console.log('Template actuel mis à jour dans l\'état local:', customizedTemplate);
+        
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde:', error);
+        alert('Erreur lors de la sauvegarde des modifications');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    saveCustomization();
+    
     setUserTemplateForCustomization(null);
     setShowCustomization(false);
+  };
+
+  // Fonction pour forcer le rechargement du template
+  const refreshCurrentTemplate = async () => {
+    if (userModels.length > 0) {
+      const userModel = userModels[0];
+      const templateData: TemplateData = {
+        id: userModel.id,
+        name: userModel.name,
+        category: userModel.category,
+        backgroundImage: userModel.backgroundImage,
+        title: userModel.title,
+        invitationText: userModel.invitationText,
+        eventDate: userModel.eventDate,
+        eventTime: userModel.eventTime,
+        eventLocation: userModel.eventLocation,
+        drinkOptions: userModel.drinkOptions,
+        features: userModel.features,
+        colors: userModel.customizations?.colors,
+        isPersonalized: true,
+        createdAt: userModel.createdAt?.toDate().toISOString()
+      };
+      
+      setCurrentTemplate(templateData);
+    }
   };
 
   const openInviteModal = (invite?: Guest) => {
