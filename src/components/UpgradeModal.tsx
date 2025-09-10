@@ -57,23 +57,22 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-luxury max-w-2xl w-full animate-slide-up relative overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-luxury max-w-xl w-full max-h-[90vh] overflow-y-auto animate-slide-up relative">
         {/* Background decorative elements */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-200/20 to-purple-200/20 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-rose-200/20 to-amber-200/20 rounded-full blur-2xl"></div>
+        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-200/20 to-purple-200/20 rounded-full blur-xl"></div>
         
         {/* Header */}
-        <div className="relative p-6 border-b border-neutral-200/50 bg-gradient-to-r from-neutral-50 to-amber-50/30">
+        <div className="relative p-4 border-b border-neutral-200/50 bg-gradient-to-r from-neutral-50 to-amber-50/30">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <div className="relative mr-3">
-                <Zap className="h-8 w-8 text-amber-500 animate-glow drop-shadow-lg" />
+                <Zap className="h-6 w-6 text-amber-500 animate-glow drop-shadow-lg" />
                 <div className="absolute inset-0 animate-pulse">
-                  <Zap className="h-8 w-8 text-amber-300 opacity-30" />
+                  <Zap className="h-6 w-6 text-amber-300 opacity-30" />
                 </div>
               </div>
               <div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
                   Limite d'invitations atteinte
                 </h2>
                 <p className="text-slate-600 text-sm">
@@ -91,50 +90,50 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
         </div>
 
         {/* Content */}
-        <div className="relative p-6">
-          <div className="text-center mb-8">
-            <div className="bg-gradient-to-r from-amber-50 to-rose-50 rounded-2xl p-6 border border-amber-200/50 mb-6">
+        <div className="relative p-4">
+          <div className="text-center mb-4">
+            <div className="bg-gradient-to-r from-amber-50 to-rose-50 rounded-xl p-4 border border-amber-200/50 mb-4">
               <div className="flex items-center justify-center mb-4">
-                <Crown className="h-12 w-12 text-amber-500 animate-glow" />
+                <Crown className="h-8 w-8 text-amber-500 animate-glow" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">
+              <h3 className="text-lg font-bold text-slate-900 mb-2">
                 Passez au niveau supérieur !
               </h3>
-              <p className="text-slate-600">
+              <p className="text-slate-600 text-sm">
                 Vous avez atteint la limite de 5 invitations gratuites
               </p>
             </div>
           </div>
 
           {/* Plans */}
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-3">
             {plans.map((plan, index) => {
               const IconComponent = plan.icon;
               return (
                 <div
                   key={plan.name}
-                  className={`relative bg-gradient-to-br from-neutral-50 to-amber-50/30 rounded-2xl shadow-lg hover:shadow-glow-amber transition-all duration-500 p-6 backdrop-blur-sm border ${
+                  className={`relative bg-gradient-to-br from-neutral-50 to-amber-50/30 rounded-xl shadow-lg hover:shadow-glow-amber transition-all duration-300 p-4 backdrop-blur-sm border ${
                     plan.popular 
-                      ? 'border-2 border-amber-400 transform hover:scale-105 shadow-glow-amber' 
-                      : 'border border-neutral-200/50 hover:border-amber-300 transform hover:scale-102'
+                      ? 'border-2 border-amber-400 shadow-glow-amber' 
+                      : 'border border-neutral-200/50 hover:border-amber-300'
                   }`}
                 >
                   {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 px-4 py-1 rounded-full text-sm font-semibold shadow-glow-amber animate-glow">
+                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                      <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 px-3 py-1 rounded-full text-xs font-semibold shadow-glow-amber">
                         Recommandé
                       </span>
                     </div>
                   )}
 
-                  <div className="flex items-center mb-6">
-                    <div className="flex justify-center mb-4">
+                  <div className="flex items-center mb-3">
+                    <div className="flex justify-center">
                       <div className={`p-3 rounded-full ${
                         plan.popular 
                           ? 'bg-gradient-to-r from-amber-100 to-amber-200 shadow-glow-amber' 
                           : 'bg-gradient-to-r from-neutral-100 to-slate-100'
                       }`}>
-                        <IconComponent className={`h-8 w-8 ${
+                        <IconComponent className={`h-6 w-6 ${
                           plan.popular 
                             ? 'text-amber-600 drop-shadow-lg' 
                             : 'text-slate-600'
@@ -143,12 +142,12 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
                     </div>
                     
                     <div className="ml-4 flex-1">
-                      <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-2">
+                      <h3 className="text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-1">
                         {plan.name}
                       </h3>
                       
                       <div className="flex items-baseline">
-                        <span className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 bg-clip-text text-transparent">
+                        <span className="text-xl font-bold bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 bg-clip-text text-transparent">
                           {plan.price}
                         </span>
                         <span className="text-slate-500 ml-1">{plan.period}</span>
@@ -156,29 +155,30 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
                     </div>
                   </div>
 
-                  <ul className="space-y-2 mb-6">
-                    {plan.features.map((feature, idx) => (
+                  <ul className="space-y-1 mb-3">
+                    {plan.features.slice(0, 4).map((feature, idx) => (
                       <li key={idx} className="flex items-center">
                         <div className="relative mr-3 flex-shrink-0">
-                          <Check className="h-4 w-4 text-amber-500 drop-shadow-sm" />
-                          <div className="absolute inset-0 animate-pulse">
-                            <Check className="h-4 w-4 text-amber-300 opacity-30" />
-                          </div>
+                          <Check className="h-3 w-3 text-amber-500" />
                         </div>
-                        <span className="text-slate-700 text-sm">{feature}</span>
+                        <span className="text-slate-700 text-xs">{feature}</span>
                       </li>
                     ))}
+                    {plan.features.length > 4 && (
+                      <li className="text-xs text-slate-500 ml-6">
+                        +{plan.features.length - 4} autres fonctionnalités
+                      </li>
+                    )}
                   </ul>
 
                   <button 
                     onClick={() => handleUpgrade(plan.name)}
-                    className={`w-full py-3 rounded-xl font-semibold transition-all duration-500 shadow-lg hover:shadow-luxury transform hover:scale-105 relative overflow-hidden ${
+                    className={`w-full py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-luxury relative overflow-hidden text-sm ${
                       plan.popular 
                         ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 hover:from-amber-600 hover:to-amber-700 shadow-glow-amber' 
                         : 'bg-gradient-to-r from-slate-900 to-slate-800 text-neutral-50 hover:from-slate-800 hover:to-slate-700'
                     }`}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-1000"></div>
                     {plan.buttonText}
                   </button>
                 </div>
@@ -187,10 +187,9 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
           </div>
 
           {/* Footer */}
-          <div className="mt-8 text-center">
-            <p className="text-slate-500 text-sm">
+          <div className="mt-4 text-center">
+            <p className="text-slate-500 text-xs">
               Vous pouvez annuler votre abonnement à tout moment. 
-              <br />
               Aucun engagement, facturation mensuelle.
             </p>
           </div>
