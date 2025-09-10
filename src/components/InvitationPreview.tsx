@@ -242,7 +242,7 @@ const InvitationPreview = () => {
       className="w-full h-full object-cover blur-2xl scale-125"
     />
   </div>
-</div>
+
 
 
 
