@@ -82,6 +82,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [tables, setTables] = useState<Table[]>([]);
   const [isLoadingTables, setIsLoadingTables] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [userTemplateForCustomization, setUserTemplateForCustomization] = useState<TemplateData | null>(null);
   
   // États pour la gestion des invités
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -182,13 +183,52 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   ];
 
   const handleCustomizeTemplate = () => {
-    if (currentTemplate) {
+    if (currentTemplate && userModels.length > 0) {
+      // Utiliser le premier modèle utilisateur disponible
+      const userModel = userModels[0];
+      setUserTemplateForCustomization({
+        id: userModel.id,
+        name: userModel.name,
+        category: userModel.category,
+        backgroundImage: userModel.backgroundImage,
+        title: userModel.title,
+        invitationText: userModel.invitationText,
+        eventDate: userModel.eventDate,
+        eventTime: userModel.eventTime,
+        eventLocation: userModel.eventLocation,
+        drinkOptions: userModel.drinkOptions,
+        features: userModel.features,
+        colors: userModel.customizations?.colors
+      });
+      setShowCustomization(true);
+    } else if (currentTemplate) {
+      // Fallback vers le template actuel si pas de modèle utilisateur
+      setUserTemplateForCustomization(currentTemplate);
       setShowCustomization(true);
     }
   };
 
   const handleSaveCustomization = (customizedTemplate: TemplateData) => {
+    // Sauvegarder les modifications dans le modèle utilisateur
+    if (userTemplateForCustomization && userModels.length > 0) {
+      const userModel = userModels[0];
+      updateUserModel(userModel.id, {
+        name: customizedTemplate.name,
+        title: customizedTemplate.title,
+        invitationText: customizedTemplate.invitationText,
+        eventDate: customizedTemplate.eventDate,
+        eventTime: customizedTemplate.eventTime,
+        eventLocation: customizedTemplate.eventLocation,
+        drinkOptions: customizedTemplate.drinkOptions,
+        backgroundImage: customizedTemplate.backgroundImage,
+        customizations: {
+          ...userModel.customizations,
+          colors: customizedTemplate.colors
+        }
+      });
+    }
     setCurrentTemplate(customizedTemplate);
+    setUserTemplateForCustomization(null);
     setShowCustomization(false);
   };
 
@@ -288,8 +328,11 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   if (showCustomization && currentTemplate) {
     return (
       <TemplateCustomization
-        template={currentTemplate}
-        onBack={() => setShowCustomization(false)}
+        template={userTemplateForCustomization || currentTemplate}
+        onBack={() => {
+          setShowCustomization(false);
+          setUserTemplateForCustomization(null);
+        }}
         onSave={handleSaveCustomization}
       />
     );
@@ -391,6 +434,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
               <button
                 onClick={handleCustomizeTemplate}
                 className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-2 rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center shadow-glow-amber transform hover:scale-105"
+                disabled={!currentTemplate}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Personnaliser
@@ -478,6 +522,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         <button
           onClick={handleCustomizeTemplate}
           className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 hover:shadow-lg transition-all duration-300 transform hover:scale-105 text-left group"
+          disabled={!currentTemplate}
         >
           <div className="flex items-center mb-4">
             <div className="p-3 bg-emerald-500 rounded-xl group-hover:scale-110 transition-transform duration-300">
