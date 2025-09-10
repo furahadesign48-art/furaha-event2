@@ -13,7 +13,9 @@ import {
   Sparkles,
   ArrowLeft,
   Gift,
-  GraduationCap
+  GraduationCap,
+  User,
+  X
 } from 'lucide-react';
 import { UserModelService, InviteService } from '../services/templateService';
 import { UserModel, Invite } from '../services/templateService';
