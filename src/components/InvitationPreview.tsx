@@ -562,19 +562,6 @@ const InvitationPreview = () => {
                       </div>
                     )}
                   </div>
-                      <p 
-                        className="text-sm sm:text-base font-semibold" 
-                        style={{ color: `${colors.primary}dd` }}
-                      >
-                        Informations de l'invité:
-                      </p>
-                      <div className="text-xs sm:text-sm space-y-1" style={{ color: `${colors.primary}cc` }}>
-                        <p><span className="font-medium">Nom:</span> {invite.nom}</p>
-                        <p><span className="font-medium">Table:</span> {invite.table || 'Non assigné'}</p>
-                        <p><span className="font-medium">Boisson:</span> {selectedDrink || 'Non sélectionnée'}</p>
-                        <p><span className="font-medium">Code:</span> {invite.id.toUpperCase()}</p>
-                      </div>
-                  </div>
           </div>
         </div>
       </div>
