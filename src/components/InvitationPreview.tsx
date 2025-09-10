@@ -224,23 +224,25 @@ const InvitationPreview = () => {
 
   return (
 <div className="min-h-screen relative overflow-hidden">
-  {/* Background Image */}
+  {/* Haut avec l’image nette */}
   <div className="absolute top-0 left-0 w-full">
     <img
       src={userModel.backgroundImage}
       alt="Event Background"
-      className="w-full object-cover 
-                 h-[500px] sm:h-[600px] md:h-[700px] lg:h-full 
-                 scale-110"
+      className="w-full h-[500px] sm:h-[600px] md:h-[700px] lg:h-full object-cover scale-110"
     />
     <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"></div>
-    <div 
-      className="absolute inset-0" 
-      style={{ 
-        background: `linear-gradient(to right, ${colors.primary}20, transparent, ${colors.primary}20)` 
-      }}
-    ></div>
   </div>
+
+  {/* Bas avec l’image floutée */}
+  <div className="absolute w-full top-[700px] bottom-0 overflow-hidden">
+    <img
+      src={userModel.backgroundImage}
+      alt="Event Background Blurred"
+      className="w-full h-full object-cover blur-2xl scale-125"
+    />
+  </div>
+</div>
 
 
 
