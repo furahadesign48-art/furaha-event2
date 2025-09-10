@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import QRCode from 'qrcode';
 import { 
   Heart, 
   Calendar, 
@@ -31,6 +32,7 @@ const InvitationPreview = () => {
   const [guestMessage, setGuestMessage] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showQRInfo, setShowQRInfo] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
 
   useEffect(() => {
     const loadInvitationData = async () => {
@@ -66,6 +68,9 @@ const InvitationPreview = () => {
         if (userModels.length > 0) {
           setUserModel(userModels[0]); // Prendre le premier modèle
           console.log('Modèle utilisateur défini:', userModels[0]);
+          
+          // Générer le QR code avec les informations de l'invité
+          await generateQRCode(inviteData, userModels[0]);
         } else {
           setError('Modèle d\'invitation non trouvé');
         }
@@ -81,6 +86,69 @@ const InvitationPreview = () => {
     loadInvitationData();
   }, [inviteId]);
 
+  // Générer le QR code avec les informations de l'invité
+  const generateQRCode = async (inviteData: Invite, modelData: UserModel) => {
+    try {
+      const qrData = {
+        nom: inviteData.nom,
+        table: inviteData.table || 'Non assigné',
+        evenement: modelData.title,
+        date: modelData.eventDate,
+        lieu: modelData.eventLocation,
+        code: inviteData.id,
+        type: modelData.category === 'graduation' ? 'Place' : 'Table'
+      };
+      
+      const qrString = JSON.stringify(qrData);
+      const qrCodeUrl = await QRCode.toDataURL(qrString, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      
+      setQrCodeDataUrl(qrCodeUrl);
+    } catch (error) {
+      console.error('Erreur lors de la génération du QR code:', error);
+    }
+  };
+
+  // Mettre à jour le QR code quand la boisson change
+  useEffect(() => {
+    if (invite && userModel && selectedDrink) {
+      const updateQRCode = async () => {
+        const qrData = {
+          nom: invite.nom,
+          table: invite.table || 'Non assigné',
+          boisson: selectedDrink,
+          evenement: userModel.title,
+          date: userModel.eventDate,
+          lieu: userModel.eventLocation,
+          code: invite.id,
+          type: userModel.category === 'graduation' ? 'Place' : 'Table'
+        };
+        
+        try {
+          const qrString = JSON.stringify(qrData);
+          const qrCodeUrl = await QRCode.toDataURL(qrString, {
+            width: 200,
+            margin: 2,
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF'
+            }
+          });
+          setQrCodeDataUrl(qrCodeUrl);
+        } catch (error) {
+          console.error('Erreur lors de la mise à jour du QR code:', error);
+        }
+      };
+      
+      updateQRCode();
+    }
+  }, [selectedDrink, invite, userModel]);
   const handleConfirmation = async () => {
     if (!invite || !userModel) return;
     
@@ -484,85 +552,36 @@ const InvitationPreview = () => {
                       <QrCode className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
                       QR Code Invité
                     </h3>
-                    <div 
-                      className="bg-white rounded-xl p-6 inline-block cursor-pointer hover:scale-105 transition-transform duration-300"
-                      onClick={() => setShowQRInfo(!showQRInfo)}
-                    >
-                      <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg flex items-center justify-center">
-                        <QrCode 
-                          className="h-16 w-16 sm:h-20 sm:w-20" 
-                          style={{ color: colors.primary }} 
-                        />
-                      </div>
-                    </div>
+                   
+                   {qrCodeDataUrl ? (
+                     <div className="bg-white rounded-xl p-4 inline-block">
+                       <img 
+                         src={qrCodeDataUrl} 
+                         alt="QR Code Invité" 
+                         className="w-32 h-32 sm:w-40 sm:h-40"
+                       />
+                     </div>
+                   ) : (
+                     <div className="bg-white rounded-xl p-6 inline-block">
+                       <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg flex items-center justify-center">
+                         <QrCode 
+                           className="h-16 w-16 sm:h-20 sm:w-20" 
+                           style={{ color: colors.primary }} 
+                         />
+                       </div>
+                     </div>
+                   )}
                     
-                    <p className="text-center mt-4 text-sm" style={{ color: `${colors.primary}cc` }}>
-                      Cliquez sur le QR code pour voir les informations
+                   <p className="text-center mt-4 text-sm text-white">
+                     Scannez ce QR code pour voir les informations
                     </p>
                     
-                    {showQRInfo && (
-                      <div className="mt-6 bg-white/90 backdrop-blur-sm rounded-xl p-4 animate-slide-up">
-                        <div className="text-center mb-4">
-                          <h4 className="font-bold text-slate-900 text-lg">Informations de l'invité</h4>
-                        </div>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg">
-                            <div className="flex items-center">
-                              <User className="h-5 w-5 text-slate-600 mr-3" />
-                              <span className="font-medium text-slate-700">Nom</span>
-                            </div>
-                            <span className="font-bold text-slate-900">{invite.nom}</span>
-                          </div>
-                          
-                          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg">
-                            <div className="flex items-center">
-                              <MapPin className="h-5 w-5 text-slate-600 mr-3" />
-                              <span className="font-medium text-slate-700">
-                                {userModel.category === 'graduation' ? 'Place' : 'Table'}
-                              </span>
-                            </div>
-                            <span className="font-bold text-slate-900">{invite.table || 'Non assigné'}</span>
-                          </div>
-                          
-                          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg">
-                            <div className="flex items-center">
-                              <Wine className="h-5 w-5 text-slate-600 mr-3" />
-                              <span className="font-medium text-slate-700">Boisson</span>
-                            </div>
-                            <span className="font-bold text-slate-900">{selectedDrink || 'Non sélectionnée'}</span>
-                          </div>
-                          
-                          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg">
-                            <div className="flex items-center">
-                              <QrCode className="h-5 w-5 text-slate-600 mr-3" />
-                              <span className="font-medium text-slate-700">Code</span>
-                            </div>
-                            <span className="font-bold text-slate-900 font-mono text-sm">{invite.id.toUpperCase()}</span>
-                          </div>
-                          
-                          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg">
-                            <div className="flex items-center">
-                              {isConfirmed ? (
-                                <Check className="h-5 w-5 text-emerald-600 mr-3" />
-                              ) : (
-                                <X className="h-5 w-5 text-rose-600 mr-3" />
-                              )}
-                              <span className="font-medium text-slate-700">Statut</span>
-                            </div>
-                            <span className={`font-bold ${isConfirmed ? 'text-emerald-600' : 'text-rose-600'}`}>
-                              {isConfirmed ? 'Confirmé' : 'En attente'}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <button
-                          onClick={() => setShowQRInfo(false)}
-                          className="w-full mt-4 bg-slate-600 text-white py-2 rounded-lg hover:bg-slate-700 transition-all duration-300 font-medium"
-                        >
-                          Fermer
-                        </button>
-                      </div>
-                    )}
+                   <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-3">
+                     <p className="text-xs text-white/80 text-center">
+                       Ce QR code contient vos informations personnelles :<br/>
+                       Nom, {userModel.category === 'graduation' ? 'Place' : 'Table'}, Boisson, Code d'invitation
+                     </p>
+                   </div>
                   </div>
           </div>
         </div>
