@@ -5,7 +5,7 @@ import { useSubscription } from './useSubscription';
 
 export const useTemplates = () => {
   const { user } = useAuth();
-  const { canCreateInvite, updateInviteCount } = useSubscription();
+  const { canCreateInvite, updateInviteCount, subscription } = useSubscription();
   const [defaultTemplates, setDefaultTemplates] = useState<TemplateData[]>([]);
   const [userModels, setUserModels] = useState<UserModel[]>([]);
   const [userInvites, setUserInvites] = useState<Invite[]>([]);
