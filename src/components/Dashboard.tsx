@@ -785,13 +785,34 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
           <p className="text-slate-600 mt-1">Gérez votre liste d'invités pour l'événement</p>
         </div>
         
-        <button
-          onClick={() => openInviteModal()}
-          className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center shadow-glow-amber hover:shadow-luxury transform hover:scale-105"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Ajouter un invité
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={() => setShowInviteModal(true)}
+            disabled={subscription?.plan === 'free' && userInvites.length >= 5}
+            className={`px-6 py-3 rounded-xl transition-all duration-300 font-semibold flex items-center transform hover:scale-105 ${
+              subscription?.plan === 'free' && userInvites.length >= 5
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+                : 'bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 shadow-glow-amber'
+            }`}
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            {subscription?.plan === 'free' && userInvites.length >= 5 
+              ? 'Limite atteinte (5/5)' 
+              : 'Ajouter un invité'
+            }
+          </button>
+          
+          {/* Bouton Upgrade visible quand limite atteinte */}
+          {subscription?.plan === 'free' && userInvites.length >= 5 && (
+            <button
+              onClick={() => setShowUpgradeModal(true)}
+              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center shadow-lg transform hover:scale-105 animate-pulse"
+            >
+              <Crown className="h-5 w-5 mr-2" />
+              Passer au Premium
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Statistiques des invités */}
