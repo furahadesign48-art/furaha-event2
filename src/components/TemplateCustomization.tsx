@@ -730,6 +730,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                       <Camera className="h-3 w-3 inline mr-1" />
                       Photo
                     </button>
+                  </div>
                 </div>
               </div>
             </div>
