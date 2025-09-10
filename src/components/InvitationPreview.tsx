@@ -223,47 +223,39 @@ const InvitationPreview = () => {
   const colors = userModel.customizations?.colors || getColorScheme(userModel.category);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-amber-900/20 to-slate-800 relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-40 h-40 bg-gradient-to-r from-amber-400/10 to-rose-400/10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-20 right-20 w-32 h-32 bg-gradient-to-r from-amber-500/10 to-amber-300/10 rounded-full blur-3xl animate-bounce-slow"></div>
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <img
+          src={userModel.backgroundImage}
+          alt="Event Background"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"></div>
+        <div 
+          className="absolute inset-0" 
+          style={{ 
+            background: `linear-gradient(to right, ${colors.primary}20, transparent, ${colors.primary}20)` 
+          }}
+        ></div>
       </div>
 
-      <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-md mx-auto">
-          {/* Invitation Content */}
-          <div className="relative bg-black rounded-2xl overflow-hidden shadow-luxury border border-amber-500/30">
-            <div className="relative h-[700px] overflow-y-auto">
-                {/* Background Image */}
-                <div className="absolute inset-0">
-                  <img
-                    src={userModel.backgroundImage}
-                    alt="Event Background"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"></div>
-                  <div 
-                    className="absolute inset-0" 
-                    style={{ 
-                      background: `linear-gradient(to right, ${colors.primary}20, transparent, ${colors.primary}20)` 
-                    }}
-                  ></div>
-                </div>
-
-                {/* Content */}
-                <div className="relative z-10 p-6 text-center text-white">
+      {/* Content */}
+      <div className="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
+        <div className="w-full max-w-2xl mx-auto">
+          <div className="text-center text-white space-y-6 sm:space-y-8">
                   {/* Decorative Header */}
-                  <div className="mb-6">
-                    <div className="flex justify-center items-center mb-4">
+                  <div>
+                    <div className="flex justify-center items-center mb-6">
                       <div className="relative">
                         <IconComponent 
-                          className="h-12 w-12 animate-glow drop-shadow-2xl" 
+                          className="h-16 w-16 sm:h-20 sm:w-20 animate-glow drop-shadow-2xl" 
                           style={{ color: colors.accent }} 
                         />
                         <div className="absolute inset-0 animate-ping">
                           <IconComponent 
-                            className="h-12 w-12 opacity-30" 
+                            className="h-16 w-16 sm:h-20 sm:w-20 opacity-30" 
                             style={{ color: colors.accent }} 
                           />
                         </div>
@@ -271,22 +263,22 @@ const InvitationPreview = () => {
                     </div>
                     
                     <div 
-                      className="w-24 h-px mx-auto mb-4" 
+                      className="w-32 sm:w-48 h-px mx-auto mb-6" 
                       style={{ 
                         background: `linear-gradient(to right, transparent, ${colors.primary}, transparent)` 
                       }}
                     ></div>
-                    <div className="flex justify-center space-x-2 mb-4">
+                    <div className="flex justify-center space-x-3 mb-6">
                       <Sparkles 
-                        className="h-4 w-4 animate-pulse" 
+                        className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" 
                         style={{ color: colors.primary }} 
                       />
                       <Sparkles 
-                        className="h-3 w-3 animate-pulse" 
+                        className="h-4 w-4 sm:h-5 sm:w-5 animate-pulse" 
                         style={{ color: colors.secondary, animationDelay: '0.5s' }} 
                       />
                       <Sparkles 
-                        className="h-4 w-4 animate-pulse" 
+                        className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" 
                         style={{ color: colors.primary, animationDelay: '1s' }} 
                       />
                     </div>
@@ -294,7 +286,7 @@ const InvitationPreview = () => {
 
                   {/* Title */}
                   <h1 
-                    className="text-2xl font-bold mb-6 font-luxury drop-shadow-lg" 
+                    className="text-3xl sm:text-4xl lg:text-5xl font-bold font-luxury drop-shadow-lg" 
                     style={{ color: colors.primary }}
                   >
                     {userModel.title}
@@ -302,71 +294,71 @@ const InvitationPreview = () => {
 
                   {/* Guest Info */}
                   <div 
-                    className="backdrop-blur-sm rounded-2xl p-4 mb-6 border" 
+                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
                     style={{ 
                       background: `linear-gradient(to right, ${colors.primary}40, ${colors.secondary}40)`,
                       borderColor: `${colors.primary}30`
                     }}
                   >
-                    <p className="text-sm mb-2" style={{ color: `${colors.primary}cc` }}>Cher(e)</p>
-                    <p className="text-xl font-semibold text-white">{invite.nom}</p>
-                    <p className="text-sm mt-2" style={{ color: `${colors.primary}dd` }}>
+                    <p className="text-base sm:text-lg mb-3" style={{ color: `${colors.primary}cc` }}>Cher(e)</p>
+                    <p className="text-2xl sm:text-3xl font-semibold text-white">{invite.nom}</p>
+                    <p className="text-base sm:text-lg mt-3" style={{ color: `${colors.primary}dd` }}>
                       {userModel.category === 'graduation' ? 'Place' : 'Table'} n° {invite.table || 'Non assigné'}
                     </p>
                   </div>
 
                   {/* Invitation Text */}
                   <div 
-                    className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 mb-6 border" 
+                    className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-2xl mx-auto" 
                     style={{ borderColor: `${colors.primary}20` }}
                   >
-                    <p className="text-neutral-200 leading-relaxed text-sm">
+                    <p className="text-neutral-200 leading-relaxed text-base sm:text-lg">
                       {userModel.invitationText}
                     </p>
                   </div>
 
                   {/* Event Details */}
-                  <div className="space-y-4 mb-6">
-                    <div className="flex items-center justify-center text-neutral-200">
+                  <div className="space-y-6 max-w-lg mx-auto">
+                    <div className="flex items-center justify-center text-neutral-200 text-lg sm:text-xl">
                       <Calendar 
-                        className="h-5 w-5 mr-3" 
+                        className="h-6 w-6 sm:h-7 sm:w-7 mr-4" 
                         style={{ color: colors.primary }} 
                       />
                       <div className="text-left">
-                        <p className="font-semibold">{userModel.eventDate}</p>
-                        <p className="text-sm" style={{ color: `${colors.primary}dd` }}>
+                        <p className="font-semibold text-lg sm:text-xl">{userModel.eventDate}</p>
+                        <p className="text-base sm:text-lg" style={{ color: `${colors.primary}dd` }}>
                           {userModel.eventTime}
                         </p>
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-center text-neutral-200">
+                    <div className="flex items-center justify-center text-neutral-200 text-lg sm:text-xl">
                       <MapPin 
-                        className="h-5 w-5 mr-3" 
+                        className="h-6 w-6 sm:h-7 sm:w-7 mr-4" 
                         style={{ color: colors.primary }} 
                       />
-                      <p className="text-sm">{userModel.eventLocation}</p>
+                      <p className="text-base sm:text-lg text-center">{userModel.eventLocation}</p>
                     </div>
                   </div>
 
                   {/* RSVP Section */}
                   <div 
-                    className="backdrop-blur-sm rounded-2xl p-4 mb-4 border" 
+                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
                     style={{ 
                       background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
                       borderColor: `${colors.primary}30`
                     }}
                   >
                     <h3 
-                      className="font-semibold mb-3 flex items-center justify-center" 
+                      className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
                       style={{ color: `${colors.primary}cc` }}
                     >
-                      <Users className="h-4 w-4 mr-2" />
+                      <Users className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
                       Confirmation de présence
                     </h3>
                     <button
                       onClick={handleConfirmation}
-                      className="w-full py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+                      className="w-full py-4 sm:py-5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 text-lg sm:text-xl"
                       style={{
                         background: isConfirmed 
                           ? 'linear-gradient(to right, #10b981, #059669)' 
@@ -376,7 +368,7 @@ const InvitationPreview = () => {
                     >
                       {isConfirmed ? (
                         <span className="flex items-center justify-center">
-                          <Check className="h-4 w-4 mr-2" />
+                          <Check className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
                           Présence confirmée
                         </span>
                       ) : (
@@ -387,23 +379,23 @@ const InvitationPreview = () => {
 
                   {/* Drink Selection */}
                   <div 
-                    className="backdrop-blur-sm rounded-2xl p-4 mb-4 border" 
+                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
                     style={{ 
                       background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
                       borderColor: `${colors.primary}30`
                     }}
                   >
                     <h3 
-                      className="font-semibold mb-3 flex items-center justify-center" 
+                      className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
                       style={{ color: `${colors.primary}cc` }}
                     >
-                      <Wine className="h-4 w-4 mr-2" />
+                      <Wine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
                       Choix de boisson
                     </h3>
                     <select
                       value={selectedDrink}
                       onChange={(e) => handleDrinkSelection(e.target.value)}
-                      className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-2 focus:ring-2 transition-all duration-200"
+                      className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-4 focus:ring-2 transition-all duration-200 text-base sm:text-lg"
                       style={{ 
                         borderColor: `${colors.primary}30`,
                         focusRingColor: colors.primary
@@ -418,46 +410,46 @@ const InvitationPreview = () => {
 
                   {/* Guest Book */}
                   <div 
-                    className="backdrop-blur-sm rounded-2xl p-4 mb-4 border" 
+                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-lg mx-auto" 
                     style={{ 
                       background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
                       borderColor: `${colors.primary}30`
                     }}
                   >
                     <h3 
-                      className="font-semibold mb-3 flex items-center justify-center" 
+                      className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
                       style={{ color: `${colors.primary}cc` }}
                     >
-                      <MessageCircle className="h-4 w-4 mr-2" />
+                      <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
                       Livre d'or
                     </h3>
                     <textarea
                       value={guestMessage}
                       onChange={(e) => setGuestMessage(e.target.value)}
                       placeholder="Laissez un message..."
-                      className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-3 focus:ring-2 transition-all duration-200 resize-none"
-                      rows={3}
+                      className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-4 focus:ring-2 transition-all duration-200 resize-none text-base sm:text-lg"
+                      rows={4}
                       style={{ 
                         borderColor: `${colors.primary}30`,
                         focusRingColor: colors.primary
                       }}
                     />
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-6 space-y-4">
                       <button 
                         onClick={handleSendMessage}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold text-sm shadow-lg transform hover:scale-105"
+                        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold text-base sm:text-lg shadow-lg transform hover:scale-105"
                       >
-                        <MessageCircle className="h-4 w-4 inline mr-2" />
+                        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 inline mr-3" />
                         Envoyer le message
                       </button>
                       <button 
-                        className="w-full py-2 rounded-xl text-sm font-semibold transition-all duration-300"
+                        className="w-full py-4 rounded-xl text-base sm:text-lg font-semibold transition-all duration-300"
                         style={{ 
                           background: `linear-gradient(to right, ${colors.secondary}, ${colors.primary})`,
                           color: '#1e293b'
                         }}
                       >
-                        <Camera className="h-4 w-4 inline mr-2" />
+                        <Camera className="h-5 w-5 sm:h-6 sm:w-6 inline mr-3" />
                         Ajouter une photo
                       </button>
                     </div>
@@ -465,36 +457,34 @@ const InvitationPreview = () => {
 
                   {/* QR Code */}
                   <div 
-                    className="backdrop-blur-sm rounded-2xl p-4 border" 
+                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-sm mx-auto" 
                     style={{ 
                       background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
                       borderColor: `${colors.primary}30`
                     }}
                   >
                     <h3 
-                      className="font-semibold mb-3 flex items-center justify-center" 
+                      className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
                       style={{ color: `${colors.primary}cc` }}
                     >
-                      <QrCode className="h-4 w-4 mr-2" />
+                      <QrCode className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
                       QR Code Invité
                     </h3>
-                    <div className="bg-white rounded-xl p-4 inline-block">
-                      <div className="w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg flex items-center justify-center">
+                    <div className="bg-white rounded-xl p-6 inline-block">
+                      <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg flex items-center justify-center">
                         <QrCode 
-                          className="h-12 w-12" 
+                          className="h-16 w-16 sm:h-20 sm:w-20" 
                           style={{ color: colors.primary }} 
                         />
                       </div>
                     </div>
                     <p 
-                      className="text-xs mt-2" 
+                      className="text-sm sm:text-base mt-4" 
                       style={{ color: `${colors.primary}dd` }}
                     >
                       Code unique: {invite.id.toUpperCase()}
                     </p>
                   </div>
-                </div>
-              </div>
           </div>
         </div>
       </div>
