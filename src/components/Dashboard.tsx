@@ -93,6 +93,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [isLoading, setIsLoading] = useState(false);
   const [userTemplateForCustomization, setUserTemplateForCustomization] = useState<TemplateData | null>(null);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
+  const [availableTables, setAvailableTables] = useState<Table[]>([]);
   
   // États pour la gestion des invités
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -218,6 +219,11 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       loadTables();
     }
   }, [userData?.id]);
+
+  // Mettre à jour les tables disponibles quand les tables changent
+  useEffect(() => {
+    setAvailableTables(tables);
+  }, [tables]);
 
   // Charger les invités depuis Firestore
   const guests: Guest[] = userInvites.map(invite => ({
@@ -840,10 +846,33 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
-                  </div>
-                </div>
-
+                        onChange={(e) => setInviteFormData({ ...inviteFormData, table: e.target.value })}
+                        list="tables-list"
+                        className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                        placeholder="Sélectionnez ou tapez une table"
                 {/* Version Mobile */}
+                      <datalist id="tables-list">
+                        {availableTables.map((table) => (
+                          <option key={table.id} value={table.name} />
+                        ))}
+                      </datalist>
+                      {availableTables.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs text-slate-500 mb-2">Tables disponibles :</p>
+                          <div className="flex flex-wrap gap-2">
+                            {availableTables.map((table) => (
+                              <button
+                                key={table.id}
+                                type="button"
+                                onClick={() => setInviteFormData({ ...inviteFormData, table: table.name })}
+                                className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs hover:bg-amber-200 transition-all duration-200"
+                              >
+                                {table.name} ({table.assignedGuests.length}/{table.seats})
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                 <div className="md:hidden p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div>

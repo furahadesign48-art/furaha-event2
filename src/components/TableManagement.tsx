@@ -69,31 +69,32 @@ const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoad
     setIsSaving(true);
     
     try {
-    if (editingTable) {
-      // Modifier une table existante
-      const updatedTable = { ...editingTable, name: formData.name, seats: formData.seats };
-      setTables(tables.map(table => 
-        table.id === editingTable.id ? updatedTable : table
-      ));
-      
-      if (onSaveTable) {
-        await onSaveTable(updatedTable);
+      if (editingTable) {
+        // Modifier une table existante
+        const updatedTable = { ...editingTable, name: formData.name, seats: formData.seats };
+        
+        if (onSaveTable) {
+          await onSaveTable(updatedTable);
+        }
+        
+        setTables(tables.map(table => 
+          table.id === editingTable.id ? updatedTable : table
+        ));
+      } else {
+        // Ajouter une nouvelle table
+        const newTable: Table = {
+          id: Math.max(...tables.map(t => t.id), 0) + 1,
+          name: formData.name,
+          seats: formData.seats,
+          assignedGuests: []
+        };
+        
+        if (onSaveTable) {
+          await onSaveTable(newTable);
+        }
+        
+        setTables([...tables, newTable]);
       }
-    } else {
-      // Ajouter une nouvelle table
-      const newTable: Table = {
-        id: Math.max(...tables.map(t => t.id), 0) + 1,
-        name: formData.name,
-        seats: formData.seats,
-        assignedGuests: []
-      };
-      setTables([...tables, newTable]);
-      
-      if (onSaveTable) {
-        await onSaveTable(newTable);
-      }
-    }
-    
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       alert('Erreur lors de la sauvegarde de la table');
@@ -108,11 +109,12 @@ const TableManagement = ({ tables, setTables, onSaveTable, onDeleteTable, isLoad
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette table ?')) {
       try {
         setIsSaving(true);
-      setTables(tables.filter(table => table.id !== id));
         
         if (onDeleteTable) {
           await onDeleteTable(id);
         }
+        
+        setTables(tables.filter(table => table.id !== id));
       } catch (error) {
         console.error('Erreur lors de la suppression:', error);
         alert('Erreur lors de la suppression de la table');
