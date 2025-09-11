@@ -1,22 +1,15 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import Stripe from 'https://esm.sh/stripe@14.21.0'
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-      apiVersion: '2023-10-16',
-    })
-
     const { planType, userId, userEmail, successUrl, cancelUrl } = await req.json()
 
     // Configuration des plans
@@ -35,6 +28,18 @@ serve(async (req) => {
     if (!selectedPlan) {
       throw new Error('Plan invalide')
     }
+
+    // Vérifier les variables d'environnement
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
+    if (!stripeSecretKey) {
+      throw new Error('STRIPE_SECRET_KEY non configuré')
+    }
+
+    // Importer Stripe dynamiquement
+    const { default: Stripe } = await import('https://esm.sh/stripe@14.21.0')
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: '2023-10-16',
+    })
 
     // Créer la session de checkout
     const session = await stripe.checkout.sessions.create({

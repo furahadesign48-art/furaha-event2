@@ -1,34 +1,49 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import Stripe from 'https://esm.sh/stripe@14.21.0'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+    // Vérifier les variables d'environnement
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
+
+    if (!stripeSecretKey) {
+      throw new Error('STRIPE_SECRET_KEY non configuré')
+    }
+    if (!supabaseUrl) {
+      throw new Error('SUPABASE_URL non configuré')
+    }
+    if (!supabaseServiceKey) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY non configuré')
+    }
+    if (!webhookSecret) {
+      throw new Error('STRIPE_WEBHOOK_SECRET non configuré')
+    }
+
+    // Importer les modules dynamiquement
+    const { default: Stripe } = await import('https://esm.sh/stripe@14.21.0')
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
+
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: '2023-10-16',
     })
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     const signature = req.headers.get('stripe-signature')
     const body = await req.text()
-    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
 
-    if (!signature || !webhookSecret) {
-      throw new Error('Signature ou secret webhook manquant')
+    if (!signature) {
+      throw new Error('Signature Stripe manquante')
     }
 
     // Vérifier la signature du webhook
