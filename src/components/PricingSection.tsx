@@ -1,7 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, Star, Crown, Gem, Zap } from 'lucide-react';
 
 const PricingSection = () => {
+  const navigate = useNavigate();
+  
   const plans = [
     {
       name: 'Gratuit',
@@ -54,6 +57,17 @@ const PricingSection = () => {
       buttonClass: 'bg-slate-900 text-neutral-50 hover:bg-slate-800'
     }
   ];
+
+  const handlePlanSelection = (planName: string) => {
+    if (planName === 'Gratuit') {
+      // Pour le plan gratuit, rediriger vers l'inscription
+      return;
+    }
+    
+    // Pour les plans payants, rediriger vers la page de paiement
+    const planRoute = planName.toLowerCase();
+    navigate(`/payment/${planRoute}`);
+  };
 
   return (
     <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-neutral-100 via-amber-50/30 to-purple-50/20 relative overflow-hidden">
@@ -160,12 +174,21 @@ const PricingSection = () => {
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 hover:from-amber-600 hover:to-amber-700 shadow-glow-amber' 
                     : index === 2 
                       ? 'bg-gradient-to-r from-slate-900 to-purple-900 text-neutral-50 hover:from-purple-900 hover:to-slate-800 shadow-glow-purple' 
-                      : 'bg-gradient-to-r from-neutral-100 to-slate-100 text-slate-900 hover:from-slate-100 hover:to-neutral-200 cursor-default opacity-75'
-                }`}>
+                      : 'bg-gradient-to-r from-neutral-100 to-slate-100 text-slate-900 hover:from-slate-100 hover:to-neutral-200'
+                }`}
+                onClick={() => handlePlanSelection(plan.name)}
+                disabled={index === 0}
+                >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-1000"></div>
                   <span className="relative flex items-center justify-center">
-                    {index === 0 && <Zap className="h-4 w-4 mr-2" />}
+                    {index === 0 ? (
+                      <>
+                        <Zap className="h-4 w-4 mr-2" />
+                        {plan.buttonText}
+                      </>
+                    ) : (
                     {plan.buttonText}
+                    )}
                   </span>
                 </button>
               </div>

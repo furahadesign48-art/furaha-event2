@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Crown, Sparkles, Check, Zap } from 'lucide-react';
 
 interface UpgradeModalProps {
@@ -9,6 +10,8 @@ interface UpgradeModalProps {
 }
 
 const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: UpgradeModalProps) => {
+  const navigate = useNavigate();
+  
   if (!isOpen) return null;
 
   const plans = [
@@ -50,9 +53,10 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
   ];
 
   const handleUpgrade = (planName: string) => {
-    // Rediriger vers la page de paiement Stripe
-    alert(`Redirection vers le paiement pour le plan ${planName}...`);
-    // Ici vous intégreriez Stripe
+    // Rediriger vers la page de paiement
+    const planRoute = planName.toLowerCase();
+    navigate(`/payment/${planRoute}`);
+    onClose();
   };
 
   return (
