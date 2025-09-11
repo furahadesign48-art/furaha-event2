@@ -3,6 +3,16 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Crown, Sparkles, Check, ArrowLeft, CreditCard, Shield, Zap, Star } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
+// Stripe
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// Stripe client secret + erreur/loading
+const [clientSecret, setClientSecret] = useState<string | null>(null);
+const [stripeLoading, setStripeLoading] = useState(false);
+const [stripeError, setStripeError] = useState<string | null>(null);
+
 
 const PaymentRedirect = () => {
   const { plan } = useParams<{ plan: 'standard' | 'premium' }>();
@@ -14,45 +24,43 @@ const PaymentRedirect = () => {
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'error' | null>(null);
 
   // Vérifier si l'utilisateur est connecté
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/', { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
-
-  // Simuler le traitement du paiement
-  const handlePayment = async () => {
-    if (!plan || !user) return;
-
-    setIsProcessing(true);
-    setPaymentStatus('pending');
+useEffect(() => {
+  let mounted = true;
+  const createIntent = async () => {
+    if (!user || !plan) return;
+    setStripeLoading(true);
+    setStripeError(null);
 
     try {
-      // Simulation d'un délai de traitement
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Simuler un succès de paiement (90% de chance de succès)
-      const success = Math.random() > 0.1;
-      
-      if (success) {
-        // Mettre à jour l'abonnement
-        await upgradeToPremium(plan);
-        setPaymentStatus('success');
-        
-        // Rediriger vers le dashboard après 3 secondes
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 3000);
-      } else {
-        setPaymentStatus('error');
-      }
-    } catch (error) {
-      console.error('Erreur lors du paiement:', error);
-      setPaymentStatus('error');
+      const token = await user.getIdToken();
+
+      // URL de la Firebase Function (configurable via .env)
+      const endpoint = import.meta.env.VITE_CREATE_PAYMENT_INTENT_URL || '/createPaymentIntent';
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ plan }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur création PaymentIntent');
+
+      if (mounted) setClientSecret(data.clientSecret);
+    } catch (err: any) {
+      console.error('createPaymentIntent error', err);
+      if (mounted) setStripeError(err.message || 'Erreur Stripe');
     } finally {
-      setIsProcessing(false);
+      if (mounted) setStripeLoading(false);
     }
   };
+
+  createIntent();
+  return () => { mounted = false; };
+}, [user, plan]);
+
 
   if (!isAuthenticated || !user) {
     return null;
@@ -415,5 +423,70 @@ const PaymentRedirect = () => {
     </div>
   );
 };
+function StripePaymentForm({ plan, onSuccess }: { plan: 'standard' | 'premium'; onSuccess?: () => void }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { upgradeToPremium } = useSubscription();
+  const [isProcessingLocal, setIsProcessingLocal] = useState(false);
+  const [errorLocal, setErrorLocal] = useState<string | null>(null);
+
+  const handleConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setIsProcessingLocal(true);
+    setErrorLocal(null);
+
+    try {
+      // On confirme en "if_required" pour éviter redirections forcées
+      const result = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          // si Stripe doit rediriger pour 3DS, il redirigera vers cette URL
+          return_url: window.location.origin + '/payment-result',
+        },
+        redirect: 'if_required',
+      });
+
+      if (result.error) {
+        setErrorLocal(result.error.message || 'Erreur de paiement');
+        return;
+      }
+
+      const paymentIntent = result.paymentIntent;
+      if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Mise à jour de l'abonnement côté client (double-check côté webhook)
+        await upgradeToPremium(plan);
+        onSuccess && onSuccess();
+      } else {
+        // Si nécessite action, Stripe gère la redirection; sinon handle l'état
+        setErrorLocal(`Statut du paiement: ${paymentIntent?.status || 'inconnu'}`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorLocal(err.message || 'Erreur lors du paiement');
+    } finally {
+      setIsProcessingLocal(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleConfirm}>
+      <div className="mb-4">
+        <PaymentElement />
+      </div>
+
+      {errorLocal && <p className="text-red-500 mb-3">{errorLocal}</p>}
+
+      <button
+        type="submit"
+        disabled={!stripe || isProcessingLocal}
+        className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-white py-4 rounded-2xl transition-all duration-500 font-bold text-lg disabled:opacity-50"
+      >
+        {isProcessingLocal ? 'Traitement...' : `Confirmer le Paiement - ${plan === 'premium' ? '200€' : '100€'}`}
+      </button>
+    </form>
+  );
+}
 
 export default PaymentRedirect;
