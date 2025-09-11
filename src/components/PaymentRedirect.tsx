@@ -13,10 +13,6 @@ const PaymentRedirect = () => {
   const { subscription, upgradeToPremium } = useSubscription();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'error' | null>(null);
-  
-  // Stripe client secret + erreur/loading
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [stripeLoading, setStripeLoading] = useState(false);
   const [stripeError, setStripeError] = useState<string | null>(null);
 
   useEffect(() => {
