@@ -16,6 +16,8 @@ import InvitationPreview from './components/InvitationPreview';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PaymentRedirect from './components/PaymentRedirect';
+import PaymentSuccess from './components/PaymentSuccess';
+import PaymentCancel from './components/PaymentCancel';
 
 interface TemplateData {
   id: string;
@@ -158,6 +160,8 @@ function App() {
         <Route path="/" element={<AppContent />} />
         <Route path="/invitation/:inviteId" element={<InvitationPreview />} />
         <Route path="/payment/:plan" element={<PaymentRedirect />} />
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/cancel" element={<PaymentCancel />} />
       </Routes>
     </AuthProvider>
   );

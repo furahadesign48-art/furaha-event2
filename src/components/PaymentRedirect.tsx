@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Crown, Sparkles, Check, ArrowLeft, CreditCard, Shield, Zap, Star } from 'lucide-react';
 import { useAuth } from './AuthContext';
-import { useSubscription } from '../hooks/useSubscription';
+import { useStripeSubscription } from '../hooks/useStripeSubscription';
+import { STRIPE_PLANS } from '../config/stripe';
 
 const PaymentRedirect = () => {
   const { plan } = useParams<{ plan: 'standard' | 'premium' }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const { subscription, upgradeToPremium } = useSubscription();
+  const { createCheckoutSession, redirectToCheckout, verifyPayment } = useStripeSubscription();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'error' | null>(null);
 
@@ -20,7 +21,39 @@ const PaymentRedirect = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Simuler le traitement du paiement
+  // Vérifier si on revient d'un paiement réussi
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) {
+      handlePaymentVerification(sessionId);
+    }
+  }, [searchParams]);
+
+  // Vérifier le paiement après retour de Stripe
+  const handlePaymentVerification = async (sessionId: string) => {
+    setIsProcessing(true);
+    setPaymentStatus('pending');
+
+    try {
+      const result = await verifyPayment(sessionId);
+      
+      if (result.success) {
+        setPaymentStatus('success');
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 3000);
+      } else {
+        setPaymentStatus('error');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification:', error);
+      setPaymentStatus('error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Traitement du paiement avec Stripe
   const handlePayment = async () => {
     if (!plan || !user) return;
 
@@ -28,21 +61,11 @@ const PaymentRedirect = () => {
     setPaymentStatus('pending');
 
     try {
-      // Simulation d'un délai de traitement
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      const session = await createCheckoutSession(plan);
       
-      // Simuler un succès de paiement (90% de chance de succès)
-      const success = Math.random() > 0.1;
-      
-      if (success) {
-        // Mettre à jour l'abonnement
-        await upgradeToPremium(plan);
-        setPaymentStatus('success');
-        
-        // Rediriger vers le dashboard après 3 secondes
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 3000);
+      if (session) {
+        // Rediriger vers Stripe Checkout
+        await redirectToCheckout(session.sessionId);
       } else {
         setPaymentStatus('error');
       }
@@ -58,7 +81,7 @@ const PaymentRedirect = () => {
     return null;
   }
 
-  const planDetails = {
+  const planDetails: Record<string, any> = {
     standard: {
       name: 'Standard',
       price: '100$',
@@ -67,7 +90,7 @@ const PaymentRedirect = () => {
       icon: Crown,
       features: [
         '200 invitations maximum',
-        '1 mois de validité',
+        'Abonnement mensuel',
         'Tous les modèles premium',
         'Personnalisation avancée',
         'Statistiques détaillées',
@@ -82,7 +105,7 @@ const PaymentRedirect = () => {
       icon: Sparkles,
       features: [
         'Invitations illimitées',
-        '1 mois de validité',
+        'Abonnement mensuel',
         'Tous les modèles premium',
         'Personnalisation avancée',
         'Statistiques détaillées',
@@ -92,6 +115,13 @@ const PaymentRedirect = () => {
       ]
     }
   };
+
+  // Utiliser les vraies données Stripe si disponibles
+  if (plan && STRIPE_PLANS[plan as keyof typeof STRIPE_PLANS]) {
+    const stripePlan = STRIPE_PLANS[plan as keyof typeof STRIPE_PLANS];
+    planDetails[plan].price = `$${(stripePlan.price / 100).toFixed(2)}`;
+    planDetails[plan].features = stripePlan.features;
+  }
 
   const currentPlan = plan && planDetails[plan] ? planDetails[plan] : planDetails.standard;
   const IconComponent = currentPlan.icon;
@@ -171,7 +201,7 @@ const PaymentRedirect = () => {
               </h2>
               
               <p className="text-slate-600 mb-6 leading-relaxed">
-                Une erreur est survenue lors du traitement de votre paiement. Veuillez réessayer ou contacter notre support.
+                Une erreur est survenue lors du traitement de votre paiement. Veuillez réessayer.
               </p>
               
               <div className="space-y-3">
@@ -361,7 +391,7 @@ const PaymentRedirect = () => {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-slate-600">Période</span>
-                        <span className="text-slate-600">1 mois</span>
+                        <span className="text-slate-600">Mensuel</span>
                       </div>
                       <hr className="my-3" />
                       <div className="flex justify-between items-center text-lg font-bold">
@@ -390,7 +420,7 @@ const PaymentRedirect = () => {
                       {isProcessing ? (
                         <>
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                          Traitement en cours...
+                          Redirection vers Stripe...
                         </>
                       ) : (
                         <>
