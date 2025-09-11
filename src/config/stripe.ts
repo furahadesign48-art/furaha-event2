@@ -13,7 +13,7 @@ export const stripePromise = loadStripe(stripePublishableKey);
 // Configuration des plans
 export const STRIPE_PLANS = {
   standard: {
-    priceId: 'price_standard_monthly', // À remplacer par votre vrai Price ID
+    priceId: 'price_1QYourRealPriceId1', // Remplacez par votre vrai Price ID Stripe
     name: 'Standard',
     price: 10000, // 100.00 EUR en centimes
     currency: 'eur',
@@ -28,7 +28,7 @@ export const STRIPE_PLANS = {
     ]
   },
   premium: {
-    priceId: 'price_premium_monthly', // À remplacer par votre vrai Price ID
+    priceId: 'price_1QYourRealPriceId2', // Remplacez par votre vrai Price ID Stripe
     name: 'Premium',
     price: 20000, // 200.00 EUR en centimes
     currency: 'eur',

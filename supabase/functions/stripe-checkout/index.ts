@@ -22,11 +22,11 @@ serve(async (req) => {
     // Configuration des plans
     const plans = {
       standard: {
-        priceId: 'price_1234567890', // Remplacez par votre vrai Price ID
+        priceId: 'price_1QYourRealPriceId1', // Remplacez par votre vrai Price ID
         name: 'Plan Standard',
       },
       premium: {
-        priceId: 'price_0987654321', // Remplacez par votre vrai Price ID
+        priceId: 'price_1QYourRealPriceId2', // Remplacez par votre vrai Price ID
         name: 'Plan Premium',
       },
     }

@@ -34,23 +34,32 @@ const CheckoutForm = ({ planType, onSuccess, onCancel }: CheckoutFormProps) => {
 
     try {
       // Créer la session de checkout
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Configuration Supabase manquante');
+      }
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
         },
         body: JSON.stringify({
           planType,
           userId: user.id,
           userEmail: user.email,
-          successUrl: `${window.location.origin}/payment/success`,
-          cancelUrl: `${window.location.origin}/payment/cancel`,
+          successUrl: `${window.location.origin}/?payment=success`,
+          cancelUrl: `${window.location.origin}/?payment=cancel`,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de la création de la session de paiement');
+        const errorData = await response.text();
+        console.error('Erreur Stripe:', errorData);
+        throw new Error(`Erreur lors de la création de la session de paiement: ${errorData}`);
       }
 
       const { sessionId } = await response.json();
