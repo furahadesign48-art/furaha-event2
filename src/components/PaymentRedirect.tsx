@@ -3,11 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Crown, Sparkles, Check, ArrowLeft, CreditCard, Shield, Zap, Star, X } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
-// Stripe
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
 const PaymentRedirect = () => {
   const { plan } = useParams<{ plan: 'standard' | 'premium' }>();
@@ -23,43 +19,42 @@ const PaymentRedirect = () => {
   const [stripeLoading, setStripeLoading] = useState(false);
   const [stripeError, setStripeError] = useState<string | null>(null);
 
-  // Vérifier si l'utilisateur est connecté
-useEffect(() => {
-  let mounted = true;
-  const createIntent = async () => {
+  useEffect(() => {
     if (!user || !plan) return;
+
+    let mounted = true;
     setStripeLoading(true);
-    setStripeError(null);
 
-    try {
-      const token = await user.getIdToken();
+    const createIntent = async () => {
+      try {
+        const token = await user.getIdToken();
 
-      // URL de la Firebase Function (configurable via .env)
-      const endpoint = import.meta.env.VITE_CREATE_PAYMENT_INTENT_URL || '/createPaymentIntent';
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ plan }),
-      });
+        // URL de la Firebase Function (configurable via .env)
+        const endpoint = import.meta.env.VITE_CREATE_PAYMENT_INTENT_URL || '/createPaymentIntent';
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ plan }),
+        });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur création PaymentIntent');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erreur création PaymentIntent');
 
-      if (mounted) setClientSecret(data.clientSecret);
-    } catch (err: any) {
-      console.error('createPaymentIntent error', err);
-      if (mounted) setStripeError(err.message || 'Erreur Stripe');
-    } finally {
-      if (mounted) setStripeLoading(false);
-    }
-  };
+        if (mounted) setClientSecret(data.clientSecret);
+      } catch (err: any) {
+        console.error('createPaymentIntent error', err);
+        if (mounted) setStripeError(err.message || 'Erreur Stripe');
+      } finally {
+        if (mounted) setStripeLoading(false);
+      }
+    };
 
-  createIntent();
-  return () => { mounted = false; };
-}, [user, plan]);
+    createIntent();
+    return () => { mounted = false; };
+  }, [user, plan]);
 
   // StripePaymentForm component definition
   const StripePaymentForm = ({ plan, onSuccess }: { plan: 'standard' | 'premium'; onSuccess?: () => void }) => {
@@ -433,47 +428,29 @@ useEffect(() => {
                         <span className="text-slate-600">Plan {currentPlan.name}</span>
                         <span className="font-semibold text-slate-900">{currentPlan.price}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-600">Période</span>
-                        <span className="text-slate-600">1 mois</span>
-                      </div>
-                      <hr className="my-3" />
-                      <div className="flex justify-between items-center text-lg font-bold">
-                        <span className="text-slate-900">Total</span>
-                        <span className={`${
-                          currentPlan.color === 'amber' ? 'text-amber-600' : 'text-purple-600'
-                        }`}>
-                          {currentPlan.price}
-                        </span>
-                      </div>
                     </div>
                   </div>
 
-                  {/* Payment Button */}
-                  {/* Stripe Payment area */}
-{stripeLoading && (
-  <div className="text-center py-6">
-    <div className="w-8 h-8 border-2 border-gray-200 border-t-gray-400 rounded-full animate-spin mx-auto mb-3"></div>
-    Chargement du formulaire de paiement...
-  </div>
-)}
+                  {/* Stripe Payment Form */}
+                  {clientSecret && (
+                    <StripePaymentForm 
+                      plan={plan || 'standard'} 
+                      onSuccess={() => setPaymentStatus('success')} 
+                    />
+                  )}
 
-{stripeError && <p className="text-red-500 mb-3">{stripeError}</p>}
+                  {stripeLoading && (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto"></div>
+                      <p className="text-slate-600 mt-2">Chargement du formulaire de paiement...</p>
+                    </div>
+                  )}
 
-{clientSecret ? (
-  <Elements stripe={stripePromise} options={{ clientSecret }}>
-    <StripePaymentForm
-      plan={plan as 'standard' | 'premium'}
-      onSuccess={() => setPaymentStatus('success')}
-    />
-  </Elements>
-) : null}
-
-{/* Security Info */}
-<div className="flex items-center justify-center text-sm text-slate-500 mt-4">
-  <Shield className="h-4 w-4 mr-2" />
-  <span>Paiement sécurisé SSL 256-bit</span>
-</div>
+                  {stripeError && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                      <p className="text-red-600 text-sm">{stripeError}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
