@@ -14,6 +14,8 @@ const PaymentRedirect = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'error' | null>(null);
   const [stripeError, setStripeError] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripeLoading, setStripeLoading] = useState(true);
 
   useEffect(() => {
     if (!user || !plan) return;
