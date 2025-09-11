@@ -187,7 +187,7 @@ const PricingSection = () => {
                         {plan.buttonText}
                       </>
                     ) : (
-                    {plan.buttonText}
+                    <>{plan.buttonText}</>
                     )}
                   </span>
                 </button>
