@@ -384,45 +384,31 @@ useEffect(() => {
                   </div>
 
                   {/* Payment Button */}
-                  <button
-                    onClick={handlePayment}
-                    disabled={isProcessing}
-                    className={`w-full bg-gradient-to-r ${
-                      currentPlan.color === 'amber' 
-                        ? 'from-amber-500 via-amber-600 to-amber-500 hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 shadow-glow-amber' 
-                        : 'from-purple-500 via-purple-600 to-purple-500 hover:from-purple-600 hover:via-purple-700 hover:to-purple-600 shadow-glow-purple'
-                    } text-white py-4 rounded-2xl transition-all duration-500 font-bold text-lg hover:shadow-luxury transform hover:scale-105 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                    <span className="relative flex items-center justify-center">
-                      {isProcessing ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                          Traitement en cours...
-                        </>
-                      ) : (
-                        <>
-                          <CreditCard className="h-5 w-5 mr-2" />
-                          Confirmer le Paiement - {currentPlan.price}
-                        </>
-                      )}
-                    </span>
-                  </button>
+                  {/* Stripe Payment area */}
+{stripeLoading && (
+  <div className="text-center py-6">
+    <div className="w-8 h-8 border-2 border-gray-200 border-t-gray-400 rounded-full animate-spin mx-auto mb-3"></div>
+    Chargement du formulaire de paiement...
+  </div>
+)}
 
-                  {/* Security Info */}
-                  <div className="flex items-center justify-center text-sm text-slate-500">
-                    <Shield className="h-4 w-4 mr-2" />
-                    <span>Paiement sécurisé SSL 256-bit</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+{stripeError && <p className="text-red-500 mb-3">{stripeError}</p>}
+
+{clientSecret ? (
+  <Elements stripe={stripePromise} options={{ clientSecret }}>
+    <StripePaymentForm
+      plan={plan as 'standard' | 'premium'}
+      onSuccess={() => setPaymentStatus('success')}
+    />
+  </Elements>
+) : null}
+
+{/* Security Info */}
+<div className="flex items-center justify-center text-sm text-slate-500 mt-4">
+  <Shield className="h-4 w-4 mr-2" />
+  <span>Paiement sécurisé SSL 256-bit</span>
+</div>
+
 function StripePaymentForm({ plan, onSuccess }: { plan: 'standard' | 'premium'; onSuccess?: () => void }) {
   const stripe = useStripe();
   const elements = useElements();
