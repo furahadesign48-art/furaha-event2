@@ -28,7 +28,7 @@ export const STRIPE_PLANS = {
     ]
   },
   premium: {
-    priceId: 'price_1QYourRealPriceId2', // Remplacez par votre vrai Price ID Stripe
+    priceId: 'price_1S6F7N0PYTC9Tov9cwD2dElL', // Remplacez par votre vrai Price ID Stripe
     name: 'Premium',
     price: 20000, // 200.00 EUR en centimes
     currency: 'eur',
