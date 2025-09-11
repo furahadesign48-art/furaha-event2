@@ -1,79 +1,104 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Crown, Sparkles, Check, ArrowLeft, CreditCard, Shield, Zap, Star, X } from 'lucide-react';
-import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Crown, Sparkles, Check, ArrowLeft, CreditCard, Shield, X, Loader } from 'lucide-react';
+import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js';
+import { stripePromise } from '../config/stripe';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
 
-// Charger Stripe avec votre clé publique
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_votre_cle_publique_stripe');
-
 const PaymentRedirect = () => {
   const { plan } = useParams<{ plan: 'standard' | 'premium' }>();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const { subscription, upgradeToPremium } = useSubscription();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const { upgradeToPremium } = useSubscription();
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'error' | null>(null);
-  const [stripeError, setStripeError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [stripeLoading, setStripeLoading] = useState(true);
+  const [isCreatingPayment, setIsCreatingPayment] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Composant interne pour le formulaire de paiement Stripe
-  const StripePaymentForm = ({ plan, onSuccess }: { plan: 'standard' | 'premium'; onSuccess?: () => void }) => {
+  const StripePaymentForm = () => {
     const stripe = useStripe();
     const elements = useElements();
-    const [isProcessingLocal, setIsProcessingLocal] = useState(false);
-    const [errorLocal, setErrorLocal] = useState<string | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [formData, setFormData] = useState({
+      email: user?.email || '',
+      name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+    });
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+    const cardElementOptions = {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#1e293b',
+          fontFamily: 'Inter, system-ui, sans-serif',
+          '::placeholder': {
+            color: '#64748b',
+          },
+          iconColor: '#f59e0b',
+        },
+        invalid: {
+          color: '#ef4444',
+          iconColor: '#ef4444',
+        },
+      },
+    };
 
     const handleSubmit = async (event: React.FormEvent) => {
       event.preventDefault();
 
-      if (!stripe || !elements) {
-        setErrorLocal('Stripe n\'est pas encore chargé');
+      if (!stripe || !elements || !clientSecret) {
+        setError('Stripe n\'est pas encore chargé');
         return;
       }
 
-      setIsProcessingLocal(true);
-      setErrorLocal(null);
       setIsProcessing(true);
+      setFormErrors({});
+      setError(null);
+
+      const cardElement = elements.getElement(CardNumberElement);
+      if (!cardElement) {
+        setError('Élément de carte non trouvé');
+        setIsProcessing(false);
+        return;
+      }
 
       try {
         // Confirmer le paiement avec Stripe
-        const { error, paymentIntent } = await stripe.confirmPayment({
-          elements,
-          redirect: 'if_required',
-          confirmParams: {
-            return_url: `${window.location.origin}/payment-success`,
+        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: cardElement,
+            billing_details: {
+              name: formData.name,
+              email: formData.email,
+            },
           },
         });
 
-        if (error) {
-          throw new Error(error.message || 'Erreur lors du paiement');
+        if (stripeError) {
+          throw new Error(stripeError.message || 'Erreur lors du paiement');
         }
 
-        if (paymentIntent && paymentIntent.status === 'succeeded') {
-          // Mettre à jour l'abonnement côté client
-          await upgradeToPremium(plan);
-          
-          // Déclencher le callback de succès
-          if (onSuccess) {
-            onSuccess();
-          }
+        if (paymentIntent?.status === 'succeeded') {
+          // Mettre à jour l'abonnement de l'utilisateur
+          const planType = plan as 'standard' | 'premium';
+          await upgradeToPremium(planType);
           
           setPaymentStatus('success');
+          
+          // Rediriger vers le dashboard après 2 secondes
+          setTimeout(() => {
+            navigate('/', { replace: true });
+          }, 2000);
         } else {
-          throw new Error(`Statut du paiement inattendu: ${paymentIntent?.status}`);
+          throw new Error('Le paiement n\'a pas été confirmé');
         }
       } catch (err: any) {
         console.error('Erreur de paiement:', err);
-        setErrorLocal(err.message || 'Erreur lors du paiement');
-        setStripeError(err.message || 'Erreur lors du paiement');
+        setError(err.message || 'Erreur lors du paiement');
         setPaymentStatus('error');
       } finally {
-        setIsProcessingLocal(false);
         setIsProcessing(false);
       }
     };
@@ -85,58 +110,137 @@ const PaymentRedirect = () => {
             <CreditCard className="h-5 w-5 mr-2 text-amber-600" />
             Informations de paiement
           </h3>
-          
-          <div className="mb-4">
-            <PaymentElement 
-              options={{
-                layout: 'tabs',
-                paymentMethodOrder: ['card', 'paypal']
-              }}
-            />
+
+          <div className="space-y-4">
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                required
+                disabled={isProcessing}
+              />
+            </div>
+
+            {/* Nom */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Nom complet
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                required
+                disabled={isProcessing}
+              />
+            </div>
+
+            {/* Numéro de carte */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Numéro de carte
+              </label>
+              <div className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200 bg-white">
+                <CardNumberElement
+                  options={cardElementOptions}
+                />
+              </div>
+            </div>
+
+            {/* Expiration et CVC */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Date d'expiration
+                </label>
+                <div className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200 bg-white">
+                  <CardExpiryElement
+                    options={cardElementOptions}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  CVC
+                </label>
+                <div className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200 bg-white">
+                  <CardCvcElement
+                    options={cardElementOptions}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {errorLocal && (
-          <div className="bg-rose-50 border border-rose-200 rounded-xl p-4">
-            <p className="text-rose-700 text-sm flex items-center">
-              <X className="h-4 w-4 mr-2" />
-              {errorLocal}
-            </p>
+        {/* Résumé de commande */}
+        <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-2xl p-6 border border-slate-200/50">
+          <h4 className="font-semibold text-slate-900 mb-4">Résumé de la commande</h4>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600">Plan {plan === 'premium' ? 'Premium' : 'Standard'}</span>
+              <span className="font-semibold text-slate-900">{plan === 'premium' ? '200€' : '100€'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600">TVA (20%)</span>
+              <span className="text-slate-600">{plan === 'premium' ? '40€' : '20€'}</span>
+            </div>
+            <hr className="my-3" />
+            <div className="flex justify-between items-center text-lg font-bold">
+              <span className="text-slate-900">Total</span>
+              <span className="text-amber-600">{plan === 'premium' ? '240€' : '120€'}</span>
+            </div>
           </div>
-        )}
+        </div>
 
+        {/* Bouton de paiement */}
         <button
           type="submit"
-          disabled={!stripe || isProcessingLocal || isProcessing}
+          disabled={!stripe || isProcessing}
           className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-slate-900 py-4 rounded-2xl hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 transition-all duration-500 font-bold text-lg shadow-glow-amber hover:shadow-luxury transform hover:scale-105 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
           <span className="relative flex items-center justify-center">
-            {isProcessingLocal || isProcessing ? (
+            {isProcessing ? (
               <>
-                <div className="w-5 h-5 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin mr-2"></div>
+                <Loader className="h-5 w-5 mr-2 animate-spin" />
                 Traitement en cours...
               </>
             ) : (
               <>
                 <CreditCard className="h-5 w-5 mr-2" />
-                Payer {plan === 'premium' ? '200€' : '100€'}
+                Payer {plan === 'premium' ? '240€' : '120€'}
               </>
             )}
           </span>
         </button>
+
+        {/* Informations légales */}
+        <div className="text-center">
+          <p className="text-xs text-slate-500">
+            En cliquant sur "Payer", vous acceptez nos conditions d'utilisation et notre politique de confidentialité.
+          </p>
+        </div>
       </form>
     );
   };
 
+  // Créer le PaymentIntent au chargement du composant
   useEffect(() => {
     if (!user || !plan || !isAuthenticated) return;
 
-    let mounted = true;
-    setStripeLoading(true);
-    setStripeError(null);
-
     const createPaymentIntent = async () => {
+      setIsCreatingPayment(true);
+      setError(null);
+
       try {
         // Obtenir le token Firebase de l'utilisateur
         const token = await user.firebaseUser?.getIdToken();
@@ -145,8 +249,7 @@ const PaymentRedirect = () => {
         }
 
         // Appeler la fonction Firebase
-        const functionUrl = import.meta.env.VITE_FIREBASE_FUNCTIONS_URL || 
-          'https://us-central1-furaha-event-831ca.cloudfunctions.net/createPaymentIntent';
+        const functionUrl = `${import.meta.env.VITE_FIREBASE_FUNCTIONS_URL || 'https://us-central1-furaha-event-831ca.cloudfunctions.net'}/createPaymentIntent`;
         
         const response = await fetch(functionUrl, {
           method: 'POST',
@@ -167,26 +270,16 @@ const PaymentRedirect = () => {
           throw new Error('Client secret manquant dans la réponse');
         }
 
-        if (mounted) {
-          setClientSecret(data.clientSecret);
-        }
+        setClientSecret(data.clientSecret);
       } catch (err: any) {
         console.error('Erreur lors de la création du PaymentIntent:', err);
-        if (mounted) {
-          setStripeError(err.message || 'Erreur lors de la création du paiement');
-        }
+        setError(err.message || 'Erreur lors de la création du paiement');
       } finally {
-        if (mounted) {
-          setStripeLoading(false);
-        }
+        setIsCreatingPayment(false);
       }
     };
 
     createPaymentIntent();
-    
-    return () => {
-      mounted = false;
-    };
   }, [user, plan, isAuthenticated]);
 
   if (!isAuthenticated || !user) {
@@ -208,10 +301,29 @@ const PaymentRedirect = () => {
     );
   }
 
+  if (!plan || !['standard', 'premium'].includes(plan)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-luxury border border-neutral-200/50 p-8">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Plan invalide</h2>
+            <p className="text-slate-600 mb-6">Le plan sélectionné n'est pas valide.</p>
+            <button
+              onClick={() => navigate('/', { replace: true })}
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold"
+            >
+              Retour à l'accueil
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const planDetails = {
     standard: {
       name: 'Standard',
-      price: '100$',
+      price: '100€',
       period: '/mois',
       color: 'amber',
       icon: Crown,
@@ -226,7 +338,7 @@ const PaymentRedirect = () => {
     },
     premium: {
       name: 'Premium',
-      price: '200$',
+      price: '200€',
       period: '/mois',
       color: 'purple',
       icon: Sparkles,
@@ -243,7 +355,7 @@ const PaymentRedirect = () => {
     }
   };
 
-  const currentPlan = plan && planDetails[plan] ? planDetails[plan] : planDetails.standard;
+  const currentPlan = planDetails[plan];
   const IconComponent = currentPlan.icon;
 
   if (paymentStatus === 'success') {
@@ -279,7 +391,7 @@ const PaymentRedirect = () => {
                   <h4 className="text-emerald-800 font-semibold">Plan {currentPlan.name} Activé</h4>
                 </div>
                 <p className="text-emerald-700 text-sm">
-                  Vous allez être redirigé vers votre dashboard dans quelques secondes...
+                  Redirection vers votre dashboard...
                 </p>
               </div>
               
@@ -321,12 +433,16 @@ const PaymentRedirect = () => {
               </h2>
               
               <p className="text-slate-600 mb-6 leading-relaxed">
-                Une erreur est survenue lors du traitement de votre paiement. Veuillez réessayer ou contacter notre support.
+                {error || 'Une erreur est survenue lors du traitement de votre paiement. Veuillez réessayer ou contacter notre support.'}
               </p>
               
               <div className="space-y-3">
                 <button
-                  onClick={() => setPaymentStatus(null)}
+                  onClick={() => {
+                    setPaymentStatus(null);
+                    setError(null);
+                    window.location.reload();
+                  }}
                   className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-slate-900 py-3 rounded-xl hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 transition-all duration-500 font-semibold shadow-glow-amber transform hover:scale-105"
                 >
                   Réessayer le Paiement
@@ -356,7 +472,7 @@ const PaymentRedirect = () => {
       </div>
       
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full">
+        <div className="max-w-4xl w-full">
           <div className="text-center mb-8 animate-fade-in">
             <button
               onClick={() => navigate('/', { replace: true })}
@@ -452,25 +568,28 @@ const PaymentRedirect = () => {
                   <h4 className={`${
                     currentPlan.color === 'amber' ? 'text-amber-800' : 'text-purple-800'
                   } font-semibold text-sm`}>
-                    Garantie de satisfaction
+                    Paiement 100% Sécurisé
                   </h4>
                 </div>
-                <p className={`${
+                <ul className={`${
                   currentPlan.color === 'amber' ? 'text-amber-700' : 'text-purple-700'
-                } text-xs`}>
-                  Annulation possible à tout moment. Aucun engagement.
-                </p>
+                } text-xs space-y-1`}>
+                  <li>• Chiffrement SSL 256-bit</li>
+                  <li>• Traité par Stripe (leader mondial)</li>
+                  <li>• Aucune donnée stockée sur nos serveurs</li>
+                  <li>• Annulation possible à tout moment</li>
+                </ul>
               </div>
             </div>
 
             {/* Payment Form */}
             <div className="bg-white rounded-3xl shadow-luxury border border-neutral-200/50 p-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
               <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Informations de Paiement</h3>
-                <p className="text-slate-600 text-sm">Paiement sécurisé par Stripe</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Paiement Sécurisé</h3>
+                <p className="text-slate-600 text-sm">Powered by Stripe</p>
               </div>
 
-              {paymentStatus === 'pending' ? (
+              {isCreatingPayment ? (
                 <div className="text-center py-8">
                   <div className="relative mb-6">
                     <CreditCard className="h-16 w-16 text-amber-500 animate-pulse mx-auto" />
@@ -478,96 +597,54 @@ const PaymentRedirect = () => {
                       <CreditCard className="h-16 w-16 text-amber-300 opacity-30 mx-auto" />
                     </div>
                   </div>
-                  <h4 className="text-lg font-semibold text-slate-900 mb-2">Traitement en cours...</h4>
-                  <p className="text-slate-600 mb-6">Veuillez patienter pendant que nous traitons votre paiement.</p>
+                  <h4 className="text-lg font-semibold text-slate-900 mb-2">Préparation du paiement...</h4>
+                  <p className="text-slate-600 mb-6">Veuillez patienter pendant que nous préparons votre paiement sécurisé.</p>
                   <div className="flex items-center justify-center space-x-2">
                     <div className="w-3 h-3 bg-amber-500 rounded-full animate-bounce"></div>
                     <div className="w-3 h-3 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                     <div className="w-3 h-3 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 </div>
+              ) : error ? (
+                <div className="bg-rose-50 border border-rose-200 rounded-xl p-6 text-center">
+                  <X className="h-12 w-12 text-rose-600 mx-auto mb-4" />
+                  <h4 className="text-rose-800 font-semibold mb-2">Erreur de configuration</h4>
+                  <p className="text-rose-600 text-sm mb-4">{error}</p>
+                  <button
+                    onClick={() => {
+                      setError(null);
+                      window.location.reload();
+                    }}
+                    className="bg-rose-600 text-white px-4 py-2 rounded-lg hover:bg-rose-700 transition-all duration-300 font-semibold text-sm"
+                  >
+                    Réessayer
+                  </button>
+                </div>
+              ) : clientSecret ? (
+                <Elements 
+                  stripe={stripePromise} 
+                  options={{
+                    clientSecret,
+                    appearance: {
+                      theme: 'stripe',
+                      variables: {
+                        colorPrimary: '#f59e0b',
+                        colorBackground: '#ffffff',
+                        colorText: '#1e293b',
+                        colorDanger: '#ef4444',
+                        fontFamily: 'Inter, system-ui, sans-serif',
+                        spacingUnit: '4px',
+                        borderRadius: '12px',
+                      },
+                    },
+                  }}
+                >
+                  <StripePaymentForm />
+                </Elements>
               ) : (
-                <div className="space-y-6">
-                  {/* User Info */}
-                  <div className="bg-gradient-to-r from-neutral-50 to-amber-50/30 rounded-2xl p-4 border border-neutral-200/50">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-rose-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                        {user.firstName[0]}{user.lastName[0]}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-900">{user.firstName} {user.lastName}</p>
-                        <p className="text-sm text-slate-600">{user.email}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Payment Summary */}
-                  <div className="border border-neutral-200 rounded-2xl p-4">
-                    <h4 className="font-semibold text-slate-900 mb-3">Résumé de la commande</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-600">Plan {currentPlan.name}</span>
-                        <span className="font-semibold text-slate-900">{currentPlan.price}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stripe Payment Form */}
-                  {clientSecret && !stripeLoading && (
-                    <Elements 
-                      stripe={stripePromise} 
-                      options={{
-                        clientSecret,
-                        appearance: {
-                          theme: 'stripe',
-                          variables: {
-                            colorPrimary: '#f59e0b',
-                            colorBackground: '#ffffff',
-                            colorText: '#1e293b',
-                            colorDanger: '#ef4444',
-                            fontFamily: 'Inter, system-ui, sans-serif',
-                            spacingUnit: '4px',
-                            borderRadius: '12px',
-                          },
-                        },
-                      }}
-                    >
-                      <StripePaymentForm 
-                        plan={plan || 'standard'} 
-                        onSuccess={() => setPaymentStatus('success')} 
-                      />
-                    </Elements>
-                  )}
-
-                  {stripeLoading && (
-                    <div className="text-center py-4">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto"></div>
-                      <p className="text-slate-600 mt-2">Chargement du formulaire de paiement...</p>
-                    </div>
-                  )}
-
-                  {stripeError && (
-                    <div className="bg-rose-50 border border-rose-200 rounded-xl p-4">
-                      <div className="flex items-center">
-                        <X className="h-5 w-5 text-rose-600 mr-2" />
-                        <div>
-                          <h4 className="text-rose-800 font-semibold text-sm">Erreur de paiement</h4>
-                          <p className="text-rose-600 text-sm mt-1">{stripeError}</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setStripeError(null);
-                          setPaymentStatus(null);
-                          // Relancer la création du PaymentIntent
-                          window.location.reload();
-                        }}
-                        className="mt-3 w-full bg-rose-600 text-white py-2 rounded-lg hover:bg-rose-700 transition-all duration-300 font-semibold text-sm"
-                      >
-                        Réessayer
-                      </button>
-                    </div>
-                  )}
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto mb-4"></div>
+                  <p className="text-slate-600">Initialisation du paiement...</p>
                 </div>
               )}
             </div>
