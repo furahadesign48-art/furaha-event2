@@ -9,6 +9,7 @@ import {
 import { CreditCard, User, Mail, Lock, Loader } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
+import { paymentService } from '../services/paymentService';
 
 interface PaymentFormProps {
   plan: {
@@ -74,23 +75,18 @@ const PaymentForm = ({ plan, onSuccess, onError, isProcessing, setIsProcessing }
     }
 
     try {
-      // Simuler la création d'un PaymentIntent côté serveur
-      // En production, vous devriez appeler votre API backend
-      const paymentIntentResponse = await simulateCreatePaymentIntent({
-        amount: plan.price * 100, // Stripe utilise les centimes
-        currency: plan.currency.toLowerCase(),
-        customer_email: formData.email,
-        customer_name: formData.name,
-        plan_id: plan.priceId
+      // Créer le PaymentIntent via Firebase Functions
+      const paymentIntentResponse = await paymentService.createPaymentIntent({
+        planId: plan.name.toLowerCase() as 'standard' | 'premium',
+        customerInfo: {
+          email: formData.email,
+          name: formData.name,
+        }
       });
-
-      if (!paymentIntentResponse.success) {
-        throw new Error(paymentIntentResponse.error || 'Erreur lors de la création du paiement');
-      }
 
       // Confirmer le paiement avec Stripe
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-        paymentIntentResponse.client_secret,
+        paymentIntentResponse.clientSecret,
         {
           payment_method: {
             card: cardElement,
@@ -110,14 +106,6 @@ const PaymentForm = ({ plan, onSuccess, onError, isProcessing, setIsProcessing }
         // Mettre à jour l'abonnement de l'utilisateur
         const planType = plan.name.toLowerCase() as 'standard' | 'premium';
         await upgradeToPremium(planType);
-        
-        // Simuler la sauvegarde côté serveur
-        await simulateSaveSubscription({
-          userId: user.id,
-          planId: plan.priceId,
-          paymentIntentId: paymentIntent.id,
-          status: 'active'
-        });
 
         onSuccess();
       } else {
@@ -129,38 +117,6 @@ const PaymentForm = ({ plan, onSuccess, onError, isProcessing, setIsProcessing }
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  // Simulation d'appel API pour créer un PaymentIntent
-  const simulateCreatePaymentIntent = async (data: any) => {
-    // En production, remplacez par un vrai appel à votre API
-    return new Promise<{ success: boolean; client_secret?: string; error?: string }>((resolve) => {
-      setTimeout(() => {
-        // Simuler un succès 90% du temps
-        if (Math.random() > 0.1) {
-          resolve({
-            success: true,
-            client_secret: `pi_test_${Date.now()}_secret_${Math.random().toString(36).substr(2, 9)}`
-          });
-        } else {
-          resolve({
-            success: false,
-            error: 'Erreur de simulation côté serveur'
-          });
-        }
-      }, 1000);
-    });
-  };
-
-  // Simulation de sauvegarde d'abonnement
-  const simulateSaveSubscription = async (data: any) => {
-    // En production, remplacez par un vrai appel à votre API
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        console.log('Abonnement sauvegardé:', data);
-        resolve();
-      }, 500);
-    });
   };
 
   return (
