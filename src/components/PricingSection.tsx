@@ -1,9 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Star, Crown, Gem, Zap } from 'lucide-react';
+import { useState } from 'react';
+import PaymentModal from './PaymentModal';
+import { useAuth } from './AuthContext';
 
 const PricingSection = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'standard' | 'premium'>('standard');
   
   const plans = [
     {
@@ -64,9 +70,22 @@ const PricingSection = () => {
       return;
     }
     
-    // Pour les plans payants, rediriger vers la page de paiement
-    const planRoute = planName.toLowerCase();
-    navigate(`/payment/${planRoute}`);
+    if (!isAuthenticated) {
+      // Rediriger vers l'inscription si pas connecté
+      navigate('/');
+      return;
+    }
+    
+    // Pour les plans payants, ouvrir le modal de paiement
+    const planType = planName.toLowerCase() as 'standard' | 'premium';
+    setSelectedPlan(planType);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    // Rediriger vers le dashboard ou afficher un message de succès
+    navigate('/');
   };
 
   return (
@@ -196,6 +215,14 @@ const PricingSection = () => {
           })}
         </div>
       </div>
+      
+      {/* Modal de paiement */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        selectedPlan={selectedPlan}
+        onSuccess={handlePaymentSuccess}
+      />
     </section>
   );
 };

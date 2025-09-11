@@ -1,6 +1,7 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { X, Crown, Sparkles, Check, Zap } from 'lucide-react';
+import { useState } from 'react';
+import PaymentModal from './PaymentModal';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -10,7 +11,8 @@ interface UpgradeModalProps {
 }
 
 const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: UpgradeModalProps) => {
-  const navigate = useNavigate();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'standard' | 'premium'>('standard');
   
   if (!isOpen) return null;
 
@@ -53,13 +55,20 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
   ];
 
   const handleUpgrade = (planName: string) => {
-    // Rediriger vers la page de paiement
-    const planRoute = planName.toLowerCase();
-    navigate(`/payment/${planRoute}`);
+    // Ouvrir le modal de paiement
+    const planType = planName.toLowerCase() as 'standard' | 'premium';
+    setSelectedPlan(planType);
+    setShowPaymentModal(true);
     onClose();
   };
 
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    onClose();
+    // L'abonnement sera automatiquement mis à jour via le hook useSubscription
+  };
   return (
+    <>
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
       <div className="bg-white rounded-2xl shadow-luxury max-w-xl w-full max-h-[90vh] overflow-y-auto animate-slide-up relative">
         {/* Background decorative elements */}
@@ -200,6 +209,15 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
         </div>
       </div>
     </div>
+      
+      {/* Modal de paiement */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        selectedPlan={selectedPlan}
+        onSuccess={handlePaymentSuccess}
+      />
+    </>
   );
 };
 
