@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Crown, Sparkles, Check, ArrowLeft, CreditCard, Shield, Zap, Star, X } from 'lucide-react';
+import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
-import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
+
+// Charger Stripe avec votre clé publique
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_votre_cle_publique_stripe');
 
 const PaymentRedirect = () => {
   const { plan } = useParams<{ plan: 'standard' | 'premium' }>();
@@ -17,112 +21,191 @@ const PaymentRedirect = () => {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [stripeLoading, setStripeLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user || !plan) return;
-
-    let mounted = true;
-    setStripeLoading(true);
-
-    const createIntent = async () => {
-      try {
-        const token = await user.getIdToken();
-
-        // URL de la Firebase Function (configurable via .env)
-        const endpoint = import.meta.env.VITE_CREATE_PAYMENT_INTENT_URL || '/createPaymentIntent';
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ plan }),
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Erreur création PaymentIntent');
-
-        if (mounted) setClientSecret(data.clientSecret);
-      } catch (err: any) {
-        console.error('createPaymentIntent error', err);
-        if (mounted) setStripeError(err.message || 'Erreur Stripe');
-      } finally {
-        if (mounted) setStripeLoading(false);
-      }
-    };
-
-    createIntent();
-    return () => { mounted = false; };
-  }, [user, plan]);
-
-  // StripePaymentForm component definition
+  // Composant interne pour le formulaire de paiement Stripe
   const StripePaymentForm = ({ plan, onSuccess }: { plan: 'standard' | 'premium'; onSuccess?: () => void }) => {
     const stripe = useStripe();
     const elements = useElements();
-    const { upgradeToPremium } = useSubscription();
     const [isProcessingLocal, setIsProcessingLocal] = useState(false);
     const [errorLocal, setErrorLocal] = useState<string | null>(null);
 
-    const handleConfirm = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!stripe || !elements) return;
+    const handleSubmit = async (event: React.FormEvent) => {
+      event.preventDefault();
+
+      if (!stripe || !elements) {
+        setErrorLocal('Stripe n\'est pas encore chargé');
+        return;
+      }
 
       setIsProcessingLocal(true);
       setErrorLocal(null);
+      setIsProcessing(true);
 
       try {
-        // On confirme en "if_required" pour éviter redirections forcées
-        const result = await stripe.confirmPayment({
+        // Confirmer le paiement avec Stripe
+        const { error, paymentIntent } = await stripe.confirmPayment({
           elements,
-          confirmParams: {
-            // si Stripe doit rediriger pour 3DS, il redirigera vers cette URL
-            return_url: window.location.origin + '/payment-result',
-          },
           redirect: 'if_required',
+          confirmParams: {
+            return_url: `${window.location.origin}/payment-success`,
+          },
         });
 
-        if (result.error) {
-          setErrorLocal(result.error.message || 'Erreur de paiement');
-          return;
+        if (error) {
+          throw new Error(error.message || 'Erreur lors du paiement');
         }
 
-        const paymentIntent = result.paymentIntent;
         if (paymentIntent && paymentIntent.status === 'succeeded') {
-          // Mise à jour de l'abonnement côté client (double-check côté webhook)
+          // Mettre à jour l'abonnement côté client
           await upgradeToPremium(plan);
-          onSuccess && onSuccess();
+          
+          // Déclencher le callback de succès
+          if (onSuccess) {
+            onSuccess();
+          }
+          
+          setPaymentStatus('success');
         } else {
-          // Si nécessite action, Stripe gère la redirection; sinon handle l'état
-          setErrorLocal(`Statut du paiement: ${paymentIntent?.status || 'inconnu'}`);
+          throw new Error(`Statut du paiement inattendu: ${paymentIntent?.status}`);
         }
       } catch (err: any) {
-        console.error(err);
+        console.error('Erreur de paiement:', err);
         setErrorLocal(err.message || 'Erreur lors du paiement');
+        setStripeError(err.message || 'Erreur lors du paiement');
+        setPaymentStatus('error');
       } finally {
         setIsProcessingLocal(false);
+        setIsProcessing(false);
       }
     };
 
     return (
-      <form onSubmit={handleConfirm}>
-        <div className="mb-4">
-          <PaymentElement />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-gradient-to-r from-neutral-50 to-amber-50/30 rounded-2xl p-6 border border-neutral-200/50">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
+            <CreditCard className="h-5 w-5 mr-2 text-amber-600" />
+            Informations de paiement
+          </h3>
+          
+          <div className="mb-4">
+            <PaymentElement 
+              options={{
+                layout: 'tabs',
+                paymentMethodOrder: ['card', 'paypal']
+              }}
+            />
+          </div>
         </div>
 
-        {errorLocal && <p className="text-red-500 mb-3">{errorLocal}</p>}
+        {errorLocal && (
+          <div className="bg-rose-50 border border-rose-200 rounded-xl p-4">
+            <p className="text-rose-700 text-sm flex items-center">
+              <X className="h-4 w-4 mr-2" />
+              {errorLocal}
+            </p>
+          </div>
+        )}
 
         <button
           type="submit"
-          disabled={!stripe || isProcessingLocal}
-          className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-white py-4 rounded-2xl transition-all duration-500 font-bold text-lg disabled:opacity-50"
+          disabled={!stripe || isProcessingLocal || isProcessing}
+          className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-slate-900 py-4 rounded-2xl hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 transition-all duration-500 font-bold text-lg shadow-glow-amber hover:shadow-luxury transform hover:scale-105 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
-          {isProcessingLocal ? 'Traitement...' : `Confirmer le Paiement - ${plan === 'premium' ? '200€' : '100€'}`}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          <span className="relative flex items-center justify-center">
+            {isProcessingLocal || isProcessing ? (
+              <>
+                <div className="w-5 h-5 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin mr-2"></div>
+                Traitement en cours...
+              </>
+            ) : (
+              <>
+                <CreditCard className="h-5 w-5 mr-2" />
+                Payer {plan === 'premium' ? '200€' : '100€'}
+              </>
+            )}
+          </span>
         </button>
       </form>
     );
   };
 
+  useEffect(() => {
+    if (!user || !plan || !isAuthenticated) return;
+
+    let mounted = true;
+    setStripeLoading(true);
+    setStripeError(null);
+
+    const createPaymentIntent = async () => {
+      try {
+        // Obtenir le token Firebase de l'utilisateur
+        const token = await user.firebaseUser?.getIdToken();
+        if (!token) {
+          throw new Error('Token d\'authentification non disponible');
+        }
+
+        // Appeler la fonction Firebase
+        const functionUrl = import.meta.env.VITE_FIREBASE_FUNCTIONS_URL || 
+          'https://us-central1-furaha-event-831ca.cloudfunctions.net/createPaymentIntent';
+        
+        const response = await fetch(functionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ plan }),
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || `Erreur HTTP ${response.status}`);
+        }
+
+        if (!data.clientSecret) {
+          throw new Error('Client secret manquant dans la réponse');
+        }
+
+        if (mounted) {
+          setClientSecret(data.clientSecret);
+        }
+      } catch (err: any) {
+        console.error('Erreur lors de la création du PaymentIntent:', err);
+        if (mounted) {
+          setStripeError(err.message || 'Erreur lors de la création du paiement');
+        }
+      } finally {
+        if (mounted) {
+          setStripeLoading(false);
+        }
+      }
+    };
+
+    createPaymentIntent();
+    
+    return () => {
+      mounted = false;
+    };
+  }, [user, plan, isAuthenticated]);
+
   if (!isAuthenticated || !user) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-luxury border border-neutral-200/50 p-8">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Connexion requise</h2>
+            <p className="text-slate-600 mb-6">Vous devez être connecté pour accéder au paiement.</p>
+            <button
+              onClick={() => navigate('/', { replace: true })}
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold"
+            >
+              Retour à l'accueil
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const planDetails = {
@@ -430,11 +513,30 @@ const PaymentRedirect = () => {
                   </div>
 
                   {/* Stripe Payment Form */}
-                  {clientSecret && (
-                    <StripePaymentForm 
-                      plan={plan || 'standard'} 
-                      onSuccess={() => setPaymentStatus('success')} 
-                    />
+                  {clientSecret && !stripeLoading && (
+                    <Elements 
+                      stripe={stripePromise} 
+                      options={{
+                        clientSecret,
+                        appearance: {
+                          theme: 'stripe',
+                          variables: {
+                            colorPrimary: '#f59e0b',
+                            colorBackground: '#ffffff',
+                            colorText: '#1e293b',
+                            colorDanger: '#ef4444',
+                            fontFamily: 'Inter, system-ui, sans-serif',
+                            spacingUnit: '4px',
+                            borderRadius: '12px',
+                          },
+                        },
+                      }}
+                    >
+                      <StripePaymentForm 
+                        plan={plan || 'standard'} 
+                        onSuccess={() => setPaymentStatus('success')} 
+                      />
+                    </Elements>
                   )}
 
                   {stripeLoading && (
@@ -445,8 +547,25 @@ const PaymentRedirect = () => {
                   )}
 
                   {stripeError && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                      <p className="text-red-600 text-sm">{stripeError}</p>
+                    <div className="bg-rose-50 border border-rose-200 rounded-xl p-4">
+                      <div className="flex items-center">
+                        <X className="h-5 w-5 text-rose-600 mr-2" />
+                        <div>
+                          <h4 className="text-rose-800 font-semibold text-sm">Erreur de paiement</h4>
+                          <p className="text-rose-600 text-sm mt-1">{stripeError}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setStripeError(null);
+                          setPaymentStatus(null);
+                          // Relancer la création du PaymentIntent
+                          window.location.reload();
+                        }}
+                        className="mt-3 w-full bg-rose-600 text-white py-2 rounded-lg hover:bg-rose-700 transition-all duration-300 font-semibold text-sm"
+                      >
+                        Réessayer
+                      </button>
                     </div>
                   )}
                 </div>
