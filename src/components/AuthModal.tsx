@@ -91,7 +91,12 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           onClose();
         } else {
           console.error('Erreur d\'inscription:', result.error);
-          setErrors({ general: result.error || 'Erreur d\'inscription' });
+          if (result.error === 'Cette adresse email est déjà utilisée') {
+            setIsLoginMode(true);
+            setErrors({ general: 'Cette adresse email existe déjà. Veuillez vous connecter.' });
+          } else {
+            setErrors({ general: result.error || 'Erreur d\'inscription' });
+          }
         }
       }
     } catch (error) {
