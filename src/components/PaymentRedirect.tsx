@@ -44,7 +44,7 @@ const PaymentRedirect = () => {
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseAnonKey) {
-      setPaymentStatus('error');
+      alert('Configuration Supabase manquante. Veuillez cliquer sur "Connect to Supabase" en haut à droite pour configurer les paiements.');
       return;
     }
     
