@@ -1,7 +1,7 @@
 import { loadStripe } from '@stripe/stripe-js';
 
 // Clé publique Stripe (remplacez par votre vraie clé en production)
-const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'clé';
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51S5oDh0PYTC9Tov9488I0IvwMNXq3cWjzHrjYdAOBvu7NpHoCSuR5ak2nNqmdjyGS9oj6O2D2m2WDLMzKpGTh1vz00JKpQCPuT';
 
 export const stripePromise = loadStripe(stripePublishableKey);
 

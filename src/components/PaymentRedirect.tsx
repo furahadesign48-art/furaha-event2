@@ -5,6 +5,7 @@ import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement,
 import { stripePromise } from '../config/stripe';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
+import { auth } from '../config/firebase';
 
 const PaymentRedirect = () => {
   const { plan } = useParams<{ plan: 'standard' | 'premium' }>();
@@ -242,12 +243,14 @@ const PaymentRedirect = () => {
       setError(null);
 
       try {
-        // Obtenir le token Firebase de l'utilisateur
-        const token = await user.firebaseUser?.getIdToken();
-        if (!token) {
+        // Obtenir le token Firebase de l'utilisateur connecté
+        const firebaseUser = auth.currentUser;
+        if (!firebaseUser) {
           throw new Error('Token d\'authentification non disponible');
         }
 
+        const token = await firebaseUser.getIdToken();
+        
         // Appeler la fonction Firebase
         const functionUrl = `${import.meta.env.VITE_FIREBASE_FUNCTIONS_URL || 'https://us-central1-furaha-event-831ca.cloudfunctions.net'}/createPaymentIntent`;
         
@@ -257,7 +260,9 @@ const PaymentRedirect = () => {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
-          body: JSON.stringify({ plan }),
+          body: JSON.stringify({ 
+            plan: plan // 'standard' ou 'premium'
+          }),
         });
 
         const data = await response.json();
