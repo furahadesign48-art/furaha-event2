@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Star, Crown, Gem, Zap } from 'lucide-react';
 import { STRIPE_PLANS } from '../config/stripe';
+import SupabaseConnectionBanner from './SupabaseConnectionBanner';
 
 const PricingSection = () => {
   const navigate = useNavigate();
@@ -65,6 +66,15 @@ const PricingSection = () => {
       return;
     }
     
+    // Vérifier la configuration Supabase
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      alert('Configuration Supabase manquante. Veuillez connecter votre projet à Supabase pour utiliser les paiements.');
+      return;
+    }
+    
     // Pour les plans payants, rediriger vers la page de paiement
     const planRoute = planName.toLowerCase();
     navigate(`/payment/${planRoute}`);
@@ -79,6 +89,9 @@ const PricingSection = () => {
       </div>
       
       <div className="max-w-7xl mx-auto">
+        {/* Bannière de configuration Supabase */}
+        <SupabaseConnectionBanner />
+        
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 bg-clip-text text-transparent">

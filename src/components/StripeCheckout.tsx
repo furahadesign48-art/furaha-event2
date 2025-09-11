@@ -38,7 +38,7 @@ const CheckoutForm = ({ planType, onSuccess, onCancel }: CheckoutFormProps) => {
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
       if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Configuration Supabase manquante');
+        throw new Error('Configuration Supabase manquante. Veuillez cliquer sur "Connect to Supabase" en haut à droite.');
       }
       
       const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {

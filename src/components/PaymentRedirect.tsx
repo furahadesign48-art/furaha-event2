@@ -39,6 +39,15 @@ const PaymentRedirect = () => {
 
   // Démarrer le processus de paiement Stripe
   const handleStartPayment = () => {
+    // Vérifier la configuration Supabase
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      setPaymentStatus('error');
+      return;
+    }
+    
     setShowStripeCheckout(true);
   };
 
