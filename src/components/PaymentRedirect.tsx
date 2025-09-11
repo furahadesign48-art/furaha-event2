@@ -3,6 +3,8 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Crown, Sparkles, Check, ArrowLeft, CreditCard, Shield, Zap, Star } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
+import StripeCheckout from './StripeCheckout';
+import { StripePlan, STRIPE_PLANS } from '../config/stripe';
 
 const PaymentRedirect = () => {
   const { plan } = useParams<{ plan: 'standard' | 'premium' }>();
@@ -12,6 +14,7 @@ const PaymentRedirect = () => {
   const { subscription, upgradeToPremium } = useSubscription();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'error' | null>(null);
+  const [showStripeCheckout, setShowStripeCheckout] = useState(false);
 
   // Vérifier si l'utilisateur est connecté
   useEffect(() => {
@@ -20,38 +23,23 @@ const PaymentRedirect = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Simuler le traitement du paiement
-  const handlePayment = async () => {
-    if (!plan || !user) return;
+  // Gérer le succès du paiement Stripe
+  const handlePaymentSuccess = async () => {
+    setPaymentStatus('success');
+    // Rediriger vers le dashboard après 3 secondes
+    setTimeout(() => {
+      navigate('/', { replace: true });
+    }, 3000);
+  };
 
-    setIsProcessing(true);
-    setPaymentStatus('pending');
+  // Gérer l'annulation du paiement
+  const handlePaymentCancel = () => {
+    setShowStripeCheckout(false);
+  };
 
-    try {
-      // Simulation d'un délai de traitement
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Simuler un succès de paiement (90% de chance de succès)
-      const success = Math.random() > 0.1;
-      
-      if (success) {
-        // Mettre à jour l'abonnement
-        await upgradeToPremium(plan);
-        setPaymentStatus('success');
-        
-        // Rediriger vers le dashboard après 3 secondes
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 3000);
-      } else {
-        setPaymentStatus('error');
-      }
-    } catch (error) {
-      console.error('Erreur lors du paiement:', error);
-      setPaymentStatus('error');
-    } finally {
-      setIsProcessing(false);
-    }
+  // Démarrer le processus de paiement Stripe
+  const handleStartPayment = () => {
+    setShowStripeCheckout(true);
   };
 
   if (!isAuthenticated || !user) {
@@ -94,6 +82,7 @@ const PaymentRedirect = () => {
   };
 
   const currentPlan = plan && planDetails[plan] ? planDetails[plan] : planDetails.standard;
+  const stripePlan = plan as StripePlan;
   const IconComponent = currentPlan.icon;
 
   if (paymentStatus === 'success') {
@@ -191,6 +180,43 @@ const PaymentRedirect = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Afficher le checkout Stripe
+  if (showStripeCheckout && stripePlan) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 relative overflow-hidden">
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full">
+            <div className="text-center mb-8">
+              <button
+                onClick={handlePaymentCancel}
+                className="inline-flex items-center text-amber-600 hover:text-amber-700 transition-all duration-300 group mb-6"
+              >
+                <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
+                Retour
+              </button>
+              
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                <span className="bg-gradient-to-r from-amber-600 to-amber-700 bg-clip-text text-transparent">
+                  Paiement Sécurisé
+                </span>
+              </h1>
+              
+              <p className="text-xl text-slate-600">
+                Finalisez votre abonnement {STRIPE_PLANS[stripePlan].name}
+              </p>
+            </div>
+
+            <StripeCheckout
+              planType={stripePlan}
+              onSuccess={handlePaymentSuccess}
+              onCancel={handlePaymentCancel}
+            />
           </div>
         </div>
       </div>
@@ -377,7 +403,7 @@ const PaymentRedirect = () => {
 
                   {/* Payment Button */}
                   <button
-                    onClick={handlePayment}
+                    onClick={handleStartPayment}
                     disabled={isProcessing}
                     className={`w-full bg-gradient-to-r ${
                       currentPlan.color === 'amber' 

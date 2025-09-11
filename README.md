@@ -1,6 +1,65 @@
 Furaha-Event3
 
 Pour utiliser l'authentification Firebase, vous devez :
+
+## Configuration Stripe
+
+✅ **Intégration Stripe configurée !**
+
+Le projet est maintenant configuré avec Stripe pour les paiements :
+- **Checkout sécurisé** : Formulaire de paiement intégré
+- **Webhooks** : Gestion automatique des événements
+- **Abonnements** : Gestion des plans Standard et Premium
+- **Portail client** : Interface pour gérer les abonnements
+
+### Configuration requise
+
+1. **Créer un compte Stripe** : [https://dashboard.stripe.com/register](https://dashboard.stripe.com/register)
+
+2. **Récupérer les clés API** :
+   - Clé publique : `pk_test_...` (pour le frontend)
+   - Clé secrète : `sk_test_...` (pour le backend)
+   - Secret webhook : `whsec_...` (pour les webhooks)
+
+3. **Configurer les variables d'environnement** :
+   ```env
+   VITE_STRIPE_PUBLISHABLE_KEY=pk_test_votre_cle_publique
+   STRIPE_SECRET_KEY=sk_test_votre_cle_secrete
+   STRIPE_WEBHOOK_SECRET=whsec_votre_secret_webhook
+   ```
+
+4. **Créer les produits et prix dans Stripe** :
+   - Plan Standard : 100€/mois
+   - Plan Premium : 200€/mois
+   - Récupérer les Price IDs et les mettre dans `src/config/stripe.ts`
+
+5. **Configurer les webhooks** :
+   - URL : `https://votre-projet.supabase.co/functions/v1/stripe-webhook`
+   - Événements à écouter :
+     - `checkout.session.completed`
+     - `customer.subscription.updated`
+     - `customer.subscription.deleted`
+     - `invoice.payment_failed`
+
+### Fonctionnalités Stripe
+
+- ✅ **Paiements sécurisés** avec Stripe Checkout
+- ✅ **Gestion des abonnements** automatique
+- ✅ **Webhooks** pour synchroniser les statuts
+- ✅ **Portail client** pour gérer les abonnements
+- ✅ **Support des cartes** bancaires européennes
+- ✅ **Gestion des échecs** de paiement
+- ✅ **Annulation** d'abonnements
+
+### Structure des Edge Functions
+
+```
+supabase/functions/
+├── stripe-checkout/     # Création des sessions de paiement
+├── stripe-webhook/      # Gestion des événements Stripe
+└── stripe-portal/       # Portail client pour gérer les abonnements
+```
+
 ## Configuration Firebase
 
 ✅ **Configuration terminée !**

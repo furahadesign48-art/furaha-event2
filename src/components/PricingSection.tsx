@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Star, Crown, Gem, Zap } from 'lucide-react';
+import { STRIPE_PLANS } from '../config/stripe';
 
 const PricingSection = () => {
   const navigate = useNavigate();
@@ -8,7 +9,7 @@ const PricingSection = () => {
   const plans = [
     {
       name: 'Gratuit',
-      price: '0€',
+      price: '0€', 
       period: '/mois',
       icon: Star,
       features: [
@@ -23,7 +24,7 @@ const PricingSection = () => {
     },
     {
       name: 'Standard',
-      price: '100$',
+      price: `${(STRIPE_PLANS.standard.price / 100).toFixed(0)}€`,
       period: '/mois',
       icon: Crown,
       features: [
@@ -40,7 +41,7 @@ const PricingSection = () => {
     },
     {
       name: 'Premium',
-      price: '200$',
+      price: `${(STRIPE_PLANS.premium.price / 100).toFixed(0)}€`,
       period: '/mois',
       icon: Gem,
       features: [

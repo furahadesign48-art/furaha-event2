@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Crown, Sparkles, Check, Zap } from 'lucide-react';
+import { STRIPE_PLANS } from '../config/stripe';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
   const plans = [
     {
       name: 'Standard',
-      price: '100$',
+      price: `${(STRIPE_PLANS.standard.price / 100).toFixed(0)}€`,
       period: '/mois',
       icon: Crown,
       features: [
@@ -34,7 +35,7 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
     },
     {
       name: 'Premium',
-      price: '200$',
+      price: `${(STRIPE_PLANS.premium.price / 100).toFixed(0)}€`,
       period: '/mois',
       icon: Sparkles,
       features: [
