@@ -8,11 +8,6 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { loadStripe } from '@stripe/stripe-js';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-// Stripe client secret + erreur/loading
-const [clientSecret, setClientSecret] = useState<string | null>(null);
-const [stripeLoading, setStripeLoading] = useState(false);
-const [stripeError, setStripeError] = useState<string | null>(null);
-
 
 const PaymentRedirect = () => {
   const { plan } = useParams<{ plan: 'standard' | 'premium' }>();
@@ -22,6 +17,11 @@ const PaymentRedirect = () => {
   const { subscription, upgradeToPremium } = useSubscription();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'error' | null>(null);
+  
+  // Stripe client secret + erreur/loading
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripeLoading, setStripeLoading] = useState(false);
+  const [stripeError, setStripeError] = useState<string | null>(null);
 
   // Vérifier si l'utilisateur est connecté
 useEffect(() => {
@@ -61,6 +61,72 @@ useEffect(() => {
   return () => { mounted = false; };
 }, [user, plan]);
 
+  // StripePaymentForm component definition
+  const StripePaymentForm = ({ plan, onSuccess }: { plan: 'standard' | 'premium'; onSuccess?: () => void }) => {
+    const stripe = useStripe();
+    const elements = useElements();
+    const { upgradeToPremium } = useSubscription();
+    const [isProcessingLocal, setIsProcessingLocal] = useState(false);
+    const [errorLocal, setErrorLocal] = useState<string | null>(null);
+
+    const handleConfirm = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!stripe || !elements) return;
+
+      setIsProcessingLocal(true);
+      setErrorLocal(null);
+
+      try {
+        // On confirme en "if_required" pour éviter redirections forcées
+        const result = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            // si Stripe doit rediriger pour 3DS, il redirigera vers cette URL
+            return_url: window.location.origin + '/payment-result',
+          },
+          redirect: 'if_required',
+        });
+
+        if (result.error) {
+          setErrorLocal(result.error.message || 'Erreur de paiement');
+          return;
+        }
+
+        const paymentIntent = result.paymentIntent;
+        if (paymentIntent && paymentIntent.status === 'succeeded') {
+          // Mise à jour de l'abonnement côté client (double-check côté webhook)
+          await upgradeToPremium(plan);
+          onSuccess && onSuccess();
+        } else {
+          // Si nécessite action, Stripe gère la redirection; sinon handle l'état
+          setErrorLocal(`Statut du paiement: ${paymentIntent?.status || 'inconnu'}`);
+        }
+      } catch (err: any) {
+        console.error(err);
+        setErrorLocal(err.message || 'Erreur lors du paiement');
+      } finally {
+        setIsProcessingLocal(false);
+      }
+    };
+
+    return (
+      <form onSubmit={handleConfirm}>
+        <div className="mb-4">
+          <PaymentElement />
+        </div>
+
+        {errorLocal && <p className="text-red-500 mb-3">{errorLocal}</p>}
+
+        <button
+          type="submit"
+          disabled={!stripe || isProcessingLocal}
+          className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-white py-4 rounded-2xl transition-all duration-500 font-bold text-lg disabled:opacity-50"
+        >
+          {isProcessingLocal ? 'Traitement...' : `Confirmer le Paiement - ${plan === 'premium' ? '200€' : '100€'}`}
+        </button>
+      </form>
+    );
+  };
 
   if (!isAuthenticated || !user) {
     return null;
@@ -408,71 +474,13 @@ useEffect(() => {
   <Shield className="h-4 w-4 mr-2" />
   <span>Paiement sécurisé SSL 256-bit</span>
 </div>
-
-function StripePaymentForm({ plan, onSuccess }: { plan: 'standard' | 'premium'; onSuccess?: () => void }) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const { upgradeToPremium } = useSubscription();
-  const [isProcessingLocal, setIsProcessingLocal] = useState(false);
-  const [errorLocal, setErrorLocal] = useState<string | null>(null);
-
-  const handleConfirm = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-
-    setIsProcessingLocal(true);
-    setErrorLocal(null);
-
-    try {
-      // On confirme en "if_required" pour éviter redirections forcées
-      const result = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          // si Stripe doit rediriger pour 3DS, il redirigera vers cette URL
-          return_url: window.location.origin + '/payment-result',
-        },
-        redirect: 'if_required',
-      });
-
-      if (result.error) {
-        setErrorLocal(result.error.message || 'Erreur de paiement');
-        return;
-      }
-
-      const paymentIntent = result.paymentIntent;
-      if (paymentIntent && paymentIntent.status === 'succeeded') {
-        // Mise à jour de l'abonnement côté client (double-check côté webhook)
-        await upgradeToPremium(plan);
-        onSuccess && onSuccess();
-      } else {
-        // Si nécessite action, Stripe gère la redirection; sinon handle l'état
-        setErrorLocal(`Statut du paiement: ${paymentIntent?.status || 'inconnu'}`);
-      }
-    } catch (err: any) {
-      console.error(err);
-      setErrorLocal(err.message || 'Erreur lors du paiement');
-    } finally {
-      setIsProcessingLocal(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleConfirm}>
-      <div className="mb-4">
-        <PaymentElement />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-
-      {errorLocal && <p className="text-red-500 mb-3">{errorLocal}</p>}
-
-      <button
-        type="submit"
-        disabled={!stripe || isProcessingLocal}
-        className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-white py-4 rounded-2xl transition-all duration-500 font-bold text-lg disabled:opacity-50"
-      >
-        {isProcessingLocal ? 'Traitement...' : `Confirmer le Paiement - ${plan === 'premium' ? '200€' : '100€'}`}
-      </button>
-    </form>
-  );
-}
+    );
+  };
 
 export default PaymentRedirect;
