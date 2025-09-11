@@ -52,6 +52,7 @@ const PaymentForm = ({ plan, onSuccess, onError, isProcessing, setIsProcessing }
         iconColor: '#ef4444',
       },
     },
+    hidePostalCode: true,
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -209,10 +210,9 @@ const PaymentForm = ({ plan, onSuccess, onError, isProcessing, setIsProcessing }
               <CreditCard className="h-4 w-4 inline mr-1" />
               Numéro de carte
             </label>
-            <div className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200">
+            <div className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200 bg-white">
               <CardNumberElement
                 options={cardElementOptions}
-                disabled={isProcessing}
               />
             </div>
           </div>
@@ -223,10 +223,9 @@ const PaymentForm = ({ plan, onSuccess, onError, isProcessing, setIsProcessing }
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Date d'expiration
               </label>
-              <div className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200">
+              <div className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200 bg-white">
                 <CardExpiryElement
                   options={cardElementOptions}
-                  disabled={isProcessing}
                 />
               </div>
             </div>
@@ -236,10 +235,9 @@ const PaymentForm = ({ plan, onSuccess, onError, isProcessing, setIsProcessing }
                 <Lock className="h-4 w-4 inline mr-1" />
                 CVC
               </label>
-              <div className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200">
+              <div className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200 bg-white">
                 <CardCvcElement
                   options={cardElementOptions}
-                  disabled={isProcessing}
                 />
               </div>
             </div>
