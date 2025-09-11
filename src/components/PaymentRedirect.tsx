@@ -3,11 +3,6 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Crown, Sparkles, Check, ArrowLeft, CreditCard, Shield, Zap, Star } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
-// Stripe
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const PaymentRedirect = () => {
   const { plan } = useParams<{ plan: 'standard' | 'premium' }>();
@@ -21,17 +16,15 @@ const PaymentRedirect = () => {
   // Stripe client secret + erreur/loading
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [stripeLoading, setStripeLoading] = useState(false);
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
   const [stripeError, setStripeError] = useState<string | null>(null);
-
-  // Vérifier si l'utilisateur est connecté
-useEffect(() => {
-  let mounted = true;
-  const createIntent = async () => {
-    if (!user || !plan) return;
-    setStripeLoading(true);
-    setStripeError(null);
-
-    try {
       const token = await user.getIdToken();
 
       // URL de la Firebase Function (configurable via .env)
@@ -61,6 +54,72 @@ useEffect(() => {
   return () => { mounted = false; };
 }, [user, plan]);
 
+  // StripePaymentForm component definition
+  const StripePaymentForm = ({ plan, onSuccess }: { plan: 'standard' | 'premium'; onSuccess?: () => void }) => {
+    const stripe = useStripe();
+    const elements = useElements();
+    const { upgradeToPremium } = useSubscription();
+    const [isProcessingLocal, setIsProcessingLocal] = useState(false);
+    const [errorLocal, setErrorLocal] = useState<string | null>(null);
+
+    const handleConfirm = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!stripe || !elements) return;
+
+      setIsProcessingLocal(true);
+      setErrorLocal(null);
+
+      try {
+        // On confirme en "if_required" pour éviter redirections forcées
+        const result = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            // si Stripe doit rediriger pour 3DS, il redirigera vers cette URL
+            return_url: window.location.origin + '/payment-result',
+          },
+          redirect: 'if_required',
+        });
+
+        if (result.error) {
+          setErrorLocal(result.error.message || 'Erreur de paiement');
+          return;
+        }
+
+        const paymentIntent = result.paymentIntent;
+        if (paymentIntent && paymentIntent.status === 'succeeded') {
+          // Mise à jour de l'abonnement côté client (double-check côté webhook)
+          await upgradeToPremium(plan);
+          onSuccess && onSuccess();
+        } else {
+          // Si nécessite action, Stripe gère la redirection; sinon handle l'état
+          setErrorLocal(`Statut du paiement: ${paymentIntent?.status || 'inconnu'}`);
+        }
+      } catch (err: any) {
+        console.error(err);
+        setErrorLocal(err.message || 'Erreur lors du paiement');
+      } finally {
+        setIsProcessingLocal(false);
+      }
+    };
+
+    return (
+      <form onSubmit={handleConfirm}>
+        <div className="mb-4">
+          <PaymentElement />
+        </div>
+
+        {errorLocal && <p className="text-red-500 mb-3">{errorLocal}</p>}
+
+        <button
+          type="submit"
+          disabled={!stripe || isProcessingLocal}
+          className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-white py-4 rounded-2xl transition-all duration-500 font-bold text-lg disabled:opacity-50"
+        >
+          {isProcessingLocal ? 'Traitement...' : `Confirmer le Paiement - ${plan === 'premium' ? '200€' : '100€'}`}
+        </button>
+      </form>
+    );
+  };
   // StripePaymentForm component definition
   const StripePaymentForm = ({ plan, onSuccess }: { plan: 'standard' | 'premium'; onSuccess?: () => void }) => {
     const stripe = useStripe();
@@ -432,55 +491,4 @@ useEffect(() => {
                       <div className="flex justify-between items-center">
                         <span className="text-slate-600">Plan {currentPlan.name}</span>
                         <span className="font-semibold text-slate-900">{currentPlan.price}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-600">Période</span>
-                        <span className="text-slate-600">1 mois</span>
-                      </div>
-                      <hr className="my-3" />
-                      <div className="flex justify-between items-center text-lg font-bold">
-                        <span className="text-slate-900">Total</span>
-                        <span className={`${
-                          currentPlan.color === 'amber' ? 'text-amber-600' : 'text-purple-600'
-                        }`}>
-                          {currentPlan.price}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Payment Button */}
-                  {/* Stripe Payment area */}
-{stripeLoading && (
-  <div className="text-center py-6">
-    <div className="w-8 h-8 border-2 border-gray-200 border-t-gray-400 rounded-full animate-spin mx-auto mb-3"></div>
-    Chargement du formulaire de paiement...
-  </div>
-)}
-
-{stripeError && <p className="text-red-500 mb-3">{stripeError}</p>}
-
-{clientSecret ? (
-  <Elements stripe={stripePromise} options={{ clientSecret }}>
-    <StripePaymentForm
-      plan={plan as 'standard' | 'premium'}
-      onSuccess={() => setPaymentStatus('success')}
-    />
-  </Elements>
-) : null}
-
-{/* Security Info */}
-<div className="flex items-center justify-center text-sm text-slate-500 mt-4">
-  <Shield className="h-4 w-4 mr-2" />
-  <span>Paiement sécurisé SSL 256-bit</span>
-</div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
 export default PaymentRedirect;
