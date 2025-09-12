@@ -15,6 +15,7 @@ import AuthModal from './components/AuthModal';
 import InvitationPreview from './components/InvitationPreview';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 interface TemplateData {
   id: string;
@@ -152,12 +153,14 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Routes>
-        <Route path="/" element={<AppContent />} />
-        <Route path="/invitation/:inviteId" element={<InvitationPreview />} />
-      </Routes>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<AppContent />} />
+          <Route path="/invitation/:inviteId" element={<InvitationPreview />} />
+        </Routes>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
