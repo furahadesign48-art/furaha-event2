@@ -1,28 +1,31 @@
 import React from 'react';
 import { Palette, Sparkles, BarChart3 } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const WhyChooseSection = () => {
+  const { t } = useLanguage();
+
   const features = [
     {
       id: 1,
-      title: 'Templates Premium',
-      description: 'Des modèles exceptionnels avec toutes les fonctionnalités avancées',
+      title: t('premium_templates') || 'Templates Premium',
+      description: t('premium_templates_desc') || 'Des modèles exceptionnels avec toutes les fonctionnalités avancées',
       icon: Palette,
       color: 'from-amber-500 to-orange-500',
       bgColor: 'from-amber-50 to-orange-50'
     },
     {
       id: 2,
-      title: 'Design Personnalisé',
-      description: 'Personnalisez complètement vos invitations selon vos goûts',
+      title: t('custom_design') || 'Design Personnalisé',
+      description: t('custom_design_desc') || 'Personnalisez complètement vos invitations selon vos goûts',
       icon: Sparkles,
       color: 'from-purple-500 to-pink-500',
       bgColor: 'from-purple-50 to-pink-50'
     },
     {
       id: 3,
-      title: 'Gestion Complète',
-      description: 'Dashboard admin pour gérer tous vos événements en un seul endroit',
+      title: t('complete_management') || 'Gestion Complète',
+      description: t('complete_management_desc') || 'Dashboard admin pour gérer tous vos événements en un seul endroit',
       icon: BarChart3,
       color: 'from-emerald-500 to-teal-500',
       bgColor: 'from-emerald-50 to-teal-50'
@@ -41,11 +44,11 @@ const WhyChooseSection = () => {
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-slate-100 dark:via-slate-300 dark:to-slate-100 bg-clip-text text-transparent">
-              Pourquoi Choisir Furaha-Event ?
+              {t('why_choose_us') || 'Pourquoi Choisir Furaha-Event ?'}
             </span>
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
-            Des fonctionnalités exceptionnelles pour des événements mémorables
+            {t('why_choose_desc') || 'Des fonctionnalités exceptionnelles pour des événements mémorables'}
           </p>
         </div>
 

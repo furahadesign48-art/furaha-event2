@@ -1,56 +1,59 @@
 import React from 'react';
 import { Check, Star, Crown, Gem, Zap } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const PricingSection = () => {
+  const { t } = useLanguage();
+
   const plans = [
     {
-      name: 'Gratuit',
+      name: t('free_plan') || 'Gratuit',
       price: '0€',
-      period: '/mois',
+      period: t('per_month') || '/mois',
       icon: Star,
       features: [
-        '5 invitations maximum',
-        'Modèles de base',
-        'Support par email',
-        'Export PDF'
+        t('max_5_invitations') || '5 invitations maximum',
+        t('basic_templates') || 'Modèles de base',
+        t('email_support') || 'Support par email',
+        t('pdf_export') || 'Export PDF'
       ],
       popular: false,
-      buttonText: 'Commencer',
+      buttonText: t('get_started') || 'Commencer',
       buttonClass: 'bg-neutral-100 text-slate-900 hover:bg-neutral-200'
     },
     {
       name: 'Standard',
       price: '100$',
-      period: '/mois',
+      period: t('per_month') || '/mois',
       icon: Crown,
       features: [
-        '200 invitations maximum',
-        '1 mois de validité',
-        'Tous les modèles premium',
-        'Personnalisation avancée',
-        'Statistiques détaillées',
-        'Support prioritaire'
+        t('max_200_invitations') || '200 invitations maximum',
+        t('1_month_validity') || '1 mois de validité',
+        t('all_premium_templates') || 'Tous les modèles premium',
+        t('advanced_customization') || 'Personnalisation avancée',
+        t('detailed_statistics') || 'Statistiques détaillées',
+        t('priority_support') || 'Support prioritaire'
       ],
       popular: true,
-      buttonText: 'Choisir Standard',
+      buttonText: t('choose_standard') || 'Choisir Standard',
       buttonClass: 'bg-amber-500 text-slate-900 hover:bg-amber-600'
     },
     {
       name: 'Premium',
       price: '200$',
-      period: '/mois',
+      period: t('per_month') || '/mois',
       icon: Gem,
       features: [
-        'Invitations illimitées',
-        '1 mois de validité',
-        'Tous les modèles premium',
-        'Personnalisation avancée',
-        'Statistiques détaillées',
-        'Support prioritaire',
-        'Design sur mesure'
+        t('unlimited_invitations') || 'Invitations illimitées',
+        t('1_month_validity') || '1 mois de validité',
+        t('all_premium_templates') || 'Tous les modèles premium',
+        t('advanced_customization') || 'Personnalisation avancée',
+        t('detailed_statistics') || 'Statistiques détaillées',
+        t('priority_support') || 'Support prioritaire',
+        t('custom_design') || 'Design sur mesure'
       ],
       popular: false,
-      buttonText: 'Choisir Premium',
+      buttonText: t('choose_premium') || 'Choisir Premium',
       buttonClass: 'bg-slate-900 text-neutral-50 hover:bg-slate-800'
     }
   ];
@@ -67,11 +70,11 @@ const PricingSection = () => {
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 dark:from-slate-100 dark:via-amber-300 dark:to-slate-100 bg-clip-text text-transparent">
-            Choisissez votre plan
+            {t('choose_your_plan') || 'Choisissez votre plan'}
             </span>
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto backdrop-blur-sm bg-neutral-50/50 dark:bg-slate-800/50 rounded-xl p-4 border border-amber-200/30 dark:border-slate-600/30">
-            Des solutions adaptées à tous vos besoins d'événements, du plus simple au plus sophistiqué
+            {t('pricing_description') || 'Des solutions adaptées à tous vos besoins d\'événements, du plus simple au plus sophistiqué'}
           </p>
         </div>
 
@@ -101,7 +104,7 @@ const PricingSection = () => {
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 px-6 py-2 rounded-full text-sm font-semibold shadow-glow-amber animate-glow">
-                      Plus populaire
+                      {t('most_popular') || 'Plus populaire'}
                     </span>
                   </div>
                 )}
@@ -110,7 +113,7 @@ const PricingSection = () => {
                 {index === 0 && (
                   <div className="absolute -top-4 right-4">
                     <span className="bg-gradient-to-r from-rose-500 to-rose-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
-                      Limité
+                      {t('limited') || 'Limité'}
                     </span>
                   </div>
                 )}

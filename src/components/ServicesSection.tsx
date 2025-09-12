@@ -1,5 +1,6 @@
 import React from 'react';
 import { Heart, Gift, GraduationCap } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface ServicesSectionProps {
   onViewWeddingTemplate?: () => void;
@@ -8,11 +9,13 @@ interface ServicesSectionProps {
 }
 
 const ServicesSection = ({ onViewWeddingTemplate, onViewBirthdayTemplate, onViewGraduationTemplate }: ServicesSectionProps) => {
+  const { t } = useLanguage();
+
   const services = [
     {
       id: 1,
-      title: 'Invitations de Mariage',
-      description: 'Créez des invitations romantiques et élégantes pour votre jour spécial',
+      title: t('wedding_invitations') || 'Invitations de Mariage',
+      description: t('wedding_description') || 'Créez des invitations romantiques et élégantes pour votre jour spécial',
       image: 'https://static.vecteezy.com/system/resources/thumbnails/056/699/345/small_2x/a-young-couple-of-african-american-bride-and-groom-at-their-wedding-ceremony-photo.jpg',
       icon: Heart,
       color: 'from-rose-500 to-pink-500',
@@ -28,8 +31,8 @@ const ServicesSection = ({ onViewWeddingTemplate, onViewBirthdayTemplate, onView
     },
     {
       id: 2,
-      title: 'Invitations d\'Anniversaire',
-      description: 'Célébrez chaque année avec style et originalité',
+      title: t('birthday_invitations') || 'Invitations d\'Anniversaire',
+      description: t('birthday_description') || 'Célébrez chaque année avec style et originalité',
       image: 'https://www.shutterstock.com/image-photo/man-blowing-candles-birthday-cake-600nw-2510173133.jpg',
       icon: Gift,
       color: 'from-purple-500 to-indigo-500',
@@ -45,8 +48,8 @@ const ServicesSection = ({ onViewWeddingTemplate, onViewBirthdayTemplate, onView
     },
     {
       id: 3,
-      title: 'Invitations de Collation',
-      description: 'Marquez votre réussite académique avec fierté',
+      title: t('graduation_invitations') || 'Invitations de Collation',
+      description: t('graduation_description') || 'Marquez votre réussite académique avec fierté',
       image: 'https://twk-media-offload.s3.eu-west-1.amazonaws.com/bruford.ac.uk/wp-uploads/2025/03/240912_rb_grads_2138.jpg',
       icon: GraduationCap,
       color: 'from-emerald-500 to-teal-500',
@@ -74,11 +77,11 @@ const ServicesSection = ({ onViewWeddingTemplate, onViewBirthdayTemplate, onView
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-slate-100 dark:via-slate-300 dark:to-slate-100 bg-clip-text text-transparent">
-              Nos Services
+              {t('our_services') || 'Nos Services'}
             </span>
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
-            Découvrez notre gamme complète d'invitations pour tous vos événements importants
+            {t('services_description') || 'Découvrez notre gamme complète d\'invitations pour tous vos événements importants'}
           </p>
         </div>
 
@@ -157,7 +160,7 @@ const ServicesSection = ({ onViewWeddingTemplate, onViewBirthdayTemplate, onView
                         }
                         className="cursor-pointer"
                       >
-                        Voir les modèles
+                        {t('view_templates') || 'Voir les modèles'}
                       </span>
                     </button>
                   </div>

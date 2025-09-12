@@ -1,6 +1,9 @@
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const NewHeroSection = () => {
+  const { t } = useLanguage();
+
   return (
     <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-amber-50 via-neutral-50 to-amber-100/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900/80 relative overflow-hidden">
       {/* Background decorative elements */}
@@ -20,17 +23,17 @@ const NewHeroSection = () => {
         </h1>
         
         <p className="text-xl md:text-2xl text-slate-700 dark:text-slate-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-          Créez des invitations magnifiques et interactives pour tous vos événements spéciaux
+          {t('hero_description') || 'Créez des invitations magnifiques et interactives pour tous vos événements spéciaux'}
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button className="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-white px-8 py-4 rounded-full hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 transition-all duration-500 font-semibold text-lg shadow-glow-amber hover:shadow-luxury transform hover:scale-105 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-1000"></div>
-            Découvrir nos modèles
+            {t('discover_templates') || 'Découvrir nos modèles'}
           </button>
           
           <button className="bg-transparent border-2 border-amber-500 text-amber-600 dark:text-amber-400 px-8 py-4 rounded-full hover:bg-amber-500 hover:text-white dark:hover:text-slate-900 transition-all duration-500 font-semibold text-lg shadow-lg hover:shadow-luxury transform hover:scale-105 backdrop-blur-sm">
-            Voir les tarifs
+            {t('view_pricing') || 'Voir les tarifs'}
           </button>
         </div>
       </div>
