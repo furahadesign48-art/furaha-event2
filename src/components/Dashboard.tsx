@@ -32,6 +32,11 @@ import TableManagement from './TableManagement';
 import UpgradeModal from './UpgradeModal';
 import { useTemplates } from '../hooks/useTemplates';
 import { useSubscription } from '../hooks/useSubscription';
+import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import ThemeToggle from './ThemeToggle';
+import LanguageSelector from './LanguageSelector';
+import DashboardSettings from './DashboardSettings';
 import { UserData } from '../hooks/useAuth';
 import { collection, doc, setDoc, getDocs, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -78,6 +83,8 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => {
+  const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
   const { 
     userInvites, 
     userModels, 
@@ -103,6 +110,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [userTemplateForCustomization, setUserTemplateForCustomization] = useState<TemplateData | null>(null);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
   const [availableTables, setAvailableTables] = useState<Table[]>([]);
+  const [showSettings, setShowSettings] = useState(false);
   
   // États pour la gestion des invités
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -1221,7 +1229,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900 relative overflow-hidden transition-colors duration-300">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-40 h-40 bg-gradient-to-r from-amber-200/10 to-purple-200/10 rounded-full blur-3xl animate-float"></div>
@@ -1230,7 +1238,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
       <div className="relative z-10">
         {/* Header */}
-        <header className="bg-white/80 backdrop-blur-xl border-b border-neutral-200/50 sticky top-0 z-50">
+        <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-b border-neutral-200/50 dark:border-slate-600/50 sticky top-0 z-50 transition-colors duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-4">
@@ -1239,25 +1247,38 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                     <Sparkles className="h-6 w-6 text-white" />
                   </div>
                   <div className="hidden md:block">
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
                       InviteElegance
                     </h1>
                   </div>
                 </div>
                 <div className="hidden md:block w-px h-6 bg-neutral-300"></div>
                 <div className="hidden md:block">
-                  <span className="text-slate-600 text-sm">Dashboard</span>
+                  <span className="text-slate-600 dark:text-slate-400 text-sm">Dashboard</span>
                 </div>
               </div>
 
               <div className="flex items-center space-x-4">
+                {/* Contrôles thème et langue */}
+                <div className="flex items-center space-x-2">
+                  <ThemeToggle />
+                  <LanguageSelector />
+                  <button
+                    onClick={() => setShowSettings(true)}
+                    className="p-2 rounded-lg bg-gradient-to-r from-amber-100 to-amber-200 dark:from-slate-700 dark:to-slate-600 hover:from-amber-200 hover:to-amber-300 dark:hover:from-slate-600 dark:hover:to-slate-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    title={t('settings') || 'Paramètres'}
+                  >
+                    <Settings className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  </button>
+                </div>
+                
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-rose-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                     {userData.firstName[0]}{userData.lastName[0]}
                   </div>
                   <div className="hidden sm:block">
-                    <p className="text-sm font-medium text-slate-900">{userData.firstName} {userData.lastName}</p>
-                    <p className="text-xs text-slate-500">{userData.email}</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{userData.firstName} {userData.lastName}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{userData.email}</p>
                   </div>
                 </div>
               </div>
@@ -1302,6 +1323,11 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
           </div>
         </div>
       </div>
+
+      <DashboardSettings
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
     </div>
   );
 };
