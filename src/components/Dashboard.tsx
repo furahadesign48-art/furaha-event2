@@ -1,45 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { 
+  BarChart3, 
   Users, 
   Calendar, 
   Settings, 
-  BarChart3, 
   Plus, 
+  Eye, 
   Edit, 
   Trash2, 
-  Download, 
-  Share2, 
-  Eye,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Crown,
+  Crown, 
   Sparkles,
   Heart,
   Gift,
   GraduationCap,
-  X,
-  Save,
-  Check,
+  FileText,
+  Download,
+  Share2,
+  QrCode,
   MessageCircle,
+  TrendingUp,
+  UserCheck,
+  Clock,
+  Table,
+  Mail,
+  Phone,
+  MapPin,
+  Filter,
+  Search,
+  SortAsc,
+  MoreVertical,
   Copy,
-  ExternalLink
+  ExternalLink,
+  CheckCircle,
+  XCircle,
+  AlertCircle
 } from 'lucide-react';
-import UserProfile from './UserProfile';
-import TemplateCustomization from './TemplateCustomization';
-import TableManagement from './TableManagement';
-import UpgradeModal from './UpgradeModal';
 import { useTemplates } from '../hooks/useTemplates';
 import { useSubscription } from '../hooks/useSubscription';
-import { useTheme } from '../contexts/ThemeContext';
-import { useLanguage } from '../contexts/LanguageContext';
-import ThemeToggle from './ThemeToggle';
-import LanguageSelector from './LanguageSelector';
-import DashboardSettings from './DashboardSettings';
 import { UserData } from '../hooks/useAuth';
-import { collection, doc, setDoc, getDocs, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { UserModel, Invite } from '../services/templateService';
+import TemplateCustomization from './TemplateCustomization';
+import TableManagement from './TableManagement';
+import UserProfile from './UserProfile';
+import DashboardSettings from './DashboardSettings';
+import UpgradeModal from './UpgradeModal';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface TemplateData {
   id: string;
@@ -61,19 +66,11 @@ interface TemplateData {
   };
 }
 
-interface Guest {
-  id: string;
-  nom: string;
-  table: string;
-  etat: 'simple' | 'couple';
-  confirmed: boolean;
-}
-
 interface Table {
   id: number;
   name: string;
   seats: number;
-  assignedGuests: Guest[];
+  assignedGuests: any[];
 }
 
 interface DashboardProps {
@@ -83,459 +80,256 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => {
-  const { isDarkMode } = useTheme();
   const { t } = useLanguage();
   const { 
-    userInvites, 
     userModels, 
+    userInvites, 
     createInvite, 
     updateInvite, 
     deleteInvite, 
-    updateUserModel,
-    isLoading: templatesLoading 
+    isLoading, 
+    error,
+    refreshUserData 
   } = useTemplates();
-  const { 
-    subscription, 
-    canCreateInvite, 
-    getRemainingInvites, 
-    updateInviteCount,
-    isLoading: subscriptionLoading 
-  } = useSubscription();
+  
+  const { subscription, canCreateInvite, getRemainingInvites } = useSubscription();
+  
   const [activeTab, setActiveTab] = useState('overview');
   const [showCustomization, setShowCustomization] = useState(false);
-  const [currentTemplate, setCurrentTemplate] = useState<TemplateData | null>(selectedTemplate || null);
-  const [tables, setTables] = useState<Table[]>([]);
-  const [isLoadingTables, setIsLoadingTables] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [userTemplateForCustomization, setUserTemplateForCustomization] = useState<TemplateData | null>(null);
-  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
-  const [availableTables, setAvailableTables] = useState<Table[]>([]);
   const [showSettings, setShowSettings] = useState(false);
-  
-  // États pour la gestion des invités
-  const [showInviteModal, setShowInviteModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [editingInvite, setEditingInvite] = useState<Guest | null>(null);
-  const [inviteFormData, setInviteFormData] = useState({
+  const [customizingTemplate, setCustomizingTemplate] = useState<TemplateData | null>(null);
+  const [tables, setTables] = useState<Table[]>([
+    { id: 1, name: 'Table des Mariés', seats: 8, assignedGuests: [] },
+    { id: 2, name: 'Table Famille', seats: 10, assignedGuests: [] },
+    { id: 3, name: 'Table Amis', seats: 8, assignedGuests: [] }
+  ]);
+
+  // États pour la gestion des invités
+  const [showAddGuestModal, setShowAddGuestModal] = useState(false);
+  const [editingGuest, setEditingGuest] = useState<Invite | null>(null);
+  const [guestFormData, setGuestFormData] = useState({
     nom: '',
     table: '',
-    etat: 'simple' as 'simple' | 'couple',
-    confirmed: false,
+    etat: 'simple' as 'simple' | 'couple'
   });
-
-  // Charger les tables depuis Firestore
-  const loadTables = async () => {
-    if (!userData?.id) return;
-    
-    try {
-      setIsLoadingTables(true);
-      const tablesRef = collection(db, 'users', userData.id, 'Tables');
-      const querySnapshot = await getDocs(tablesRef);
-      
-      const loadedTables: Table[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        loadedTables.push({
-          id: parseInt(doc.id.replace('table_', '')),
-          name: data.name,
-          seats: data.seats,
-          assignedGuests: data.assignedGuests || []
-        });
-      });
-      
-      setTables(loadedTables.sort((a, b) => a.id - b.id));
-    } catch (error) {
-      console.error('Erreur lors du chargement des tables:', error);
-    } finally {
-      setIsLoadingTables(false);
-    }
-  };
-
-  // Sauvegarder une table dans Firestore
-  const saveTableToFirestore = async (table: Table) => {
-    if (!userData?.id) return;
-    
-    try {
-      const tableRef = doc(db, 'users', userData.id, 'Tables', `table_${table.id}`);
-      await setDoc(tableRef, {
-        name: table.name,
-        seats: table.seats,
-        assignedGuests: table.assignedGuests,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde de la table:', error);
-      throw error;
-    }
-  };
-
-  // Supprimer une table de Firestore
-  const deleteTableFromFirestore = async (tableId: number) => {
-    if (!userData?.id) return;
-    
-    try {
-      const tableRef = doc(db, 'users', userData.id, 'Tables', `table_${tableId}`);
-      await deleteDoc(tableRef);
-    } catch (error) {
-      console.error('Erreur lors de la suppression de la table:', error);
-      throw error;
-    }
-  };
-
-  // Charger le template actuel depuis les modèles utilisateur
-  const loadCurrentTemplate = async () => {
-    if (!userData?.id || userModels.length === 0) return;
-    
-    try {
-      setIsLoadingTemplate(true);
-      // Prendre le premier modèle utilisateur comme template actuel
-      const userModel = userModels[0];
-      const templateData: TemplateData = {
-        id: userModel.id,
-        name: userModel.name,
-        category: userModel.category,
-        backgroundImage: userModel.backgroundImage,
-        title: userModel.title,
-        invitationText: userModel.invitationText,
-        eventDate: userModel.eventDate,
-        eventTime: userModel.eventTime,
-        eventLocation: userModel.eventLocation,
-        drinkOptions: userModel.drinkOptions,
-        features: userModel.features,
-        colors: userModel.customizations?.colors,
-        isPersonalized: true,
-        createdAt: userModel.createdAt?.toDate().toISOString()
-      };
-      
-      setCurrentTemplate(templateData);
-      console.log('Template actuel chargé depuis Firebase:', templateData);
-    } catch (error) {
-      console.error('Erreur lors du chargement du template actuel:', error);
-    } finally {
-      setIsLoadingTemplate(false);
-    }
-  };
-
-  // Charger le template actuel quand les modèles utilisateur changent
-  useEffect(() => {
-    if (userModels.length > 0 && !currentTemplate) {
-      loadCurrentTemplate();
-    }
-  }, [userModels, userData?.id]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
 
   // Charger le template sélectionné au montage
   useEffect(() => {
-    if (selectedTemplate && !currentTemplate) {
-      setCurrentTemplate(selectedTemplate);
+    if (selectedTemplate) {
+      setCustomizingTemplate(selectedTemplate);
+      setShowCustomization(true);
     }
   }, [selectedTemplate]);
 
-  // Charger les tables au montage du composant
+  // Rafraîchir les données périodiquement
   useEffect(() => {
-    if (userData?.id) {
-      loadTables();
-    }
-  }, [userData?.id]);
+    const interval = setInterval(() => {
+      refreshUserData();
+    }, 30000); // Rafraîchir toutes les 30 secondes
 
-  // Mettre à jour les tables disponibles quand les tables changent
-  useEffect(() => {
-    setAvailableTables(tables);
-  }, [tables]);
+    return () => clearInterval(interval);
+  }, [refreshUserData]);
 
-  // Mettre à jour le compteur d'invitations quand les invités changent
-  useEffect(() => {
-    if (subscription && userInvites.length !== subscription.currentInvites) {
-      updateInviteCount(userInvites.length);
-    }
-  }, [userInvites.length, subscription, updateInviteCount]);
-
-  // Charger les invités depuis Firestore
-  const guests: Guest[] = userInvites.map(invite => ({
-    id: invite.id,
-    nom: invite.nom,
-    table: invite.table,
-    etat: invite.etat,
-    confirmed: invite.confirmed,
-  }));
-
-  const tabs = [
-    { id: 'overview', label: 'Vue d\'ensemble', icon: BarChart3 },
-    { id: 'invitations', label: 'Gestion des invitations', icon: Users },
-    { id: 'tables', label: 'Plan de table', icon: MapPin },
-    { id: 'profile', label: 'Mon profil', icon: User },
-    { id: 'settings', label: 'Paramètres', icon: Settings }
-  ];
-
-  const handleCustomizeTemplate = () => {
-    console.log('Modèles utilisateur disponibles:', userModels);
-    console.log('Template actuel:', currentTemplate);
+  const handleCustomizeTemplate = (template: UserModel) => {
+    const templateData: TemplateData = {
+      id: template.id,
+      name: template.name,
+      category: template.category,
+      backgroundImage: template.backgroundImage,
+      title: template.title,
+      invitationText: template.invitationText,
+      eventDate: template.eventDate,
+      eventTime: template.eventTime,
+      eventLocation: template.eventLocation,
+      drinkOptions: template.drinkOptions,
+      features: template.features,
+      isPersonalized: true,
+      createdAt: template.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+    };
     
-    if (currentTemplate && userModels.length > 0) {
-      // Utiliser le premier modèle utilisateur disponible
-      const userModel = userModels[0];
-      console.log('Utilisation du modèle utilisateur:', userModel);
-      
-      setUserTemplateForCustomization({
-        id: userModel.id,
-        name: userModel.name,
-        category: userModel.category,
-        backgroundImage: userModel.backgroundImage,
-        title: userModel.title,
-        invitationText: userModel.invitationText,
-        eventDate: userModel.eventDate,
-        eventTime: userModel.eventTime,
-        eventLocation: userModel.eventLocation,
-        drinkOptions: userModel.drinkOptions,
-        features: userModel.features,
-        colors: userModel.customizations?.colors,
-        isPersonalized: true
-      });
-      setShowCustomization(true);
-    } else if (currentTemplate) {
-      // Fallback vers le template actuel si pas de modèle utilisateur
-      setUserTemplateForCustomization(currentTemplate);
-      setShowCustomization(true);
-    }
+    setCustomizingTemplate(templateData);
+    setShowCustomization(true);
   };
 
   const handleSaveCustomization = (customizedTemplate: TemplateData) => {
-    console.log('Sauvegarde de la personnalisation:', customizedTemplate);
-    
-    const saveCustomization = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Sauvegarder les modifications dans le modèle utilisateur
-        if (userTemplateForCustomization && userModels.length > 0) {
-          const userModel = userModels[0];
-          await updateUserModel(userModel.id, {
-            name: customizedTemplate.name,
-            title: customizedTemplate.title,
-            invitationText: customizedTemplate.invitationText,
-            eventDate: customizedTemplate.eventDate,
-            eventTime: customizedTemplate.eventTime,
-            eventLocation: customizedTemplate.eventLocation,
-            drinkOptions: customizedTemplate.drinkOptions,
-            backgroundImage: customizedTemplate.backgroundImage,
-            colors: customizedTemplate.colors,
-            customizations: {
-              ...userModel.customizations,
-              colors: customizedTemplate.colors || userModel.customizations?.colors
-            }
-          });
-          
-          console.log('Modèle utilisateur mis à jour dans Firebase');
-        }
-        
-        // Mettre à jour le template actuel dans l'état local
-        setCurrentTemplate(customizedTemplate);
-        console.log('Template actuel mis à jour dans l\'état local:', customizedTemplate);
-        
-      } catch (error) {
-        console.error('Erreur lors de la sauvegarde:', error);
-        alert('Erreur lors de la sauvegarde des modifications');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    saveCustomization();
-    
-    setUserTemplateForCustomization(null);
+    console.log('Template personnalisé sauvegardé:', customizedTemplate);
     setShowCustomization(false);
+    setCustomizingTemplate(null);
+    // Rafraîchir les données
+    refreshUserData();
   };
 
-  // Fonction pour forcer le rechargement du template
-  const refreshCurrentTemplate = async () => {
-    if (userModels.length > 0) {
-      const userModel = userModels[0];
-      const templateData: TemplateData = {
-        id: userModel.id,
-        name: userModel.name,
-        category: userModel.category,
-        backgroundImage: userModel.backgroundImage,
-        title: userModel.title,
-        invitationText: userModel.invitationText,
-        eventDate: userModel.eventDate,
-        eventTime: userModel.eventTime,
-        eventLocation: userModel.eventLocation,
-        drinkOptions: userModel.drinkOptions,
-        features: userModel.features,
-        colors: userModel.customizations?.colors,
-        isPersonalized: true,
-        createdAt: userModel.createdAt?.toDate().toISOString()
-      };
-      
-      setCurrentTemplate(templateData);
+  const handleAddGuest = async () => {
+    if (!guestFormData.nom.trim()) {
+      alert(t('required_field'));
+      return;
     }
-  };
 
-  const openInviteModal = (invite?: Guest) => {
-    // Vérifier la limite d'invitations pour les nouveaux invités
-    if (!invite && !canCreateInvite()) {
+    // Vérifier la limite d'invitations
+    if (!canCreateInvite()) {
       setShowUpgradeModal(true);
       return;
     }
 
-    if (invite) {
-      setEditingInvite(invite);
-      setInviteFormData({
-        nom: invite.nom,
-        table: invite.table,
-        etat: invite.etat,
-        confirmed: invite.confirmed,
+    try {
+      const inviteId = await createInvite({
+        nom: guestFormData.nom,
+        table: guestFormData.table || 'Non assigné',
+        etat: guestFormData.etat,
+        confirmed: false
       });
-    } else {
-      setEditingInvite(null);
-      setInviteFormData({
-        nom: '',
-        table: '',
-        etat: 'simple',
-        confirmed: false,
-      });
+
+      if (inviteId) {
+        setShowAddGuestModal(false);
+        setGuestFormData({ nom: '', table: '', etat: 'simple' });
+        alert(t('guest_confirmed'));
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de l\'invité:', error);
+      alert(t('error'));
     }
-    setShowInviteModal(true);
   };
 
-  const closeInviteModal = () => {
-    setShowInviteModal(false);
-    setEditingInvite(null);
-    setInviteFormData({
-      nom: '',
-      table: '',
-      etat: 'simple',
-      confirmed: false,
+  const handleEditGuest = (guest: Invite) => {
+    setEditingGuest(guest);
+    setGuestFormData({
+      nom: guest.nom,
+      table: guest.table || '',
+      etat: guest.etat
+    });
+    setShowAddGuestModal(true);
+  };
+
+  const handleUpdateGuest = async () => {
+    if (!editingGuest || !guestFormData.nom.trim()) {
+      alert(t('required_field'));
+      return;
+    }
+
+    try {
+      const success = await updateInvite(editingGuest.id, {
+        nom: guestFormData.nom,
+        table: guestFormData.table || 'Non assigné',
+        etat: guestFormData.etat
+      });
+
+      if (success) {
+        setShowAddGuestModal(false);
+        setEditingGuest(null);
+        setGuestFormData({ nom: '', table: '', etat: 'simple' });
+        alert(t('profile_updated'));
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de l\'invité:', error);
+      alert(t('error'));
+    }
+  };
+
+  const handleDeleteGuest = async (guestId: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet invité ?')) {
+      try {
+        const success = await deleteInvite(guestId);
+        if (success) {
+          alert('Invité supprimé avec succès');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la suppression de l\'invité:', error);
+        alert(t('error'));
+      }
+    }
+  };
+
+  const generateInvitationLink = (guestId: string) => {
+    return `${window.location.origin}/invitation/${guestId}`;
+  };
+
+  const copyInvitationLink = (guestId: string) => {
+    const link = generateInvitationLink(guestId);
+    navigator.clipboard.writeText(link).then(() => {
+      alert('Lien copié dans le presse-papiers !');
     });
   };
 
-  const handleInviteSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Vérification stricte de la limite AVANT toute action
-    const currentCount = userInvites.length;
-    if (subscription?.plan === 'free' && currentCount >= 5) {
-      setShowUpgradeModal(true);
-      setShowInviteModal(false);
-      alert('Limite de 5 invitations atteinte pour le plan gratuit. Veuillez passer au plan premium.');
-      return;
-    }
+  const openInvitationPreview = (guestId: string) => {
+    const link = generateInvitationLink(guestId);
+    window.open(link, '_blank');
+  };
 
-    // Vérifier la limite pour les nouveaux invités
-    if (!editingInvite && !canCreateInvite()) {
-      setShowUpgradeModal(true);
-      return;
-    }
-    
-    // Double vérification juste avant la création
-    if (subscription?.plan === 'free' && userInvites.length >= 5) {
-      setIsSubmitting(false);
-      setShowUpgradeModal(true);
-      setShowInviteModal(false);
-      alert('Limite de 5 invitations atteinte. Impossible de créer plus d\'invités en mode gratuit.');
-      return;
-    }
-
-    try {
-      if (editingInvite) {
-        // Modifier un invité existant
-        await updateInvite(editingInvite.id, inviteFormData);
-      } else {
-        // Créer un nouvel invité
-        await createInvite(inviteFormData);
+  // Filtrer et trier les invités
+  const filteredAndSortedGuests = userInvites
+    .filter(guest => {
+      const matchesSearch = guest.nom.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = filterStatus === 'all' || 
+        (filterStatus === 'confirmed' && guest.confirmed) ||
+        (filterStatus === 'pending' && !guest.confirmed);
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.nom.localeCompare(b.nom);
+        case 'table':
+          return (a.table || '').localeCompare(b.table || '');
+        case 'status':
+          return a.confirmed === b.confirmed ? 0 : a.confirmed ? -1 : 1;
+        default:
+          return 0;
       }
-      closeInviteModal();
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde de l\'invité:', error);
-      alert('Erreur lors de la sauvegarde de l\'invité');
-    }
-  };
+    });
 
-  const handleDeleteInvite = async (inviteId: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet invité ?')) {
-      try {
-        await deleteInvite(inviteId);
-      } catch (error) {
-        console.error('Erreur lors de la suppression de l\'invité:', error);
-        alert('Erreur lors de la suppression de l\'invité');
-      }
-    }
-  };
-
-  const handleShareWhatsApp = (guest: Guest) => {
-    const baseUrl = window.location.origin;
-    const invitationUrl = `${baseUrl}/invitation/${guest.id}`;
-    console.log('URL d\'invitation WhatsApp:', invitationUrl);
-    const message = `Bonjour ${guest.nom}, vous êtes invité(e) à notre événement ! Voici votre invitation personnalisée : ${invitationUrl}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  const handleShareEmail = (guest: Guest) => {
-    const baseUrl = window.location.origin;
-    const invitationUrl = `${baseUrl}/invitation/${guest.id}`;
-    console.log('URL d\'invitation Email:', invitationUrl);
-    const subject = `Invitation à notre événement`;
-    const body = `Bonjour ${guest.nom},\n\nVous êtes invité(e) à notre événement !\n\nVoici votre invitation personnalisée :\n${invitationUrl}\n\nNous espérons vous voir bientôt !\n\nCordialement`;
-    const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoUrl;
-  };
-
-  const handleCopyLink = async (guest: Guest) => {
-    const baseUrl = window.location.origin;
-    const invitationUrl = `${baseUrl}/invitation/${guest.id}`;
-    console.log('URL d\'invitation à copier:', invitationUrl);
-    try {
-      await navigator.clipboard.writeText(invitationUrl);
-      alert('Lien copié dans le presse-papiers !');
-    } catch (error) {
-      // Fallback pour les navigateurs qui ne supportent pas l'API clipboard
-      const textArea = document.createElement('textarea');
-      textArea.value = invitationUrl;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      alert('Lien copié dans le presse-papiers !');
-    }
-  };
-
-  const handlePreviewInvitation = (guest: Guest) => {
-    const baseUrl = window.location.origin;
-    const invitationUrl = `${baseUrl}/invitation/${guest.id}`;
-    console.log('URL d\'invitation pour prévisualisation:', invitationUrl);
-    window.open(invitationUrl, '_blank');
-  };
-  
-  const getEtatColor = (etat: string) => {
-    switch (etat) {
-      case 'couple':
-        return 'bg-purple-100 text-purple-800';
-      case 'simple':
-        return 'bg-blue-100 text-blue-800';
+  const getIconForCategory = (category: string) => {
+    switch (category) {
+      case 'wedding':
+        return Heart;
+      case 'birthday':
+        return Gift;
+      case 'graduation':
+        return GraduationCap;
       default:
-        return 'bg-neutral-100 text-neutral-800';
+        return FileText;
     }
   };
 
-  const getEtatText = (etat: string) => {
-    switch (etat) {
-      case 'couple':
-        return 'Couple';
-      case 'simple':
-        return 'Simple';
+  const getCategoryName = (category: string) => {
+    switch (category) {
+      case 'wedding':
+        return t('wedding_invitations');
+      case 'birthday':
+        return t('birthday_invitations');
+      case 'graduation':
+        return t('graduation_invitations');
       default:
-        return 'Inconnu';
+        return category;
     }
   };
 
-  if (showCustomization && currentTemplate) {
+  const getStatusColor = (confirmed: boolean) => {
+    return confirmed 
+      ? 'bg-emerald-100 text-emerald-800' 
+      : 'bg-amber-100 text-amber-800';
+  };
+
+  const getStatusText = (confirmed: boolean) => {
+    return confirmed ? t('confirmed') : t('pending');
+  };
+
+  // Statistiques
+  const totalInvites = userInvites.length;
+  const confirmedInvites = userInvites.filter(invite => invite.confirmed).length;
+  const pendingInvites = totalInvites - confirmedInvites;
+  const totalTemplates = userModels.length;
+
+  if (showCustomization && customizingTemplate) {
     return (
       <TemplateCustomization
-        template={userTemplateForCustomization || currentTemplate}
+        template={customizingTemplate}
         onBack={() => {
           setShowCustomization(false);
-          setUserTemplateForCustomization(null);
+          setCustomizingTemplate(null);
         }}
         onSave={handleSaveCustomization}
       />
@@ -543,423 +337,410 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   }
 
   const renderOverview = () => (
-    <div className="animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       {/* En-tête de bienvenue */}
-      <div className="mb-8">
-        <div className="bg-gradient-to-r from-amber-50 via-rose-50/30 to-amber-50 rounded-2xl p-6 border border-amber-200/50 shadow-luxury">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-rose-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-glow-amber mr-4">
-                {userData.firstName[0]}{userData.lastName[0]}
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                  Bienvenue, {userData.firstName} !
-                </h1>
-                <p className="text-slate-600 mt-1">Gérez vos événements et invitations en toute simplicité</p>
-              </div>
+      <div className="bg-gradient-to-r from-amber-50 via-amber-100/50 to-rose-50 rounded-3xl p-8 border border-amber-200/50 shadow-luxury relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-200/20 to-rose-200/20 rounded-full blur-2xl"></div>
+        <div className="relative">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-2">
+                {t('dashboard_welcome')}, {userData.firstName} !
+              </h1>
+              <p className="text-slate-600 text-lg">
+                {t('dashboard_subtitle')}
+              </p>
             </div>
-            <div className="hidden md:flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
               <Crown className="h-8 w-8 text-amber-500 animate-glow" />
-              <Sparkles className="h-6 w-6 text-rose-500 animate-pulse" />
+              <div className="text-right">
+                <p className="text-sm font-medium text-amber-700">
+                  {subscription?.plan === 'free' ? t('free_plan') : subscription?.plan}
+                </p>
+                {subscription?.plan === 'free' && (
+                  <p className="text-xs text-amber-600">
+                    {getRemainingInvites()}/5 {t('remaining_invites')}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        {/* Ajout d'une carte pour l'abonnement */}
-        <div className={`rounded-2xl p-6 border shadow-lg ${
-          subscription?.plan === 'free' 
-            ? 'bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200/50' 
-            : 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200/50'
-        }`}>
-          <div className="flex items-center">
-            <div className={`p-3 rounded-xl ${
-              subscription?.plan === 'free' 
-                ? 'bg-amber-500 shadow-glow-amber' 
-                : 'bg-emerald-500'
-            }`}>
-              <Crown className="h-6 w-6 text-white" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg hover:shadow-glow-amber transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-amber-700 text-sm font-medium">{t('my_templates')}</p>
+              <p className="text-3xl font-bold text-amber-900">{totalTemplates}</p>
             </div>
-            <div className="ml-4">
-              <p className={`text-sm font-medium ${
-                subscription?.plan === 'free' ? 'text-amber-700' : 'text-emerald-700'
-              }`}>
-                Plan {subscription?.plan === 'free' ? 'Gratuit' : subscription?.plan}
-              </p>
-              <p className={`text-2xl font-bold ${
-                subscription?.plan === 'free' ? 'text-amber-900' : 'text-emerald-900'
-              }`}>
-                {subscription?.plan === 'free' 
-                  ? `${getRemainingInvites()}/5` 
-                  : '∞'
-                }
-              </p>
+            <div className="p-3 bg-amber-500 rounded-xl shadow-glow-amber">
+              <FileText className="h-6 w-6 text-white" />
             </div>
           </div>
-          {subscription?.plan === 'free' && getRemainingInvites() <= 2 && (
-            <button
-              onClick={() => setShowUpgradeModal(true)}
-              className="w-full mt-3 bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition-all duration-300 font-medium text-sm"
-            >
-              Passer au Premium
-            </button>
-          )}
         </div>
 
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg">
-          <div className="flex items-center">
-            <div className="p-3 bg-amber-500 rounded-xl shadow-glow-amber">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg hover:shadow-glow-purple transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-purple-700 text-sm font-medium">{t('total_invitations')}</p>
+              <p className="text-3xl font-bold text-purple-900">{totalInvites}</p>
+            </div>
+            <div className="p-3 bg-purple-500 rounded-xl shadow-glow-purple">
               <Users className="h-6 w-6 text-white" />
             </div>
-            <div className="ml-4">
-              <p className="text-amber-700 text-sm font-medium">Total Invités</p>
-              <p className="text-2xl font-bold text-amber-900">{guests.reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}</p>
-            </div>
           </div>
         </div>
-        
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg">
-          <div className="flex items-center">
+
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg hover:shadow-xl transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-emerald-700 text-sm font-medium">{t('confirmed_guests')}</p>
+              <p className="text-3xl font-bold text-emerald-900">{confirmedInvites}</p>
+            </div>
             <div className="p-3 bg-emerald-500 rounded-xl">
-              <Check className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <p className="text-emerald-700 text-sm font-medium">Confirmés</p>
-              <p className="text-2xl font-bold text-emerald-900">
-                {guests.filter(g => g.confirmed).reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-500 rounded-xl shadow-glow-purple">
-              <Calendar className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <p className="text-purple-700 text-sm font-medium">En attente</p>
-              <p className="text-2xl font-bold text-purple-900">
-                {guests.filter(g => !g.confirmed).reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}
-              </p>
+              <UserCheck className="h-6 w-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200/50 shadow-lg">
-          <div className="flex items-center">
-            <div className="p-3 bg-rose-500 rounded-xl">
-              <X className="h-6 w-6 text-white" />
+        <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200/50 shadow-lg hover:shadow-xl transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-rose-700 text-sm font-medium">{t('pending_responses')}</p>
+              <p className="text-3xl font-bold text-rose-900">{pendingInvites}</p>
             </div>
-            <div className="ml-4">
-              <p className="text-rose-700 text-sm font-medium">Déclinés</p>
-              <p className="text-2xl font-bold text-rose-900">
-                0
-              </p>
+            <div className="p-3 bg-rose-500 rounded-xl">
+              <Clock className="h-6 w-6 text-white" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Template actuel */}
-      {currentTemplate && (
-        <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                Template Actuel
-              </h2>
-              <p className="text-slate-600 mt-1">{currentTemplate.name}</p>
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={handleCustomizeTemplate}
-                className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-2 rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center shadow-glow-amber transform hover:scale-105"
-                disabled={!currentTemplate && userModels.length === 0}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Personnaliser
-              </button>
-              <button className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center shadow-glow-purple transform hover:scale-105">
-                <Eye className="h-4 w-4 mr-2" />
-                Prévisualiser
-              </button>
-            </div>
-          </div>
+      {/* Actions rapides */}
+      <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
+        <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-6">
+          {t('quick_actions')}
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={() => setShowAddGuestModal(true)}
+            className="flex items-center justify-center p-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            {t('add')} {t('guests').toLowerCase()}
+          </button>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1">
-              <img
-                src={currentTemplate.backgroundImage}
-                alt={currentTemplate.name}
-                className="w-full h-48 object-cover rounded-xl shadow-lg"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold text-slate-900 mb-2">Détails de l'événement</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center text-slate-600">
-                      <Calendar className="h-4 w-4 mr-2 text-amber-500" />
-                      {currentTemplate.eventDate} à {currentTemplate.eventTime}
-                    </div>
-                    <div className="flex items-center text-slate-600">
-                      <MapPin className="h-4 w-4 mr-2 text-amber-500" />
-                      {currentTemplate.eventLocation}
-                    </div>
-                  </div>
+          <button
+            onClick={() => setActiveTab('tables')}
+            className="flex items-center justify-center p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-300 font-semibold shadow-glow-purple transform hover:scale-105"
+          >
+            <Table className="h-5 w-5 mr-2" />
+            {t('manage_guests')}
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className="flex items-center justify-center p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold shadow-glow transform hover:scale-105"
+          >
+            <BarChart3 className="h-5 w-5 mr-2" />
+            {t('view_analytics')}
+          </button>
+        </div>
+      </div>
+
+      {/* Activité récente */}
+      <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
+        <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-6">
+          {t('recent_activity')}
+        </h2>
+        <div className="space-y-4">
+          {userInvites.slice(0, 5).map((invite, index) => (
+            <div key={invite.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-neutral-50 to-amber-50/30 rounded-xl border border-neutral-200/50 hover:shadow-md transition-all duration-200">
+              <div className="flex items-center">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg ${
+                  invite.confirmed 
+                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600' 
+                    : 'bg-gradient-to-r from-amber-500 to-amber-600'
+                }`}>
+                  {invite.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
                 </div>
-                <div>
-                  <h4 className="font-semibold text-slate-900 mb-2">Titre</h4>
-                  <p className="text-slate-600">{currentTemplate.title}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-slate-900 mb-2">Message d'invitation</h4>
-                  <p className="text-slate-600 text-sm leading-relaxed">
-                    {currentTemplate.invitationText.length > 150 
-                      ? currentTemplate.invitationText.substring(0, 150) + '...'
-                      : currentTemplate.invitationText}
+                <div className="ml-3">
+                  <p className="font-medium text-slate-900">{invite.nom}</p>
+                  <p className="text-sm text-slate-600">
+                    {invite.confirmed ? t('guest_confirmed') : t('invitation_sent')}
                   </p>
                 </div>
               </div>
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(invite.confirmed)}`}>
+                {getStatusText(invite.confirmed)}
+              </span>
             </div>
-          </div>
+          ))}
+          
+          {userInvites.length === 0 && (
+            <div className="text-center py-8">
+              <Users className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-neutral-500 mb-2">{t('no_invitations')}</h3>
+              <p className="text-neutral-400 mb-6">{t('create_first_invitation')}</p>
+              <button
+                onClick={() => setShowAddGuestModal(true)}
+                className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
+              >
+                {t('create_invitation')}
+              </button>
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Actions rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <button
-          onClick={() => setActiveTab('invitations')}
-          className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 hover:shadow-glow-amber transition-all duration-300 transform hover:scale-105 text-left group"
-        >
-          <div className="flex items-center mb-4">
-            <div className="p-3 bg-amber-500 rounded-xl shadow-glow-amber group-hover:scale-110 transition-transform duration-300">
-              <Users className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-semibold text-amber-900">Gérer les invités</h3>
-              <p className="text-amber-700 text-sm">Ajouter, modifier ou supprimer des invités</p>
-            </div>
-          </div>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('tables')}
-          className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 hover:shadow-glow-purple transition-all duration-300 transform hover:scale-105 text-left group"
-        >
-          <div className="flex items-center mb-4">
-            <div className="p-3 bg-purple-500 rounded-xl shadow-glow-purple group-hover:scale-110 transition-transform duration-300">
-              <MapPin className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-semibold text-purple-900">Plan de table</h3>
-              <p className="text-purple-700 text-sm">Organiser les places de vos invités</p>
-            </div>
-          </div>
-        </button>
-
-        <button
-          onClick={handleCustomizeTemplate}
-          className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 hover:shadow-lg transition-all duration-300 transform hover:scale-105 text-left group"
-          disabled={!currentTemplate}
-        >
-          <div className="flex items-center mb-4">
-            <div className="p-3 bg-emerald-500 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <Settings className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-semibold text-emerald-900">Personnaliser</h3>
-              <p className="text-emerald-700 text-sm">Modifier votre template d'invitation</p>
-            </div>
-          </div>
-        </button>
       </div>
     </div>
   );
 
-  const renderInvitations = () => (
-    <div className="animate-fade-in">
-      {/* En-tête avec bouton d'ajout */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+  const renderTemplates = () => (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-            Gestion des Invitations
+            {t('my_templates')}
           </h2>
-          <p className="text-slate-600 mt-1">Gérez votre liste d'invités pour l'événement</p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={() => setShowInviteModal(true)}
-            disabled={subscription?.plan === 'free' && userInvites.length >= 5}
-            className={`px-6 py-3 rounded-xl transition-all duration-300 font-semibold flex items-center transform hover:scale-105 ${
-              subscription?.plan === 'free' && userInvites.length >= 5
-                ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
-                : 'bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 shadow-glow-amber'
-            }`}
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            {subscription?.plan === 'free' && userInvites.length >= 5 
-              ? 'Limite atteinte (5/5)' 
-              : 'Ajouter un invité'
-            }
-          </button>
-          
-          {/* Bouton Upgrade visible quand limite atteinte */}
-          {subscription?.plan === 'free' && userInvites.length >= 5 && (
-            <button
-              onClick={() => setShowUpgradeModal(true)}
-              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center shadow-lg transform hover:scale-105 animate-pulse"
-            >
-              <Crown className="h-5 w-5 mr-2" />
-              Passer au Premium
-            </button>
-          )}
+          <p className="text-slate-600 mt-1">{t('event_management')}</p>
         </div>
       </div>
 
-      {/* Statistiques des invités */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg">
-          <div className="flex items-center">
-            <div className="p-3 bg-amber-500 rounded-xl shadow-glow-amber">
-              <Users className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <p className="text-amber-700 text-sm font-medium">Total Invités</p>
-              <p className="text-2xl font-bold text-amber-900">{guests.reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}</p>
-            </div>
-          </div>
+      {userModels.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {userModels.map((template, index) => {
+            const IconComponent = getIconForCategory(template.category);
+            return (
+              <div
+                key={template.id}
+                className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 overflow-hidden hover:shadow-glow-amber transition-all duration-500 transform hover:scale-105 animate-slide-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={template.backgroundImage}
+                    alt={template.name}
+                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                  <div className="absolute top-4 right-4">
+                    <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
+                      <IconComponent className="h-5 w-5 text-amber-600" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-white font-bold text-lg mb-1 drop-shadow-lg">
+                      {template.title}
+                    </h3>
+                    <p className="text-white/80 text-sm">
+                      {getCategoryName(template.category)}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-slate-600 text-sm">{template.eventDate}</p>
+                      <p className="text-slate-500 text-xs">{template.eventLocation}</p>
+                    </div>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                      {t('template_customized')}
+                    </span>
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleCustomizeTemplate(template)}
+                      className="flex-1 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-all duration-300 font-medium flex items-center justify-center"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      {t('edit')}
+                    </button>
+                    
+                    <button className="flex-1 bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-all duration-300 font-medium flex items-center justify-center">
+                      <Eye className="h-4 w-4 mr-2" />
+                      {t('view')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-        
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg">
-          <div className="flex items-center">
-            <div className="p-3 bg-emerald-500 rounded-xl">
-              <Check className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <p className="text-emerald-700 text-sm font-medium">Confirmés</p>
-              <p className="text-2xl font-bold text-emerald-900">
-                {guests.filter(g => g.confirmed).reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}
-              </p>
-            </div>
-          </div>
+      ) : (
+        <div className="text-center py-16">
+          <FileText className="h-24 w-24 text-neutral-300 mx-auto mb-6" />
+          <h3 className="text-2xl font-bold text-neutral-500 mb-4">{t('no_templates')}</h3>
+          <p className="text-neutral-400 mb-8 max-w-md mx-auto">
+            {t('create_first_template')}
+          </p>
+          <button className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-8 py-4 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105">
+            <Plus className="h-5 w-5 mr-2 inline" />
+            {t('create')} {t('templates').toLowerCase()}
+          </button>
         </div>
-        
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-500 rounded-xl shadow-glow-purple">
-              <Calendar className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <p className="text-purple-700 text-sm font-medium">En attente</p>
-              <p className="text-2xl font-bold text-purple-900">
-                {guests.filter(g => !g.confirmed).reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}
-              </p>
-            </div>
-          </div>
-        </div>
+      )}
+    </div>
+  );
 
-        <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200/50 shadow-lg">
-          <div className="flex items-center">
-            <div className="p-3 bg-rose-500 rounded-xl">
-              <X className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <p className="text-rose-700 text-sm font-medium">Déclinés</p>
-              <p className="text-2xl font-bold text-rose-900">
-                0
-              </p>
-            </div>
+  const renderGuests = () => (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+            {t('guest_management')}
+          </h2>
+          <p className="text-slate-600 mt-1">{totalInvites} {t('guests').toLowerCase()}</p>
+        </div>
+        
+        <button
+          onClick={() => setShowAddGuestModal(true)}
+          className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center shadow-glow-amber transform hover:scale-105"
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          {t('add')} {t('guests').toLowerCase()}
+        </button>
+      </div>
+
+      {/* Filtres et recherche */}
+      <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <input
+              type="text"
+              placeholder={t('search')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+            />
+          </div>
+          
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+          >
+            <option value="all">{t('filter')} - Tous</option>
+            <option value="confirmed">{t('confirmed')}</option>
+            <option value="pending">{t('pending')}</option>
+          </select>
+          
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+          >
+            <option value="name">{t('sort')} - {t('guest_name')}</option>
+            <option value="table">{t('table_number')}</option>
+            <option value="status">{t('confirmation_status')}</option>
+          </select>
+          
+          <div className="flex items-center text-sm text-slate-600">
+            <Filter className="h-4 w-4 mr-2" />
+            {filteredAndSortedGuests.length} résultat(s)
           </div>
         </div>
       </div>
 
       {/* Liste des invités */}
-      <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 overflow-hidden">
-        {/* En-tête du tableau - Desktop */}
-        <div className="hidden md:grid md:grid-cols-6 gap-4 p-6 bg-gradient-to-r from-neutral-50 to-amber-50/30 border-b border-neutral-200/50">
-          <div className="font-semibold text-slate-700">Nom</div>
-          <div className="font-semibold text-slate-700">Table</div>
-          <div className="font-semibold text-slate-700">État</div>
-          <div className="font-semibold text-slate-700">Confirmé</div>
-          <div className="font-semibold text-slate-700"></div>
-          <div className="font-semibold text-slate-700 text-right">Actions</div>
-        </div>
+      {filteredAndSortedGuests.length > 0 ? (
+        <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 overflow-hidden">
+          {/* En-tête du tableau - Desktop */}
+          <div className="hidden md:grid md:grid-cols-6 gap-4 p-6 bg-gradient-to-r from-neutral-50 to-amber-50/30 border-b border-neutral-200/50">
+            <div className="font-semibold text-slate-700">{t('guest_name')}</div>
+            <div className="font-semibold text-slate-700">{t('table_number')}</div>
+            <div className="font-semibold text-slate-700">{t('guest_type')}</div>
+            <div className="font-semibold text-slate-700">{t('confirmation_status')}</div>
+            <div className="font-semibold text-slate-700">{t('invitation_preview')}</div>
+            <div className="font-semibold text-slate-700 text-right">Actions</div>
+          </div>
 
-        {/* Corps du tableau */}
-        <div className="divide-y divide-neutral-200/50">
-          {guests.length > 0 ? (
-            guests.map((guest, index) => (
+          {/* Corps du tableau */}
+          <div className="divide-y divide-neutral-200/50">
+            {filteredAndSortedGuests.map((guest, index) => (
               <div
                 key={guest.id}
                 className="animate-slide-up hover:bg-gradient-to-r hover:from-neutral-50/50 hover:to-amber-50/30 transition-all duration-300"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                style={{ animationDelay: `${index * 0.05}s` }}
               >
                 {/* Version Desktop */}
                 <div className="hidden md:grid md:grid-cols-6 gap-4 p-6 items-center">
-                  <div className="font-medium text-slate-900">{guest.nom}</div>
-                  <div className="text-slate-600">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-amber-100 text-amber-800">
+                  <div className="flex items-center">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg mr-3 ${
+                      guest.etat === 'couple' 
+                        ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
+                        : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                    }`}>
+                      {guest.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900">{guest.nom}</p>
+                      <p className="text-sm text-slate-500">ID: {guest.id.substring(0, 8)}...</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
+                      <Table className="h-4 w-4 mr-1" />
                       {guest.table || 'Non assigné'}
                     </span>
                   </div>
+                  
                   <div>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getEtatColor(guest.etat)}`}>
-                      {getEtatText(guest.etat)}
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                      guest.etat === 'couple' 
+                        ? 'bg-pink-100 text-pink-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {guest.etat === 'couple' ? t('couple') : t('single')}
                     </span>
                   </div>
+                  
                   <div>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${guest.confirmed ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                      {guest.confirmed ? 'Oui' : 'Non'}
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(guest.confirmed)}`}>
+                      {guest.confirmed ? (
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                      ) : (
+                        <Clock className="h-4 w-4 mr-1" />
+                      )}
+                      {getStatusText(guest.confirmed)}
                     </span>
                   </div>
-                  <div></div>
-                  <div className="flex justify-end space-x-2">
+                  
+                  <div className="flex space-x-2">
                     <button
-                      onClick={() => handlePreviewInvitation(guest)}
-                      className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                      title="Prévisualiser l'invitation"
+                      onClick={() => openInvitationPreview(guest.id)}
+                      className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                      title={t('invitation_preview')}
                     >
                       <ExternalLink className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleShareWhatsApp(guest)}
-                      className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                      title="Partager sur WhatsApp"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleShareEmail(guest)}
-                      className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                      title="Envoyer par email"
-                    >
-                      <Mail className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleCopyLink(guest)}
-                      className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                      onClick={() => copyInvitationLink(guest.id)}
+                      className="p-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all duration-200 transform hover:scale-110"
                       title="Copier le lien"
                     >
                       <Copy className="h-4 w-4" />
                     </button>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2">
                     <button
-                      onClick={() => openInviteModal(guest)}
+                      onClick={() => handleEditGuest(guest)}
                       className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                      title="Modifier"
+                      title={t('edit')}
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDeleteInvite(guest.id)}
+                      onClick={() => handleDeleteGuest(guest.id)}
                       className="p-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                      title="Supprimer"
+                      title={t('delete')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -968,175 +749,496 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
                 {/* Version Mobile */}
                 <div className="md:hidden p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h4 className="font-medium text-slate-900 text-lg">{guest.nom}</h4>
-                      <div className="flex items-center mt-1 space-x-3">
-                        <span className="text-slate-600 text-sm">Table: {guest.table || 'Non assigné'}</span>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getEtatColor(guest.etat)}`}>
-                          {getEtatText(guest.etat)}
-                        </span>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold shadow-lg mr-3 ${
+                        guest.etat === 'couple' 
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
+                          : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                      }`}>
+                        {guest.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-slate-900">{guest.nom}</h3>
+                        <p className="text-sm text-slate-500">{guest.table || 'Non assigné'}</p>
                       </div>
                     </div>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(guest.confirmed)}`}>
+                      {getStatusText(guest.confirmed)}
+                    </span>
                   </div>
                   
-                  <div className="mb-3">
-                    <div className="mb-3 space-y-1">
-                        <p className="text-sm text-slate-600">
-                          <span className="font-medium">Confirmé:</span> {guest.confirmed ? 'Oui' : 'Non'}
-                        </p>
+                  <div className="flex items-center justify-between">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      guest.etat === 'couple' 
+                        ? 'bg-pink-100 text-pink-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {guest.etat === 'couple' ? t('couple') : t('single')}
+                    </span>
+                    
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => openInvitationPreview(guest.id)}
+                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => copyInvitationLink(guest.id)}
+                        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleEditGuest(guest)}
+                        className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-all duration-200"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteGuest(guest.id)}
+                        className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-all duration-200"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => handlePreviewInvitation(guest)}
-                      className="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      Voir
-                    </button>
-                    <button
-                      onClick={() => openInviteModal(guest)}
-                      className="bg-amber-100 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Modifier
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteInvite(guest.id)}
-                    disabled={subscription?.plan === 'free' && userInvites.length >= 5}
-                    className="w-full bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-sm mt-2"
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Supprimer
-                  </button>
-                  
-                  {/* Bouton upgrade si limite atteinte */}
-                  {subscription?.plan === 'free' && userInvites.length >= 5 && (
-                    <button
-                      onClick={() => setShowUpgradeModal(true)}
-                      className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center shadow-lg transform hover:scale-105"
-                    >
-                      <Crown className="h-5 w-5 mr-2" />
-                      Passer au Premium
-                    </button>
-                  )}
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="p-12 text-center">
-              <Users className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-neutral-500 mb-2">Aucun invité ajouté</h3>
-              <p className="text-neutral-400 mb-6">Commencez par ajouter votre premier invité</p>
-              <button
-                onClick={() => openInviteModal()}
-                className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
-              >
-                Ajouter un invité
-              </button>
-            </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-12 text-center">
+          <Users className="h-24 w-24 text-neutral-300 mx-auto mb-6" />
+          <h3 className="text-2xl font-bold text-neutral-500 mb-4">{t('no_invitations')}</h3>
+          <p className="text-neutral-400 mb-8 max-w-md mx-auto">
+            {searchTerm || filterStatus !== 'all' 
+              ? 'Aucun invité ne correspond à vos critères de recherche.'
+              : t('create_first_invitation')
+            }
+          </p>
+          {!searchTerm && filterStatus === 'all' && (
+            <button
+              onClick={() => setShowAddGuestModal(true)}
+              className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-8 py-4 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105"
+            >
+              <Plus className="h-5 w-5 mr-2 inline" />
+              {t('add')} {t('guests').toLowerCase()}
+            </button>
           )}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderTables = () => (
+    <div className="animate-fade-in">
+      <TableManagement 
+        tables={tables} 
+        setTables={setTables}
+        guests={userInvites}
+      />
+    </div>
+  );
+
+  const renderAnalytics = () => (
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+          {t('statistics')}
+        </h2>
+        <p className="text-slate-600 mt-1">{t('event_analytics')}</p>
+      </div>
+
+      {/* Statistiques détaillées */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-amber-500 rounded-xl shadow-glow-amber">
+              <TrendingUp className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-amber-600 text-sm font-medium">+12%</span>
+          </div>
+          <div>
+            <p className="text-amber-700 text-sm font-medium">{t('total_invitations')}</p>
+            <p className="text-3xl font-bold text-amber-900">{totalInvites}</p>
+            <p className="text-amber-600 text-xs mt-1">Ce mois-ci</p>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-emerald-500 rounded-xl">
+              <UserCheck className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-emerald-600 text-sm font-medium">
+              {totalInvites > 0 ? Math.round((confirmedInvites / totalInvites) * 100) : 0}%
+            </span>
+          </div>
+          <div>
+            <p className="text-emerald-700 text-sm font-medium">Taux de confirmation</p>
+            <p className="text-3xl font-bold text-emerald-900">{confirmedInvites}/{totalInvites}</p>
+            <p className="text-emerald-600 text-xs mt-1">{t('confirmed_guests')}</p>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-purple-500 rounded-xl shadow-glow-purple">
+              <Clock className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-purple-600 text-sm font-medium">
+              {totalInvites > 0 ? Math.round((pendingInvites / totalInvites) * 100) : 0}%
+            </span>
+          </div>
+          <div>
+            <p className="text-purple-700 text-sm font-medium">{t('pending_responses')}</p>
+            <p className="text-3xl font-bold text-purple-900">{pendingInvites}</p>
+            <p className="text-purple-600 text-xs mt-1">En attente</p>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200/50 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-rose-500 rounded-xl">
+              <Table className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-rose-600 text-sm font-medium">{tables.length}</span>
+          </div>
+          <div>
+            <p className="text-rose-700 text-sm font-medium">{t('total_tables')}</p>
+            <p className="text-3xl font-bold text-rose-900">{tables.reduce((sum, table) => sum + table.seats, 0)}</p>
+            <p className="text-rose-600 text-xs mt-1">Places totales</p>
+          </div>
         </div>
       </div>
 
-      {/* Modal pour ajouter/modifier un invité */}
-      {showInviteModal && (
+      {/* Graphiques et analyses */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Répartition des confirmations</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-emerald-500 rounded-full mr-3"></div>
+                <span className="text-slate-700">{t('confirmed')}</span>
+              </div>
+              <div className="flex items-center">
+                <span className="text-slate-900 font-semibold mr-2">{confirmedInvites}</span>
+                <span className="text-slate-500 text-sm">
+                  ({totalInvites > 0 ? Math.round((confirmedInvites / totalInvites) * 100) : 0}%)
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-amber-500 rounded-full mr-3"></div>
+                <span className="text-slate-700">{t('pending')}</span>
+              </div>
+              <div className="flex items-center">
+                <span className="text-slate-900 font-semibold mr-2">{pendingInvites}</span>
+                <span className="text-slate-500 text-sm">
+                  ({totalInvites > 0 ? Math.round((pendingInvites / totalInvites) * 100) : 0}%)
+                </span>
+              </div>
+            </div>
+            
+            {/* Barre de progression */}
+            <div className="mt-4">
+              <div className="w-full bg-neutral-200 rounded-full h-3 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-500"
+                  style={{ width: `${totalInvites > 0 ? (confirmedInvites / totalInvites) * 100 : 0}%` }}
+                ></div>
+              </div>
+              <p className="text-center text-sm text-slate-600 mt-2">
+                Taux de confirmation: {totalInvites > 0 ? Math.round((confirmedInvites / totalInvites) * 100) : 0}%
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Répartition par type</h3>
+          <div className="space-y-4">
+            {(() => {
+              const singleGuests = userInvites.filter(guest => guest.etat === 'simple').length;
+              const coupleGuests = userInvites.filter(guest => guest.etat === 'couple').length;
+              
+              return (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
+                      <span className="text-slate-700">{t('single')}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-slate-900 font-semibold mr-2">{singleGuests}</span>
+                      <span className="text-slate-500 text-sm">
+                        ({totalInvites > 0 ? Math.round((singleGuests / totalInvites) * 100) : 0}%)
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-pink-500 rounded-full mr-3"></div>
+                      <span className="text-slate-700">{t('couple')}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-slate-900 font-semibold mr-2">{coupleGuests}</span>
+                      <span className="text-slate-500 text-sm">
+                        ({totalInvites > 0 ? Math.round((coupleGuests / totalInvites) * 100) : 0}%)
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Barre de progression */}
+                  <div className="mt-4">
+                    <div className="w-full bg-neutral-200 rounded-full h-3 overflow-hidden flex">
+                      <div 
+                        className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500"
+                        style={{ width: `${totalInvites > 0 ? (singleGuests / totalInvites) * 100 : 0}%` }}
+                      ></div>
+                      <div 
+                        className="h-full bg-gradient-to-r from-pink-500 to-pink-600 transition-all duration-500"
+                        style={{ width: `${totalInvites > 0 ? (coupleGuests / totalInvites) * 100 : 0}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-center text-sm text-slate-600 mt-2">
+                      Places occupées: {singleGuests + (coupleGuests * 2)} places
+                    </p>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderProfile = () => (
+    <div className="animate-fade-in">
+      <UserProfile userData={userData} onLogout={onLogout} />
+    </div>
+  );
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return renderOverview();
+      case 'templates':
+        return renderTemplates();
+      case 'guests':
+        return renderGuests();
+      case 'tables':
+        return renderTables();
+      case 'analytics':
+        return renderAnalytics();
+      case 'profile':
+        return renderProfile();
+      default:
+        return renderOverview();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-40 h-40 bg-gradient-to-r from-amber-200/10 to-purple-200/10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-20 w-32 h-32 bg-gradient-to-r from-rose-200/10 to-amber-200/10 rounded-full blur-3xl animate-bounce-slow"></div>
+      </div>
+
+      <div className="relative z-10 flex">
+        {/* Sidebar */}
+        <div className="w-64 bg-white/80 backdrop-blur-xl shadow-luxury border-r border-neutral-200/50 min-h-screen sticky top-0">
+          <div className="p-6">
+            {/* Logo */}
+            <div className="flex items-center space-x-2 mb-8">
+              <div className="relative">
+                <Crown className="h-8 w-8 text-amber-500 animate-glow drop-shadow-lg" />
+                <div className="absolute inset-0 animate-pulse">
+                  <Crown className="h-8 w-8 text-amber-300 opacity-30" />
+                </div>
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 bg-clip-text text-transparent">
+                Furaha-Event
+              </span>
+            </div>
+
+            {/* Navigation */}
+            <nav className="space-y-2">
+              {[
+                { id: 'overview', label: t('dashboard'), icon: BarChart3 },
+                { id: 'templates', label: t('my_templates'), icon: FileText },
+                { id: 'guests', label: t('guests'), icon: Users },
+                { id: 'tables', label: t('tables'), icon: Table },
+                { id: 'analytics', label: t('analytics'), icon: TrendingUp },
+                { id: 'profile', label: t('profile'), icon: Users }
+              ].map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-300 text-left ${
+                      activeTab === item.id
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-glow-amber transform scale-105'
+                        : 'text-slate-600 hover:bg-amber-50 hover:text-amber-700 hover:transform hover:scale-102'
+                    }`}
+                  >
+                    <IconComponent className="h-5 w-5 mr-3" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Plan d'abonnement */}
+            {subscription && (
+              <div className="mt-8 p-4 bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl border border-amber-200/50">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center">
+                    <Crown className="h-4 w-4 text-amber-600 mr-2" />
+                    <span className="text-sm font-semibold text-amber-800">
+                      {subscription.plan === 'free' ? t('free_plan') : subscription.plan}
+                    </span>
+                  </div>
+                  {subscription.plan === 'free' && (
+                    <button
+                      onClick={() => setShowUpgradeModal(true)}
+                      className="text-xs bg-amber-600 text-white px-2 py-1 rounded-full hover:bg-amber-700 transition-all duration-300"
+                    >
+                      {t('upgrade_plan')}
+                    </button>
+                  )}
+                </div>
+                
+                {subscription.plan === 'free' && (
+                  <div>
+                    <div className="flex justify-between text-xs text-amber-700 mb-2">
+                      <span>{t('remaining_invites')}</span>
+                      <span>{getRemainingInvites()}/5</span>
+                    </div>
+                    <div className="w-full bg-amber-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-amber-500 to-amber-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${((5 - getRemainingInvites()) / 5) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Paramètres */}
+            <div className="mt-8 pt-6 border-t border-neutral-200/50">
+              <button
+                onClick={() => setShowSettings(true)}
+                className="w-full flex items-center px-4 py-3 text-slate-600 hover:bg-neutral-50 hover:text-slate-700 rounded-xl transition-all duration-300"
+              >
+                <Settings className="h-5 w-5 mr-3" />
+                {t('settings')}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 p-8">
+          {renderContent()}
+        </div>
+      </div>
+
+      {/* Modal d'ajout/modification d'invité */}
+      {showAddGuestModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-md w-full animate-slide-up relative">
-            {/* Header simple */}
-            <div className="p-6 pb-4">
+          <div className="bg-white rounded-2xl shadow-luxury max-w-md w-full animate-slide-up">
+            <div className="p-6 border-b border-neutral-200/50">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-semibold text-gray-800">
-                  Ajouter un invité
+                <h3 className="text-xl font-bold text-slate-900">
+                  {editingGuest ? t('edit') + ' ' + t('guests').toLowerCase() : t('add') + ' ' + t('guests').toLowerCase()}
                 </h3>
                 <button
-                  onClick={() => setShowInviteModal(false)}
-                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                  onClick={() => {
+                    setShowAddGuestModal(false);
+                    setEditingGuest(null);
+                    setGuestFormData({ nom: '', table: '', etat: 'simple' });
+                  }}
+                  className="p-2 hover:bg-neutral-100 rounded-lg transition-colors duration-200"
                 >
-                  <X className="h-5 w-5 text-gray-500" />
+                  <X className="h-5 w-5 text-neutral-500" />
                 </button>
               </div>
             </div>
 
-            <form onSubmit={handleInviteSubmit} className="px-6 pb-6">
+            <div className="p-6">
               <div className="space-y-4">
-                {/* Nom complet */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nom complet
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    {t('guest_name')}
                   </label>
                   <input
                     type="text"
-                    value={inviteFormData.nom}
-                    onChange={(e) => setInviteFormData({ ...inviteFormData, nom: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50"
-                    placeholder="Ex: Jean Dupont"
+                    value={guestFormData.nom}
+                    onChange={(e) => setGuestFormData({ ...guestFormData, nom: e.target.value })}
+                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                    placeholder="Nom complet de l'invité"
                     required
                   />
                 </div>
 
-                {/* Numéro de table */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Table
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    {t('table_number')}
                   </label>
                   <select
-                    value={inviteFormData.table}
-                    onChange={(e) => setInviteFormData({ ...inviteFormData, table: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50"
+                    value={guestFormData.table}
+                    onChange={(e) => setGuestFormData({ ...guestFormData, table: e.target.value })}
+                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
                   >
                     <option value="">Sélectionner une table</option>
-                    {availableTables.map((table) => {
-                      const occupiedSeats = guests.filter(guest => guest.table === table.name).length;
-                      return (
-                        <option key={table.id} value={table.name}>
-                          {table.name} ({occupiedSeats}/{table.seats})
-                        </option>
-                      );
-                    })}
+                    {tables.map((table) => (
+                      <option key={table.id} value={table.name}>
+                        {table.name} ({table.seats} places)
+                      </option>
+                    ))}
                   </select>
                 </div>
 
-                {/* Statut */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    État
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    {t('guest_type')}
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setInviteFormData({ ...inviteFormData, etat: 'simple' })}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
-                        inviteFormData.etat === 'simple'
-                          ? 'border-amber-500 bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800 shadow-glow-amber'
-                          : 'bg-gray-100 text-gray-600 border-gray-300 hover:border-green-300'
+                      onClick={() => setGuestFormData({ ...guestFormData, etat: 'simple' })}
+                      className={`p-3 rounded-xl border-2 transition-all duration-300 ${
+                        guestFormData.etat === 'simple'
+                          ? 'border-amber-500 bg-amber-50 text-amber-700'
+                          : 'border-neutral-300 hover:border-amber-300'
                       }`}
                     >
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center space-x-2">
-                          <User className="h-4 w-4" />
-                          <span className="font-medium">Simple</span>
-                        </div>
-                      </div>
+                      <Users className="h-5 w-5 mx-auto mb-1" />
+                      <span className="text-sm font-medium">{t('single')}</span>
                     </button>
-                    
                     <button
                       type="button"
-                      onClick={() => setInviteFormData({ ...inviteFormData, etat: 'couple' })}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
-                        inviteFormData.etat === 'couple'
-                          ? 'bg-pink-100 text-pink-800 border-pink-300'
-                          : 'bg-gray-100 text-gray-600 border-gray-300 hover:border-pink-300'
+                      onClick={() => setGuestFormData({ ...guestFormData, etat: 'couple' })}
+                      className={`p-3 rounded-xl border-2 transition-all duration-300 ${
+                        guestFormData.etat === 'couple'
+                          ? 'border-pink-500 bg-pink-50 text-pink-700'
+                          : 'border-neutral-300 hover:border-pink-300'
                       }`}
                     >
-                      <div className="flex items-center justify-center space-x-2">
-                        <Heart className="h-4 w-4" />
-                        <span className="font-medium">Couple</span>
-                        <span className="text-xs mt-1 opacity-75">2 personnes</span>
-                      </div>
+                      <Heart className="h-5 w-5 mx-auto mb-1" />
+                      <span className="text-sm font-medium">{t('couple')}</span>
                     </button>
                   </div>
                 </div>
@@ -1144,36 +1246,32 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
               <div className="flex space-x-3 mt-6">
                 <button
-                  type="button"
-                  onClick={closeInviteModal}
-                  className="flex-1 px-6 py-4 border-2 border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 hover:border-neutral-400 transition-all duration-300 font-semibold transform hover:scale-105"
+                  onClick={() => {
+                    setShowAddGuestModal(false);
+                    setEditingGuest(null);
+                    setGuestFormData({ nom: '', table: '', etat: 'simple' });
+                  }}
+                  className="flex-1 px-4 py-3 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-all duration-200 font-medium"
                 >
-                  Annuler
+                  {t('cancel')}
                 </button>
                 <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-2xl hover:bg-gray-300 transition-all duration-200 font-medium"
+                  onClick={editingGuest ? handleUpdateGuest : handleAddGuest}
+                  className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                  {isLoading ? (
-                    <div className="relative flex items-center justify-center">
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                      Sauvegarde...
-                    </div>
-                  ) : (
-                    <span className="relative flex items-center justify-center">
-                      <Save className="h-4 w-4 inline mr-2" />
-                      {editingInvite ? 'Modifier' : 'Ajouter'}
-                      <Sparkles className="h-4 w-4 ml-2" />
-                    </span>
-                  )}
+                  {editingGuest ? t('save') : t('add')}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Modal de paramètres */}
+      <DashboardSettings
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
 
       {/* Modal de mise à niveau */}
       <UpgradeModal
@@ -1181,152 +1279,6 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         onClose={() => setShowUpgradeModal(false)}
         currentPlan={subscription?.plan || 'free'}
         remainingInvites={getRemainingInvites()}
-      />
-    </div>
-  );
-
-  const renderTables = () => (
-    <TableManagement 
-      tables={tables} 
-      setTables={setTables}
-      guests={guests}
-      onSaveTable={saveTableToFirestore}
-      onDeleteTable={deleteTableFromFirestore}
-      isLoading={isLoadingTables}
-    />
-  );
-
-  const renderProfile = () => (
-    <UserProfile userData={userData} onLogout={onLogout} />
-  );
-
-  const renderSettings = () => (
-    <div className="animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-8">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-6">
-          Paramètres
-        </h2>
-        <p className="text-slate-600">Fonctionnalité en cours de développement...</p>
-      </div>
-    </div>
-  );
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'overview':
-        return renderOverview();
-      case 'invitations':
-        return renderInvitations();
-      case 'tables':
-        return renderTables();
-      case 'profile':
-        return renderProfile();
-      case 'settings':
-        return renderSettings();
-      default:
-        return renderOverview();
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900 relative overflow-hidden transition-colors duration-300">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-40 h-40 bg-gradient-to-r from-amber-200/10 to-purple-200/10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-20 right-20 w-60 h-60 bg-gradient-to-r from-rose-200/10 to-amber-200/10 rounded-full blur-3xl animate-float-delayed"></div>
-      </div>
-
-      <div className="relative z-10">
-        {/* Header */}
-        <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-b border-neutral-200/50 dark:border-slate-600/50 sticky top-0 z-50 transition-colors duration-300">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-rose-500 rounded-xl flex items-center justify-center shadow-glow-amber">
-                    <Sparkles className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="hidden md:block">
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-                      InviteElegance
-                    </h1>
-                  </div>
-                </div>
-                <div className="hidden md:block w-px h-6 bg-neutral-300"></div>
-                <div className="hidden md:block">
-                  <span className="text-slate-600 dark:text-slate-400 text-sm">Dashboard</span>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                {/* Contrôles thème et langue */}
-                <div className="flex items-center space-x-2">
-                  <ThemeToggle />
-                  <LanguageSelector />
-                  <button
-                    onClick={() => setShowSettings(true)}
-                    className="p-2 rounded-lg bg-gradient-to-r from-amber-100 to-amber-200 dark:from-slate-700 dark:to-slate-600 hover:from-amber-200 hover:to-amber-300 dark:hover:from-slate-600 dark:hover:to-slate-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                    title={t('settings') || 'Paramètres'}
-                  >
-                    <Settings className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                  </button>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-rose-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {userData.firstName[0]}{userData.lastName[0]}
-                  </div>
-                  <div className="hidden sm:block">
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{userData.firstName} {userData.lastName}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{userData.email}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Sidebar */}
-            <div className="lg:w-64 flex-shrink-0">
-              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-luxury border border-neutral-200/50 overflow-hidden sticky top-24">
-                <div className="p-6 bg-gradient-to-r from-amber-50 to-rose-50/30 border-b border-neutral-200/50">
-                  <h3 className="text-lg font-semibold text-slate-900">Navigation</h3>
-                </div>
-                <nav className="p-4">
-                  {tabs.map((tab) => {
-                    const IconComponent = tab.icon;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-300 mb-2 text-left ${
-                          activeTab === tab.id
-                            ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-glow-amber transform scale-105'
-                            : 'text-slate-600 hover:bg-amber-50 hover:text-amber-700 hover:transform hover:scale-102'
-                        }`}
-                      >
-                        <IconComponent className="h-5 w-5 mr-3" />
-                        <span className="font-medium">{tab.label}</span>
-                      </button>
-                    );
-                  })}
-                </nav>
-              </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="flex-1">
-              {renderTabContent()}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <DashboardSettings
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
       />
     </div>
   );
