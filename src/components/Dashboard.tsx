@@ -33,8 +33,6 @@ import UpgradeModal from './UpgradeModal';
 import { useTemplates } from '../hooks/useTemplates';
 import { useSubscription } from '../hooks/useSubscription';
 import { UserData } from '../hooks/useAuth';
-import { collection, doc, setDoc, getDocs, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../config/firebase';
 
 interface TemplateData {
   id: string;
@@ -102,7 +100,11 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [isLoading, setIsLoading] = useState(false);
   const [userTemplateForCustomization, setUserTemplateForCustomization] = useState<TemplateData | null>(null);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
-  const [availableTables, setAvailableTables] = useState<Table[]>([]);
+  const [availableTables, setAvailableTables] = useState<Table[]>([
+    { id: 1, name: 'Table des Mariés', seats: 8, assignedGuests: [] },
+    { id: 2, name: 'Table Famille', seats: 10, assignedGuests: [] },
+    { id: 3, name: 'Table Amis', seats: 8, assignedGuests: [] }
+  ]);
   
   // États pour la gestion des invités
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -115,60 +117,39 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     confirmed: false,
   });
 
-  // Charger les tables depuis Firestore
+  // Charger les tables depuis le stockage local
   const loadTables = async () => {
-    if (!userData?.id) return;
-    
     try {
       setIsLoadingTables(true);
-      const tablesRef = collection(db, 'users', userData.id, 'Tables');
-      const querySnapshot = await getDocs(tablesRef);
-      
-      const loadedTables: Table[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        loadedTables.push({
-          id: parseInt(doc.id.replace('table_', '')),
-          name: data.name,
-          seats: data.seats,
-          assignedGuests: data.assignedGuests || []
-        });
-      });
-      
-      setTables(loadedTables.sort((a, b) => a.id - b.id));
+      // Simulation du chargement des tables
+      setTimeout(() => {
+        setTables(availableTables);
+        setIsLoadingTables(false);
+      }, 500);
     } catch (error) {
       console.error('Erreur lors du chargement des tables:', error);
-    } finally {
       setIsLoadingTables(false);
+    } finally {
+      // Déjà géré dans le setTimeout
     }
   };
 
-  // Sauvegarder une table dans Firestore
+  // Sauvegarder une table dans le stockage local
   const saveTableToFirestore = async (table: Table) => {
-    if (!userData?.id) return;
-    
     try {
-      const tableRef = doc(db, 'users', userData.id, 'Tables', `table_${table.id}`);
-      await setDoc(tableRef, {
-        name: table.name,
-        seats: table.seats,
-        assignedGuests: table.assignedGuests,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
+      // Simulation de la sauvegarde
+      console.log('Table sauvegardée:', table);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde de la table:', error);
       throw error;
     }
   };
 
-  // Supprimer une table de Firestore
+  // Supprimer une table du stockage local
   const deleteTableFromFirestore = async (tableId: number) => {
-    if (!userData?.id) return;
-    
     try {
-      const tableRef = doc(db, 'users', userData.id, 'Tables', `table_${tableId}`);
-      await deleteDoc(tableRef);
+      // Simulation de la suppression
+      console.log('Table supprimée:', tableId);
     } catch (error) {
       console.error('Erreur lors de la suppression de la table:', error);
       throw error;
@@ -197,11 +178,11 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         features: userModel.features,
         colors: userModel.customizations?.colors,
         isPersonalized: true,
-        createdAt: userModel.createdAt?.toDate().toISOString()
+        createdAt: userModel.createdAt
       };
       
       setCurrentTemplate(templateData);
-      console.log('Template actuel chargé depuis Firebase:', templateData);
+      console.log('Template actuel chargé:', templateData);
     } catch (error) {
       console.error('Erreur lors du chargement du template actuel:', error);
     } finally {
@@ -225,10 +206,8 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
   // Charger les tables au montage du composant
   useEffect(() => {
-    if (userData?.id) {
-      loadTables();
-    }
-  }, [userData?.id]);
+    loadTables();
+  }, []);
 
   // Mettre à jour les tables disponibles quand les tables changent
   useEffect(() => {
@@ -242,7 +221,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     }
   }, [userInvites.length, subscription, updateInviteCount]);
 
-  // Charger les invités depuis Firestore
+  // Charger les invités depuis le stockage local
   const guests: Guest[] = userInvites.map(invite => ({
     id: invite.id,
     nom: invite.nom,
@@ -317,7 +296,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             }
           });
           
-          console.log('Modèle utilisateur mis à jour dans Firebase');
+          console.log('Modèle utilisateur mis à jour');
         }
         
         // Mettre à jour le template actuel dans l'état local
@@ -356,7 +335,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         features: userModel.features,
         colors: userModel.customizations?.colors,
         isPersonalized: true,
-        createdAt: userModel.createdAt?.toDate().toISOString()
+        createdAt: userModel.createdAt
       };
       
       setCurrentTemplate(templateData);
@@ -404,9 +383,12 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    setIsLoading(true);
+    
     // Vérification stricte de la limite AVANT toute action
     const currentCount = userInvites.length;
     if (subscription?.plan === 'free' && currentCount >= 5) {
+      setIsLoading(false);
       setShowUpgradeModal(true);
       setShowInviteModal(false);
       alert('Limite de 5 invitations atteinte pour le plan gratuit. Veuillez passer au plan premium.');
@@ -415,13 +397,14 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
     // Vérifier la limite pour les nouveaux invités
     if (!editingInvite && !canCreateInvite()) {
+      setIsLoading(false);
       setShowUpgradeModal(true);
       return;
     }
     
     // Double vérification juste avant la création
     if (subscription?.plan === 'free' && userInvites.length >= 5) {
-      setIsSubmitting(false);
+      setIsLoading(false);
       setShowUpgradeModal(true);
       setShowInviteModal(false);
       alert('Limite de 5 invitations atteinte. Impossible de créer plus d\'invités en mode gratuit.');
@@ -440,6 +423,8 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     } catch (error) {
       console.error('Erreur lors de la sauvegarde de l\'invité:', error);
       alert('Erreur lors de la sauvegarde de l\'invité');
+    } finally {
+      setIsLoading(false);
     }
   };
 
