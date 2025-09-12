@@ -3,6 +3,8 @@ import { Menu, X, Crown, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
 import ThemeToggle from './ThemeToggle';
+import LanguageToggle from './LanguageToggle';
+import { useLanguage } from '../contexts/LanguageContext';
 
 
 interface HeaderProps {
@@ -12,6 +14,7 @@ interface HeaderProps {
 const Header = ({ onLogin }: HeaderProps) => {
   const { user, isAuthenticated, logout } = useAuth();
   const { subscription, getRemainingInvites } = useSubscription();
+  const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -65,20 +68,23 @@ const Header = ({ onLogin }: HeaderProps) => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-300 font-medium relative group">
-              Accueil
+              {t('nav.home')}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-600 group-hover:w-full transition-all duration-300"></span>
             </a>
             <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-300 font-medium relative group">
-              Modèles
+              {t('nav.templates')}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-600 group-hover:w-full transition-all duration-300"></span>
             </a>
             <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-300 font-medium relative group">
-              Prix
+              {t('nav.pricing')}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-600 group-hover:w-full transition-all duration-300"></span>
             </a>
             
             {/* Bouton de basculement du thème */}
             <ThemeToggle />
+            
+            {/* Sélecteur de langue */}
+            <LanguageToggle />
             
             {/* Bouton de connexion ou menu utilisateur */}
             {isAuthenticated && user ? (
@@ -118,7 +124,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                         className="w-full flex items-center px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-slate-700 hover:text-amber-700 dark:hover:text-amber-400 transition-all duration-200"
                       >
                         <User className="h-4 w-4 mr-3" />
-                        Mon Dashboard
+                        {t('nav.dashboard')}
                       </button>
                       
                       {/* Affichage du plan et des invitations restantes */}
@@ -151,7 +157,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                         className="w-full flex items-center px-4 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-700 dark:hover:text-rose-300 transition-all duration-200"
                       >
                         <LogOut className="h-4 w-4 mr-3" />
-                        Se déconnecter
+                        {t('nav.logout')}
                       </button>
                     </div>
                   </div>
@@ -162,7 +168,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                 onClick={onLogin}
                 className="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 px-6 py-2 rounded-full hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-medium shadow-glow-amber hover:shadow-luxury transform hover:scale-105"
               >
-                Connexion
+                {t('nav.login')}
               </button>
             )}
           </nav>
@@ -185,20 +191,27 @@ const Header = ({ onLogin }: HeaderProps) => {
           <div className="md:hidden py-4 animate-slide-up bg-gradient-to-r from-neutral-50/95 via-amber-50/90 to-neutral-50/95 dark:from-slate-800/95 dark:via-slate-700/90 dark:to-slate-800/95 backdrop-blur-xl">
             <nav className="flex flex-col space-y-4">
               <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors duration-300 font-medium px-4 py-2">
-                Accueil
+                {t('nav.home')}
               </a>
               <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors duration-300 font-medium px-4 py-2">
-                Modèles
+                {t('nav.templates')}
               </a>
               <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors duration-300 font-medium px-4 py-2">
-                Prix
+                {t('nav.pricing')}
               </a>
               
-              {/* Bouton de basculement du thème mobile */}
+              {/* Contrôles d'apparence mobile */}
               <div className="px-4 py-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-700 dark:text-slate-300 font-medium">Thème</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">{t('theme.toggle')}</span>
                   <ThemeToggle />
+                </div>
+              </div>
+              
+              <div className="px-4 py-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">{t('language.select')}</span>
+                  <LanguageToggle />
                 </div>
               </div>
               
@@ -229,7 +242,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                     className="w-full bg-amber-500 text-slate-900 px-4 py-2 rounded-xl hover:bg-amber-600 transition-all duration-300 font-medium flex items-center justify-center"
                   >
                     <User className="h-4 w-4 mr-2" />
-                    Mon Dashboard
+                    {t('nav.dashboard')}
                   </button>
                   
                   <button
@@ -240,7 +253,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                     className="w-full bg-rose-500 text-white px-4 py-2 rounded-xl hover:bg-rose-600 transition-all duration-300 font-medium flex items-center justify-center"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
-                    Se déconnecter
+                    {t('nav.logout')}
                   </button>
                 </div>
               ) : (
@@ -251,7 +264,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                   }}
                   className="bg-amber-500 text-slate-900 px-6 py-2 rounded-full hover:bg-amber-600 transition-all duration-300 font-medium shadow-lg mx-4"
                 >
-                  Connexion
+                  {t('nav.login')}
                 </button>
               )}
             </nav>
