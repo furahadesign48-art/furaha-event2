@@ -1,7 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth as useFirebaseAuth, UserData } from '../hooks/useAuth';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../config/firebase';
 
 interface AuthContextType {
   user: UserData | null;
@@ -32,19 +30,6 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const firebaseAuth = useFirebaseAuth();
-
-  // Écouter les changements d'état d'authentification pour maintenir la session
-  React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log('Session utilisateur maintenue:', user.email);
-      } else {
-        console.log('Aucune session utilisateur active');
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   const value: AuthContextType = {
     user: firebaseAuth.user,

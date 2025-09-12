@@ -1,16 +1,7 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Check, Star, Crown, Gem, Zap } from 'lucide-react';
-import { useState } from 'react';
-import PaymentModal from './PaymentModal';
-import { useAuth } from './AuthContext';
 
 const PricingSection = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<'standard' | 'premium'>('standard');
-  
   const plans = [
     {
       name: 'Gratuit',
@@ -46,7 +37,7 @@ const PricingSection = () => {
     },
     {
       name: 'Premium',
-      price: '200$',
+      price: '200€',
       period: '/mois',
       icon: Gem,
       features: [
@@ -65,27 +56,8 @@ const PricingSection = () => {
   ];
 
   const handlePlanSelection = (planName: string) => {
-    if (planName === 'Gratuit') {
-      // Pour le plan gratuit, rediriger vers l'inscription
-      return;
-    }
-    
-    if (!isAuthenticated) {
-      // Rediriger vers l'inscription si pas connecté
-      navigate('/');
-      return;
-    }
-    
-    // Pour les plans payants, ouvrir le modal de paiement
-    const planType = planName.toLowerCase() as 'standard' | 'premium';
-    setSelectedPlan(planType);
-    setShowPaymentModal(true);
-  };
-
-  const handlePaymentSuccess = () => {
-    setShowPaymentModal(false);
-    // Rediriger vers le dashboard ou afficher un message de succès
-    navigate('/');
+    // Fonctionnalité de paiement désactivée
+    alert(`Plan ${planName} sélectionné. Fonctionnalité de paiement à implémenter.`);
   };
 
   return (
@@ -196,18 +168,11 @@ const PricingSection = () => {
                       : 'bg-gradient-to-r from-neutral-100 to-slate-100 text-slate-900 hover:from-slate-100 hover:to-neutral-200'
                 }`}
                 onClick={() => handlePlanSelection(plan.name)}
-                disabled={index === 0}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-1000"></div>
                   <span className="relative flex items-center justify-center">
-                    {index === 0 ? (
-                      <>
-                        <Zap className="h-4 w-4 mr-2" />
-                        {plan.buttonText}
-                      </>
-                    ) : (
-                    <>{plan.buttonText}</>
-                    )}
+                    <Zap className="h-4 w-4 mr-2" />
+                    {plan.buttonText}
                   </span>
                 </button>
               </div>
@@ -215,14 +180,6 @@ const PricingSection = () => {
           })}
         </div>
       </div>
-      
-      {/* Modal de paiement */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        selectedPlan={selectedPlan}
-        onSuccess={handlePaymentSuccess}
-      />
     </section>
   );
 };

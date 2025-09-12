@@ -1,118 +1,65 @@
-Furaha-Event3
+# Furaha-Event
 
-Pour utiliser l'authentification Firebase, vous devez :
-## Configuration Firebase
+Application de création d'invitations digitales élégantes pour vos événements.
 
-✅ **Configuration terminée !**
+## Fonctionnalités
 
-Le projet est maintenant configuré avec Firebase :
-- **Projet Firebase** : furaha-event-831ca
-- **Authentification** : Email/Mot de passe activée
-- **Firestore** : Base de données configurée
-- **Persistance** : Session utilisateur maintenue automatiquement
-
-## Configuration Stripe
-
-✅ **Système de paiement intégré !**
-
-Le projet inclut maintenant un système de paiement complet avec Stripe :
-- **Paiements sécurisés** : Intégration Stripe Elements
-- **Plans d'abonnement** : Gratuit, Standard (100€/mois), Premium (200€/mois)
-- **Gestion des limites** : Contrôle automatique des invitations selon le plan
-- **Interface moderne** : Modals de paiement élégants et sécurisés
-
-### Configuration requise
-
-1. **Compte Stripe** : Créez un compte sur [stripe.com](https://stripe.com)
-2. **Clés API** : Récupérez vos clés dans le dashboard Stripe
-3. **Variables d'environnement** : Ajoutez votre clé publique dans `.env`
-
-```env
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_votre_cle_publique_stripe
-```
-
-### Fonctionnalités de paiement
-
-- ✅ **Modal de paiement** intégré avec Stripe Elements
-- ✅ **Validation en temps réel** des cartes de crédit
-- ✅ **Gestion des erreurs** et messages utilisateur
-- ✅ **Mise à jour automatique** des abonnements
+- ✅ **Création d'invitations** pour mariages, anniversaires et collations
+- ✅ **Templates premium** avec personnalisation complète
+- ✅ **Gestion des invités** et des tables
+- ✅ **QR Codes** pour chaque invitation
 - ✅ **Interface responsive** pour mobile et desktop
-- ✅ **Sécurité PCI** complète via Stripe
+- ✅ **Livre d'or interactif** pour les messages des invités
 
-### Variables d'environnement requises
+## Technologies utilisées
 
-Les variables d'environnement sont déjà configurées dans le fichier `.env` :
+- **React** avec TypeScript
+- **Tailwind CSS** pour le design
+- **Vite** pour le développement
+- **Lucide React** pour les icônes
+- **React Router** pour la navigation
 
-```
-VITE_FIREBASE_API_KEY=AIzaSyBtWKFZ78KtLA_WKEkNBpJWS1LQVUMWQXc
-VITE_FIREBASE_AUTH_DOMAIN=furaha-event-831ca.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=furaha-event-831ca
-VITE_FIREBASE_STORAGE_BUCKET=furaha-event-831ca.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=369854399050
-VITE_FIREBASE_APP_ID=1:369854399050:web:9dd985ac0fd2a26a8e9cb3
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_votre_cle_stripe
-```
+## Installation
 
-### Fonctionnalités d'authentification
-
-- ✅ **Inscription** avec email/mot de passe
-- ✅ **Connexion** avec email/mot de passe  
-- ✅ **Réinitialisation** de mot de passe
-- ✅ **Persistance** de session (l'utilisateur reste connecté)
-- ✅ **Déconnexion** manuelle
-- ✅ **Gestion** des profils utilisateur
-
-### Fonctionnalités de paiement
-
-- ✅ **Plan Gratuit** : 5 invitations gratuites
-- ✅ **Plan Standard** : 200 invitations (100€/mois)
-- ✅ **Plan Premium** : Invitations illimitées (200€/mois)
-- ✅ **Paiement sécurisé** via Stripe
-- ✅ **Gestion automatique** des limites d'utilisation
-
-### Règles Firestore
-
-Ajoutez ces règles dans votre console Firebase Firestore :
-
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Règles pour la collection users
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Règles pour les événements et invitations
-    match /events/{eventId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-    }
-    
-    match /invitations/{invitationId} {
-      allow read, write: if request.auth != null;
-    }
-    
-    // Règles pour les abonnements
-    match /subscriptions/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-## Déploiement en production
+## Structure du projet
 
-### Configuration Stripe en production
+```
+src/
+├── components/          # Composants React
+├── hooks/              # Hooks personnalisés
+├── services/           # Services de données
+├── utils/              # Utilitaires
+└── config/             # Configuration
+```
 
-1. **Remplacez les clés de test** par les clés de production dans `.env`
-2. **Configurez les webhooks** Stripe pour synchroniser les paiements
-3. **Implémentez un backend** pour gérer les PaymentIntents de manière sécurisée
-4. **Testez les paiements** avec de vraies cartes en mode test
+## Fonctionnalités principales
 
-### Sécurité
+### Templates d'invitation
+- **Mariage** : Design romantique et élégant
+- **Anniversaire** : Style festif et coloré
+- **Collation** : Prestige académique
 
-- ✅ **Aucune donnée sensible** stockée côté client
-- ✅ **Chiffrement SSL** pour tous les échanges
-- ✅ **Validation côté serveur** des paiements
-- ✅ **Conformité PCI** via Stripe
+### Gestion des invités
+- Ajout/modification/suppression d'invités
+- Gestion des tables et places
+- Confirmation de présence
+- Choix de boissons
+
+### Personnalisation
+- Couleurs personnalisées
+- Images de fond
+- Textes modifiables
+- Options de boissons
+
+## Développement
+
+Le projet utilise un système de stockage local pour les données utilisateur. Pour une utilisation en production, vous devrez implémenter une base de données réelle.
+
+## Licence
+
+Tous droits réservés - Furaha-Event 2025
