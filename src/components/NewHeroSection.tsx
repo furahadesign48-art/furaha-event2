@@ -2,7 +2,7 @@ import React from 'react';
 
 const NewHeroSection = () => {
   return (
-    <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-amber-50 via-neutral-50 to-amber-100/50 relative overflow-hidden">
+    <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-amber-50 via-neutral-50 to-amber-100/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900/80 relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-amber-200/30 to-rose-200/30 rounded-full blur-xl animate-float"></div>
@@ -13,11 +13,12 @@ const NewHeroSection = () => {
       <div className="max-w-4xl mx-auto text-center animate-fade-in">
         <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
           <span className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 dark:from-amber-400 dark:via-amber-300 dark:to-amber-400 bg-clip-text text-transparent">
             Furaha-Event
           </span>
         </h1>
         
-        <p className="text-xl md:text-2xl text-slate-700 mb-12 max-w-3xl mx-auto leading-relaxed">
+        <p className="text-xl md:text-2xl text-slate-700 dark:text-slate-300 mb-12 max-w-3xl mx-auto leading-relaxed">
           Créez des invitations magnifiques et interactives pour tous vos événements spéciaux
         </p>
         
@@ -28,6 +29,7 @@ const NewHeroSection = () => {
           </button>
           
           <button className="bg-transparent border-2 border-amber-500 text-amber-600 px-8 py-4 rounded-full hover:bg-amber-500 hover:text-white transition-all duration-500 font-semibold text-lg shadow-lg hover:shadow-luxury transform hover:scale-105 backdrop-blur-sm">
+          <button className="bg-transparent border-2 border-amber-500 text-amber-600 dark:text-amber-400 px-8 py-4 rounded-full hover:bg-amber-500 hover:text-white dark:hover:text-slate-900 transition-all duration-500 font-semibold text-lg shadow-lg hover:shadow-luxury transform hover:scale-105 backdrop-blur-sm">
             Voir les tarifs
           </button>
         </div>
@@ -37,3 +39,5 @@ const NewHeroSection = () => {
 };
 
 export default NewHeroSection;
+  )
+}

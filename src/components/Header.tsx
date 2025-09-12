@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Menu, X, Crown, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
+import ThemeToggle from './ThemeToggle';
 
 
 interface HeaderProps {
@@ -63,18 +64,21 @@ const Header = ({ onLogin }: HeaderProps) => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#" className="text-slate-700 hover:text-amber-600 transition-all duration-300 font-medium relative group">
+            <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-300 font-medium relative group">
               Accueil
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-600 group-hover:w-full transition-all duration-300"></span>
             </a>
-            <a href="#" className="text-slate-700 hover:text-amber-600 transition-all duration-300 font-medium relative group">
+            <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-300 font-medium relative group">
               Modèles
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-600 group-hover:w-full transition-all duration-300"></span>
             </a>
-            <a href="#" className="text-slate-700 hover:text-amber-600 transition-all duration-300 font-medium relative group">
+            <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-300 font-medium relative group">
               Prix
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-600 group-hover:w-full transition-all duration-300"></span>
             </a>
+            
+            {/* Bouton de basculement du thème */}
+            <ThemeToggle />
             
             {/* Bouton de connexion ou menu utilisateur */}
             {isAuthenticated && user ? (
@@ -91,15 +95,15 @@ const Header = ({ onLogin }: HeaderProps) => {
                 
                 {/* Menu déroulant utilisateur */}
                 {showUserMenu && (
-                  <div className="user-menu absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-luxury border border-neutral-200/50 py-2 z-50 animate-slide-up">
-                    <div className="px-4 py-3 border-b border-neutral-200/50">
+                  <div className="user-menu absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-luxury border border-neutral-200/50 dark:border-slate-600/50 py-2 z-50 animate-slide-up">
+                    <div className="px-4 py-3 border-b border-neutral-200/50 dark:border-slate-600/50">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-rose-500 rounded-full flex items-center justify-center text-white font-bold">
                           {user.firstName[0]}{user.lastName[0]}
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900">{user.firstName} {user.lastName}</p>
-                          <p className="text-sm text-slate-600">{user.email}</p>
+                          <p className="font-semibold text-slate-900 dark:text-slate-100">{user.firstName} {user.lastName}</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">{user.email}</p>
                         </div>
                       </div>
                     </div>
@@ -111,7 +115,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                           setShowUserMenu(false);
                           onLogin && onLogin();
                         }}
-                        className="w-full flex items-center px-4 py-2 text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-all duration-200"
+                        className="w-full flex items-center px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-slate-700 hover:text-amber-700 dark:hover:text-amber-400 transition-all duration-200"
                       >
                         <User className="h-4 w-4 mr-3" />
                         Mon Dashboard
@@ -119,24 +123,24 @@ const Header = ({ onLogin }: HeaderProps) => {
                       
                       {/* Affichage du plan et des invitations restantes */}
                       {subscription && (
-                        <div className="px-4 py-2 bg-gradient-to-r from-amber-50 to-amber-100 mx-2 rounded-lg">
+                        <div className="px-4 py-2 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/30 mx-2 rounded-lg">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-xs font-medium text-amber-800">
+                              <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
                                 Plan {subscription.plan === 'free' ? 'Gratuit' : subscription.plan}
                               </p>
                               {subscription.plan === 'free' && (
-                                <p className="text-xs text-amber-600">
+                                <p className="text-xs text-amber-600 dark:text-amber-400">
                                   {getRemainingInvites()} invitations restantes
                                 </p>
                               )}
                             </div>
-                            <Crown className="h-4 w-4 text-amber-600" />
+                            <Crown className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                           </div>
                         </div>
                       )}
                       
-                      <hr className="my-2 border-neutral-200/50" />
+                      <hr className="my-2 border-neutral-200/50 dark:border-slate-600/50" />
                       
                       <button
                         onClick={() => {
@@ -144,7 +148,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                           setShowUserMenu(false);
                           handleLogout();
                         }}
-                        className="w-full flex items-center px-4 py-2 text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all duration-200"
+                        className="w-full flex items-center px-4 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-700 dark:hover:text-rose-300 transition-all duration-200"
                       >
                         <LogOut className="h-4 w-4 mr-3" />
                         Se déconnecter
@@ -178,29 +182,37 @@ const Header = ({ onLogin }: HeaderProps) => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 animate-slide-up">
+          <div className="md:hidden py-4 animate-slide-up bg-gradient-to-r from-neutral-50/95 via-amber-50/90 to-neutral-50/95 dark:from-slate-800/95 dark:via-slate-700/90 dark:to-slate-800/95 backdrop-blur-xl">
             <nav className="flex flex-col space-y-4">
-              <a href="#" className="text-slate-700 hover:text-amber-500 transition-colors duration-300 font-medium px-4 py-2">
+              <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors duration-300 font-medium px-4 py-2">
                 Accueil
               </a>
-              <a href="#" className="text-slate-700 hover:text-amber-500 transition-colors duration-300 font-medium px-4 py-2">
+              <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors duration-300 font-medium px-4 py-2">
                 Modèles
               </a>
-              <a href="#" className="text-slate-700 hover:text-amber-500 transition-colors duration-300 font-medium px-4 py-2">
+              <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors duration-300 font-medium px-4 py-2">
                 Prix
               </a>
               
+              {/* Bouton de basculement du thème mobile */}
+              <div className="px-4 py-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">Thème</span>
+                  <ThemeToggle />
+                </div>
+              </div>
+              
               {isAuthenticated && user ? (
                 <div className="mx-4 space-y-2">
-                  <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl">
+                  <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/30 rounded-xl">
                     <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-rose-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                       {user.firstName[0]}{user.lastName[0]}
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900 text-sm">{user.firstName} {user.lastName}</p>
-                      <p className="text-xs text-slate-600">{user.email}</p>
+                      <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{user.firstName} {user.lastName}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{user.email}</p>
                       {subscription?.plan === 'free' && (
-                        <p className="text-xs text-amber-600">
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
                           {getRemainingInvites()}/5 invitations
                         </p>
                       )}

@@ -63,7 +63,7 @@ const ServicesSection = ({ onViewWeddingTemplate, onViewBirthdayTemplate, onView
   ];
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-neutral-50 via-amber-50/20 to-neutral-100 relative overflow-hidden">
+    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-neutral-50 via-amber-50/20 to-neutral-100 dark:from-slate-800 dark:via-slate-700/20 dark:to-slate-800 relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-10 right-10 w-40 h-40 bg-gradient-to-r from-amber-200/15 to-purple-200/15 rounded-full blur-2xl animate-float"></div>
@@ -73,11 +73,11 @@ const ServicesSection = ({ onViewWeddingTemplate, onViewBirthdayTemplate, onView
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-slate-100 dark:via-slate-300 dark:to-slate-100 bg-clip-text text-transparent">
               Nos Services
             </span>
           </h2>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+          <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
             Découvrez notre gamme complète d'invitations pour tous vos événements importants
           </p>
         </div>
@@ -92,6 +92,7 @@ const ServicesSection = ({ onViewWeddingTemplate, onViewBirthdayTemplate, onView
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
                 <div className={`bg-gradient-to-br ${service.bgColor} rounded-3xl shadow-luxury hover:shadow-glow-amber transition-all duration-500 overflow-hidden backdrop-blur-sm border border-neutral-200/50 hover:border-amber-300/50 relative`}>
+                <div className={`bg-gradient-to-br ${service.bgColor} dark:from-slate-700 dark:to-slate-600 rounded-3xl shadow-luxury hover:shadow-glow-amber transition-all duration-500 overflow-hidden backdrop-blur-sm border border-neutral-200/50 dark:border-slate-600/50 hover:border-amber-300/50 relative`}>
                   {/* Heart icon overlay for wedding */}
                   {service.id === 1 && (
                     <div className="absolute top-4 right-4 z-10">
@@ -129,17 +130,17 @@ const ServicesSection = ({ onViewWeddingTemplate, onViewBirthdayTemplate, onView
                   </div>
                   
                   <div className="p-6">
-                    <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-3">
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent mb-3">
                       {service.title}
                     </h3>
-                    <p className="text-slate-600 mb-4 text-sm leading-relaxed">
+                    <p className="text-slate-600 dark:text-slate-400 mb-4 text-sm leading-relaxed">
                       {service.description}
                     </p>
                     
                     {/* Features list */}
                     <ul className="space-y-2 mb-6">
                       {service.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-center text-sm text-slate-600">
+                        <li key={idx} className="flex items-center text-sm text-slate-600 dark:text-slate-400">
                           <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mr-3 flex-shrink-0"></div>
                           {feature}
                         </li>
