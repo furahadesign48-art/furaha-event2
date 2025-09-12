@@ -91,7 +91,6 @@ const ServicesSection = ({ onViewWeddingTemplate, onViewBirthdayTemplate, onView
                 className="group cursor-pointer animate-slide-up transform hover:scale-105 transition-all duration-500"
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
-                <div className={`bg-gradient-to-br ${service.bgColor} rounded-3xl shadow-luxury hover:shadow-glow-amber transition-all duration-500 overflow-hidden backdrop-blur-sm border border-neutral-200/50 hover:border-amber-300/50 relative`}>
                 <div className={`bg-gradient-to-br ${service.bgColor} dark:from-slate-700 dark:to-slate-600 rounded-3xl shadow-luxury hover:shadow-glow-amber transition-all duration-500 overflow-hidden backdrop-blur-sm border border-neutral-200/50 dark:border-slate-600/50 hover:border-amber-300/50 relative`}>
                   {/* Heart icon overlay for wedding */}
                   {service.id === 1 && (
