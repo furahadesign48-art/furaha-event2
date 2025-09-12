@@ -26,7 +26,6 @@ const Footer = () => {
               </span>
             </div>
             <p className="text-gray-300 mb-6 max-w-md leading-relaxed backdrop-blur-sm bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
-            <p className="text-gray-300 dark:text-gray-400 mb-6 max-w-md leading-relaxed backdrop-blur-sm bg-slate-800/30 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-700/50 dark:border-slate-800/50">
               Créez des invitations digitales exceptionnelles qui marquent les esprits. 
               Votre événement mérite une <span className="text-amber-400 font-medium">invitation à la hauteur</span> de son importance.
             </p>
