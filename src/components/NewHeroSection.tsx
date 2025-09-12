@@ -16,6 +16,7 @@ const NewHeroSection = () => {
           <span className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 dark:from-amber-400 dark:via-amber-300 dark:to-amber-400 bg-clip-text text-transparent">
             Furaha-Event
           </span>
+          </span>
         </h1>
         
         <p className="text-xl md:text-2xl text-slate-700 dark:text-slate-300 mb-12 max-w-3xl mx-auto leading-relaxed">
