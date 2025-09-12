@@ -3,6 +3,8 @@ import { Menu, X, Crown, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
 import ThemeToggle from './ThemeToggle';
+import LanguageSelector from './LanguageSelector';
+import { useLanguage } from '../contexts/LanguageContext';
 
 
 interface HeaderProps {
@@ -12,6 +14,7 @@ interface HeaderProps {
 const Header = ({ onLogin }: HeaderProps) => {
   const { user, isAuthenticated, logout } = useAuth();
   const { subscription, getRemainingInvites } = useSubscription();
+  const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -80,6 +83,9 @@ const Header = ({ onLogin }: HeaderProps) => {
             {/* Bouton de basculement du thème */}
             <ThemeToggle />
             
+            {/* Sélecteur de langue */}
+            <LanguageSelector />
+            
             {/* Bouton de connexion ou menu utilisateur */}
             {isAuthenticated && user ? (
               <div className="relative">
@@ -118,7 +124,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                         className="w-full flex items-center px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-slate-700 hover:text-amber-700 dark:hover:text-amber-400 transition-all duration-200"
                       >
                         <User className="h-4 w-4 mr-3" />
-                        Mon Dashboard
+                        {t('dashboard')}
                       </button>
                       
                       {/* Affichage du plan et des invitations restantes */}
@@ -151,7 +157,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                         className="w-full flex items-center px-4 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-700 dark:hover:text-rose-300 transition-all duration-200"
                       >
                         <LogOut className="h-4 w-4 mr-3" />
-                        Se déconnecter
+                        {t('logout')}
                       </button>
                     </div>
                   </div>
@@ -162,7 +168,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                 onClick={onLogin}
                 className="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 px-6 py-2 rounded-full hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-medium shadow-glow-amber hover:shadow-luxury transform hover:scale-105"
               >
-                Connexion
+                {t('login') || 'Connexion'}
               </button>
             )}
           </nav>
@@ -197,8 +203,16 @@ const Header = ({ onLogin }: HeaderProps) => {
               {/* Bouton de basculement du thème mobile */}
               <div className="px-4 py-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-700 dark:text-slate-300 font-medium">Thème</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">{t('theme')}</span>
                   <ThemeToggle />
+                </div>
+              </div>
+              
+              {/* Sélecteur de langue mobile */}
+              <div className="px-4 py-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">{t('language')}</span>
+                  <LanguageSelector />
                 </div>
               </div>
               
@@ -229,7 +243,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                     className="w-full bg-amber-500 text-slate-900 px-4 py-2 rounded-xl hover:bg-amber-600 transition-all duration-300 font-medium flex items-center justify-center"
                   >
                     <User className="h-4 w-4 mr-2" />
-                    Mon Dashboard
+                    {t('dashboard')}
                   </button>
                   
                   <button
@@ -240,7 +254,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                     className="w-full bg-rose-500 text-white px-4 py-2 rounded-xl hover:bg-rose-600 transition-all duration-300 font-medium flex items-center justify-center"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
-                    Se déconnecter
+                    {t('logout')}
                   </button>
                 </div>
               ) : (
@@ -251,7 +265,7 @@ const Header = ({ onLogin }: HeaderProps) => {
                   }}
                   className="bg-amber-500 text-slate-900 px-6 py-2 rounded-full hover:bg-amber-600 transition-all duration-300 font-medium shadow-lg mx-4"
                 >
-                  Connexion
+                  {t('login') || 'Connexion'}
                 </button>
               )}
             </nav>
