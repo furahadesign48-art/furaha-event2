@@ -40,3 +40,5 @@ const NewHeroSection = () => {
 };
 
 export default NewHeroSection;
+  )
+}
