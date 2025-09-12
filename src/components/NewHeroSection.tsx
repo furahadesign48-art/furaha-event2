@@ -29,7 +29,6 @@ const NewHeroSection = () => {
             Découvrir nos modèles
           </button>
           
-          <button className="bg-transparent border-2 border-amber-500 text-amber-600 px-8 py-4 rounded-full hover:bg-amber-500 hover:text-white transition-all duration-500 font-semibold text-lg shadow-lg hover:shadow-luxury transform hover:scale-105 backdrop-blur-sm">
           <button className="bg-transparent border-2 border-amber-500 text-amber-600 dark:text-amber-400 px-8 py-4 rounded-full hover:bg-amber-500 hover:text-white dark:hover:text-slate-900 transition-all duration-500 font-semibold text-lg shadow-lg hover:shadow-luxury transform hover:scale-105 backdrop-blur-sm">
             Voir les tarifs
           </button>
