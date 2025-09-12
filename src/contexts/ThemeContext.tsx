@@ -39,6 +39,9 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     } else {
       document.documentElement.classList.remove('dark');
     }
+    
+    // Forcer le re-render des composants
+    document.dispatchEvent(new CustomEvent('themeChange', { detail: { isDarkMode } }));
   }, [isDarkMode]);
 
   const toggleDarkMode = () => {

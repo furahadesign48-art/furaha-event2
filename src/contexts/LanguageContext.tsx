@@ -25,6 +25,11 @@ interface LanguageProviderProps {
 // Dictionnaire des traductions
 const translations = {
   fr: {
+    // Navigation principale
+    'home': 'Accueil',
+    'pricing': 'Prix',
+    'login': 'Connexion',
+    
     // Navigation
     'dashboard': 'Tableau de bord',
     'templates': 'Modèles',
@@ -137,6 +142,11 @@ const translations = {
   },
   
   en: {
+    // Navigation principale
+    'home': 'Home',
+    'pricing': 'Pricing',
+    'login': 'Login',
+    
     // Navigation
     'dashboard': 'Dashboard',
     'templates': 'Templates',
@@ -249,6 +259,11 @@ const translations = {
   },
   
   es: {
+    // Navigation principale
+    'home': 'Inicio',
+    'pricing': 'Precios',
+    'login': 'Iniciar sesión',
+    
     // Navigation
     'dashboard': 'Panel de control',
     'templates': 'Plantillas',

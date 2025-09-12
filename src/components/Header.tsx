@@ -32,13 +32,14 @@ const Header = ({ onLogin }: HeaderProps) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
   const handleLogout = async () => {
     setShowUserMenu(false);
     await logout();
   };
 
   return (
-<header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-neutral-50/95 via-amber-50/90 to-neutral-50/95 backdrop-blur-xl shadow-luxury border-b border-amber-200/30 z-50 animate-fade-in">
+<header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-neutral-50/95 via-amber-50/90 to-neutral-50/95 dark:from-slate-800/95 dark:via-slate-700/90 dark:to-slate-800/95 backdrop-blur-xl shadow-luxury border-b border-amber-200/30 dark:border-slate-600/30 z-50 animate-fade-in transition-colors duration-300">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="flex items-center justify-between h-16">
       
@@ -59,7 +60,7 @@ const Header = ({ onLogin }: HeaderProps) => {
           </div>
         </div>
 
-        <span className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 bg-clip-text text-transparent">
+        <span className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 dark:from-slate-100 dark:via-amber-300 dark:to-slate-100 bg-clip-text text-transparent">
           Furaha-Event
         </span>
         </div>
@@ -68,15 +69,15 @@ const Header = ({ onLogin }: HeaderProps) => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-300 font-medium relative group">
-              Accueil
+              {t('home') || 'Accueil'}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-600 group-hover:w-full transition-all duration-300"></span>
             </a>
             <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-300 font-medium relative group">
-              Modèles
+              {t('templates') || 'Modèles'}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-600 group-hover:w-full transition-all duration-300"></span>
             </a>
             <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-300 font-medium relative group">
-              Prix
+              {t('pricing') || 'Prix'}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-600 group-hover:w-full transition-all duration-300"></span>
             </a>
             
@@ -191,13 +192,13 @@ const Header = ({ onLogin }: HeaderProps) => {
           <div className="md:hidden py-4 animate-slide-up bg-gradient-to-r from-neutral-50/95 via-amber-50/90 to-neutral-50/95 dark:from-slate-800/95 dark:via-slate-700/90 dark:to-slate-800/95 backdrop-blur-xl">
             <nav className="flex flex-col space-y-4">
               <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors duration-300 font-medium px-4 py-2">
-                Accueil
+                {t('home') || 'Accueil'}
               </a>
               <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors duration-300 font-medium px-4 py-2">
-                Modèles
+                {t('templates') || 'Modèles'}
               </a>
               <a href="#" className="text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors duration-300 font-medium px-4 py-2">
-                Prix
+                {t('pricing') || 'Prix'}
               </a>
               
               {/* Bouton de basculement du thème mobile */}

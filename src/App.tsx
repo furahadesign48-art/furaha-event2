@@ -17,6 +17,8 @@ import { AuthProvider, useAuth } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { useTheme } from './contexts/ThemeContext';
+import { useLanguage } from './contexts/LanguageContext';
 
 interface TemplateData {
   id: string;
@@ -42,12 +44,28 @@ interface UserData {
 
 function AppContent() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { isDarkMode } = useTheme();
+  const { language } = useLanguage();
   const [showDashboard, setShowDashboard] = useState(false);
   const [showWeddingTemplate, setShowWeddingTemplate] = useState(false);
   const [showBirthdayTemplate, setShowBirthdayTemplate] = useState(false);
   const [showGraduationTemplate, setShowGraduationTemplate] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateData | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Appliquer la classe dark au document
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  // Appliquer la langue au document
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   const handleLogin = () => {
     if (isAuthenticated) {
@@ -126,7 +144,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 font-elegant">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900 font-elegant transition-colors duration-300">
       <Header 
         onLogin={handleLogin}
       />
