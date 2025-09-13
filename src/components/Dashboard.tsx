@@ -77,6 +77,12 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [showSettings, setShowSettings] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<UserModel | null>(null);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteFormData, setInviteFormData] = useState({
+    guestName: '',
+    tableNumber: '',
+    guestType: 'simple' as 'simple' | 'couple'
+  });
   const [tables, setTables] = useState<Table[]>([
     { id: 1, name: 'Table des Mariés', seats: 8, assignedGuests: [] },
     { id: 2, name: 'Table Famille', seats: 10, assignedGuests: [] },
@@ -176,32 +182,40 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       return;
     }
 
-    const guestName = prompt('Nom de l\'invité :');
-    const tableNumber = prompt('Numéro de table :');
-    const guestType = confirm('Est-ce un couple ?') ? 'couple' : 'simple';
+    setShowInviteModal(true);
+  };
 
-    if (guestName && tableNumber) {
-      try {
-        const inviteId = await createInvite({
-          nom: guestName,
-          table: tableNumber,
-          etat: guestType as 'simple' | 'couple',
-          confirmed: false
-        });
+  const handleSubmitInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!inviteFormData.guestName.trim() || !inviteFormData.tableNumber.trim()) {
+      alert('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
 
-        if (inviteId) {
-          console.log('Invité créé avec succès:', inviteId);
-          await refreshUserData();
-        } else {
-          alert('Erreur lors de la création de l\'invité');
-        }
-      } catch (error) {
-        console.error('Erreur lors de la création de l\'invité:', error);
-        if (error.message?.includes('limite')) {
-          setShowUpgradeModal(true);
-        } else {
-          alert('Erreur lors de la création de l\'invité');
-        }
+    try {
+      const inviteId = await createInvite({
+        nom: inviteFormData.guestName.trim(),
+        table: inviteFormData.tableNumber.trim(),
+        etat: inviteFormData.guestType,
+        confirmed: false
+      });
+
+      if (inviteId) {
+        console.log('Invité créé avec succès:', inviteId);
+        await refreshUserData();
+        setShowInviteModal(false);
+        setInviteFormData({ guestName: '', tableNumber: '', guestType: 'simple' });
+      } else {
+        alert('Erreur lors de la création de l\'invité');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'invité:', error);
+      if (error.message?.includes('limite')) {
+        setShowUpgradeModal(true);
+        setShowInviteModal(false);
+      } else {
+        alert('Erreur lors de la création de l\'invité');
       }
     }
   };
@@ -1037,6 +1051,134 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         currentPlan={subscription?.plan || 'free'}
         remainingInvites={getRemainingInvites()}
       />
+
+      {/* Modal d'ajout d'invité */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-luxury max-w-md w-full animate-slide-up">
+            <div className="p-6 border-b border-neutral-200/50 dark:border-slate-600/50 bg-gradient-to-r from-neutral-50 to-amber-50/30 dark:from-slate-700 dark:to-slate-600">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="relative mr-3">
+                    <Users className="h-6 w-6 text-amber-500 animate-glow drop-shadow-lg" />
+                    <div className="absolute inset-0 animate-pulse">
+                      <Users className="h-6 w-6 text-amber-300 opacity-30" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+                      Ajouter un invité
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm">
+                      Créez une nouvelle invitation
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowInviteModal(false);
+                    setInviteFormData({ guestName: '', tableNumber: '', guestType: 'simple' });
+                  }}
+                  className="p-2 hover:bg-neutral-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200"
+                >
+                  <X className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmitInvite} className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Nom de l'invité *
+                  </label>
+                  <input
+                    type="text"
+                    value={inviteFormData.guestName}
+                    onChange={(e) => setInviteFormData(prev => ({ ...prev, guestName: e.target.value }))}
+                    className="w-full px-4 py-3 border border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                    placeholder="Ex: Sophie Martin"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Numéro de table *
+                  </label>
+                  <input
+                    type="text"
+                    value={inviteFormData.tableNumber}
+                    onChange={(e) => setInviteFormData(prev => ({ ...prev, tableNumber: e.target.value }))}
+                    className="w-full px-4 py-3 border border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                    placeholder="Ex: 1, 2, VIP..."
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Type d'invité
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setInviteFormData(prev => ({ ...prev, guestType: 'simple' }))}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                        inviteFormData.guestType === 'simple'
+                          ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                          : 'border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-amber-300 dark:hover:border-amber-400'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <User className="h-6 w-6 mx-auto mb-2" />
+                        <p className="font-medium">Simple</p>
+                        <p className="text-xs opacity-75">1 personne</p>
+                      </div>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setInviteFormData(prev => ({ ...prev, guestType: 'couple' }))}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                        inviteFormData.guestType === 'couple'
+                          ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                          : 'border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-amber-300 dark:hover:border-amber-400'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <Users className="h-6 w-6 mx-auto mb-2" />
+                        <p className="font-medium">Couple</p>
+                        <p className="text-xs opacity-75">2 personnes</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowInviteModal(false);
+                    setInviteFormData({ guestName: '', tableNumber: '', guestType: 'simple' });
+                  }}
+                  className="flex-1 px-4 py-3 border border-neutral-300 dark:border-slate-600 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-slate-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-slate-600 transition-all duration-200 font-medium"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105"
+                >
+                  <Plus className="h-4 w-4 mr-2 inline" />
+                  Créer l'invité
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
