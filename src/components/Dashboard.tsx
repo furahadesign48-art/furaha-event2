@@ -1,54 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, Calendar, BarChart3, Plus, Edit, Trash2, Eye, Settings, ChevronDown, Crown,
+  Users, 
+  Calendar, 
+  BarChart3, 
+  Settings, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Eye, 
+  Download,
+  Upload,
+  Search,
+  Filter,
+  MoreVertical,
+  Crown,
   Sparkles,
   Heart,
   Gift,
   GraduationCap,
-  User,
-  LogOut,
-  Bell,
-  Search,
-  Filter,
-  MoreVertical,
-  Copy,
-  Share2,
-  ExternalLink,
-  CheckCircle,
-  Clock,
-  Camera,
-  XCircle,
-  AlertCircle,
-  TrendingUp,
   Mail,
-  X
+  Share2,
+  Copy,
+  ExternalLink,
+  MessageCircle,
+  Send
 } from 'lucide-react';
-import { useAuth } from './AuthContext';
-import { useSubscription } from '../hooks/useSubscription';
-import { useTemplates } from '../hooks/useTemplates';
+import { UserData } from '../hooks/useAuth';
 import UserProfile from './UserProfile';
 import TableManagement from './TableManagement';
 import TemplateCustomization from './TemplateCustomization';
 import DashboardSettings from './DashboardSettings';
 import UpgradeModal from './UpgradeModal';
-import { UserModel, Invite } from '../services/templateService';
+import { useTemplates } from '../hooks/useTemplates';
+import { useSubscription } from '../hooks/useSubscription';
+import * as XLSX from 'xlsx';
 
-interface UserData {
-  firstName: string;
-  lastName: string;
+interface TemplateData {
+  id: string;
+  name: string;
+  category: string;
+  backgroundImage: string;
+  title: string;
+  invitationText: string;
+  eventDate: string;
+  eventTime: string;
+  eventLocation: string;
+  drinkOptions: string[];
+  features: string[];
+  guestData?: {
+    name: string;
+    tableNumber: string;
+  };
 }
 
-interface DashboardProps {
-  selectedTemplate?: any;
-  userData: UserData | null;
-  onLogout: () => void;
+interface Guest {
+  id: string;
+  nom: string;
+  table: string;
+  etat: 'simple' | 'couple';
+  confirmed: boolean;
 }
 
 interface Table {
   id: number;
   name: string;
   seats: number;
-  assignedGuests: any[];
+  assignedGuests: Guest[];
+}
+
+interface DashboardProps {
+  selectedTemplate?: TemplateData | null;
+  userData: UserData;
+  onLogout: () => void;
 }
 
 const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => {
@@ -56,190 +79,261 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     userModels, 
     userInvites, 
     userTables,
-    isLoading, 
-    error, 
-    updateUserModel, 
-    deleteUserModel, 
     createInvite, 
     updateInvite, 
     deleteInvite,
     createTable,
     updateTable,
     deleteTable,
-    refreshUserData 
+    isLoading,
+    error,
+    refreshUserData
   } = useTemplates();
-  const { user } = useAuth();
+  
   const { subscription, canCreateInvite, getRemainingInvites } = useSubscription();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [showProfile, setShowProfile] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<UserModel | null>(null);
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [inviteFormData, setInviteFormData] = useState({
-    guestName: '',
-    tableNumber: '',
-    guestType: 'simple' as 'simple' | 'couple'
+  const [showCustomization, setShowCustomization] = useState(false);
+  const [customizingTemplate, setCustomizingTemplate] = useState<TemplateData | null>(null);
+  
+  // États pour la gestion des invités
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [showAddGuestModal, setShowAddGuestModal] = useState(false);
+  const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
+  const [guestFormData, setGuestFormData] = useState({
+    nom: '',
+    table: '',
+    etat: 'simple' as 'simple' | 'couple'
   });
+  
+  // États pour la gestion des tables
   const [tables, setTables] = useState<Table[]>([]);
+  
+  // États pour la recherche et les filtres
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedGuests, setSelectedGuests] = useState<string[]>([]);
 
-  // Charger les données au montage et quand selectedTemplate change
+  // États pour les liens d'invitation personnalisés
+  const [showInvitationLinkModal, setShowInvitationLinkModal] = useState(false);
+  const [selectedGuestForLink, setSelectedGuestForLink] = useState<Guest | null>(null);
+  const [invitationMessage, setInvitationMessage] = useState('');
+  const [generatedLink, setGeneratedLink] = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  // Charger les données au montage du composant
   useEffect(() => {
-    if (selectedTemplate && user) {
-      console.log('Template sélectionné reçu:', selectedTemplate);
-      refreshUserData();
+    if (userInvites.length > 0) {
+      setGuests(userInvites);
     }
-  }, [selectedTemplate, user, refreshUserData]);
-
-  // Charger les données utilisateur au montage
-  useEffect(() => {
-    if (user) {
-      console.log('Utilisateur connecté, chargement des données...');
-      // Les tables sont automatiquement chargées par le hook useTemplates
+    if (userTables.length > 0) {
       setTables(userTables);
     }
-  }, [user, userTables]);
+  }, [userInvites, userTables]);
 
-  // Fonction pour sauvegarder les modifications du template
-  const handleSaveTemplate = async (customizedTemplate: any) => {
-    if (!user || !customizedTemplate.id) {
-      console.error('Utilisateur ou ID de template manquant');
-      return;
+  // Gérer le template sélectionné
+  useEffect(() => {
+    if (selectedTemplate && !showCustomization) {
+      setCustomizingTemplate(selectedTemplate);
+      setShowCustomization(true);
     }
+  }, [selectedTemplate]);
 
-    try {
-      console.log('Sauvegarde du template personnalisé:', customizedTemplate);
-      
-      // Préparer les données de mise à jour
-      const updateData = {
-        name: customizedTemplate.name,
-        title: customizedTemplate.title,
-        invitationText: customizedTemplate.invitationText,
-        eventDate: customizedTemplate.eventDate,
-        eventTime: customizedTemplate.eventTime,
-        eventLocation: customizedTemplate.eventLocation,
-        backgroundImage: customizedTemplate.backgroundImage,
-        drinkOptions: customizedTemplate.drinkOptions,
-        colors: customizedTemplate.colors,
-        customizations: {
-          colors: customizedTemplate.colors,
-          fonts: customizedTemplate.customizations?.fonts || {
-            title: 'Playfair Display',
-            body: 'Inter'
-          },
-          layout: customizedTemplate.customizations?.layout || 'default'
-        },
-        updatedAt: new Date().toISOString()
-      };
+  // Messages d'invitation prédéfinis
+  const invitationMessages = [
+    "🎉 Vous êtes cordialement invité(e) à notre événement spécial ! Votre présence nous ferait un immense plaisir.",
+    "✨ Nous avons l'honneur de vous inviter à célébrer avec nous ce moment unique. Réservez votre place dès maintenant !",
+    "💫 Rejoignez-nous pour une soirée inoubliable ! Votre invitation personnalisée vous attend.",
+    "🌟 Vous êtes notre invité(e) d'honneur ! Découvrez tous les détails de notre événement en cliquant sur le lien.",
+    "🎊 Une invitation spéciale rien que pour vous ! Nous espérons vous voir parmi nous pour cette célébration.",
+    "💝 Votre présence est le plus beau des cadeaux ! Consultez votre invitation personnalisée.",
+    "🥂 Levons nos verres ensemble ! Votre invitation exclusive vous attend, ne la manquez pas.",
+    "🎈 Préparez-vous à vivre des moments magiques ! Votre place est réservée, il ne manque plus que vous."
+  ];
 
-      console.log('Données de mise à jour:', updateData);
-
-      // Mettre à jour le modèle dans Firestore
-      const success = await updateUserModel(customizedTemplate.id, updateData);
-      
-      if (success) {
-        console.log('Template mis à jour avec succès');
-        // Forcer le rechargement des données
-        await refreshUserData();
-        // Fermer l'éditeur
-        setEditingTemplate(null);
-        // Changer d'onglet pour voir les modifications
-        setActiveTab('templates');
-      } else {
-        console.error('Échec de la mise à jour du template');
-        alert('Erreur lors de la sauvegarde des modifications');
-      }
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      alert('Erreur lors de la sauvegarde des modifications');
-    }
+  const openInvitationLinkModal = (guest: Guest) => {
+    setSelectedGuestForLink(guest);
+    setInvitationMessage(invitationMessages[Math.floor(Math.random() * invitationMessages.length)]);
+    setGeneratedLink('');
+    setLinkCopied(false);
+    setShowInvitationLinkModal(true);
   };
 
-  const handleEditTemplate = (template: UserModel) => {
-    console.log('Édition du template:', template);
-    setEditingTemplate(template);
-  };
-
-  const handleDeleteTemplate = async (templateId: string) => {
-    if (!user) return;
+  const generateInvitationLink = () => {
+    if (!selectedGuestForLink) return;
     
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce modèle ?')) {
-      try {
-        const success = await deleteUserModel(templateId);
-        if (success) {
-          console.log('Template supprimé avec succès');
-          await refreshUserData();
-        } else {
-          alert('Erreur lors de la suppression du modèle');
-        }
-      } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
-        alert('Erreur lors de la suppression du modèle');
-      }
+    const baseUrl = window.location.origin;
+    const inviteId = selectedGuestForLink.id;
+    const link = `${baseUrl}/invitation/${inviteId}`;
+    setGeneratedLink(link);
+  };
+
+  const copyLinkToClipboard = async () => {
+    if (!generatedLink) return;
+    
+    try {
+      await navigator.clipboard.writeText(generatedLink);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 3000);
+    } catch (error) {
+      console.error('Erreur lors de la copie:', error);
     }
   };
 
-  const handleCreateInvite = async () => {
+  const shareInvitation = () => {
+    if (!generatedLink || !selectedGuestForLink) return;
+    
+    const shareText = `${invitationMessage}\n\n${generatedLink}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'Invitation personnalisée',
+        text: shareText,
+        url: generatedLink
+      });
+    } else {
+      // Fallback pour les navigateurs qui ne supportent pas l'API Web Share
+      const mailtoLink = `mailto:?subject=Invitation personnalisée&body=${encodeURIComponent(shareText)}`;
+      window.open(mailtoLink);
+    }
+  };
+
+  const openAddGuestModal = () => {
     if (!canCreateInvite()) {
       setShowUpgradeModal(true);
       return;
     }
-
-    setShowInviteModal(true);
+    
+    setEditingGuest(null);
+    setGuestFormData({ nom: '', table: '', etat: 'simple' });
+    setShowAddGuestModal(true);
   };
 
-  const handleSubmitInvite = async (e: React.FormEvent) => {
+  const openEditGuestModal = (guest: Guest) => {
+    setEditingGuest(guest);
+    setGuestFormData({
+      nom: guest.nom,
+      table: guest.table,
+      etat: guest.etat
+    });
+    setShowAddGuestModal(true);
+  };
+
+  const handleGuestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inviteFormData.guestName.trim() || !inviteFormData.tableNumber.trim()) {
-      alert('Veuillez remplir tous les champs obligatoires');
-      return;
-    }
-
     try {
-      const inviteId = await createInvite({
-        nom: inviteFormData.guestName.trim(),
-        table: inviteFormData.tableNumber.trim(),
-        etat: inviteFormData.guestType,
-        confirmed: false
-      });
-
-      if (inviteId) {
-        console.log('Invité créé avec succès:', inviteId);
-        await refreshUserData();
-        setShowInviteModal(false);
-        setInviteFormData({ guestName: '', tableNumber: '', guestType: 'simple' });
-      } else {
-        alert('Erreur lors de la création de l\'invité');
-      }
-    } catch (error: any) {
-      console.error('Erreur lors de la création de l\'invité:', error);
-      if (error.message?.includes('limite')) {
-        setShowUpgradeModal(true);
-        setShowInviteModal(false);
-      } else {
-        alert('Erreur lors de la création de l\'invité');
-      }
-    }
-  };
-
-  const handleDeleteInvite = async (inviteId: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet invité ?')) {
-      try {
-        const success = await deleteInvite(inviteId);
+      if (editingGuest) {
+        // Modifier un invité existant
+        const success = await updateInvite(editingGuest.id, {
+          nom: guestFormData.nom,
+          table: guestFormData.table,
+          etat: guestFormData.etat
+        });
+        
         if (success) {
-          console.log('Invité supprimé avec succès');
           await refreshUserData();
-        } else {
-          alert('Erreur lors de la suppression de l\'invité');
         }
-      } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
-        alert('Erreur lors de la suppression de l\'invité');
+      } else {
+        // Ajouter un nouvel invité
+        const inviteId = await createInvite({
+          nom: guestFormData.nom,
+          table: guestFormData.table,
+          etat: guestFormData.etat,
+          confirmed: false
+        });
+        
+        if (inviteId) {
+          await refreshUserData();
+        }
+      }
+      
+      setShowAddGuestModal(false);
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+    }
+  };
+
+  const handleDeleteGuest = async (guestId: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet invité ?')) {
+      const success = await deleteInvite(guestId);
+      if (success) {
+        await refreshUserData();
       }
     }
   };
+
+  const handleBulkDelete = async () => {
+    if (selectedGuests.length === 0) return;
+    
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedGuests.length} invité(s) ?`)) {
+      for (const guestId of selectedGuests) {
+        await deleteInvite(guestId);
+      }
+      await refreshUserData();
+      setSelectedGuests([]);
+    }
+  };
+
+  const exportGuestsToExcel = () => {
+    const exportData = guests.map(guest => ({
+      'Nom': guest.nom,
+      'Table': guest.table,
+      'Type': guest.etat === 'couple' ? 'Couple' : 'Simple',
+      'Statut': guest.confirmed ? 'Confirmé' : 'En attente'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Invités');
+    XLSX.writeFile(wb, 'liste_invites.xlsx');
+  };
+
+  const importGuestsFromExcel = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        for (const row of jsonData as any[]) {
+          if (row['Nom']) {
+            await createInvite({
+              nom: row['Nom'],
+              table: row['Table'] || '',
+              etat: row['Type'] === 'Couple' ? 'couple' : 'simple',
+              confirmed: false
+            });
+          }
+        }
+        
+        await refreshUserData();
+        alert('Import réussi !');
+      } catch (error) {
+        console.error('Erreur lors de l\'import:', error);
+        alert('Erreur lors de l\'import du fichier');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const filteredGuests = guests.filter(guest => {
+    const matchesSearch = guest.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         guest.table.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || 
+                         (filterStatus === 'confirmed' && guest.confirmed) ||
+                         (filterStatus === 'pending' && !guest.confirmed);
+    return matchesSearch && matchesFilter;
+  });
 
   const getIconForCategory = (category: string) => {
     switch (category) {
@@ -254,76 +348,490 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     }
   };
 
-  const getColorForCategory = (category: string) => {
-    switch (category) {
-      case 'wedding':
-        return 'from-rose-500 to-pink-500';
-      case 'birthday':
-        return 'from-purple-500 to-indigo-500';
-      case 'graduation':
-        return 'from-emerald-500 to-teal-500';
-      default:
-        return 'from-amber-500 to-orange-500';
-    }
-  };
+  const renderOverview = () => (
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg">
+          <div className="flex items-center">
+            <div className="p-3 bg-amber-500 rounded-xl shadow-glow-amber">
+              <Users className="h-6 w-6 text-white" />
+            </div>
+            <div className="ml-4">
+              <p className="text-amber-700 text-sm font-medium">Total Invités</p>
+              <p className="text-2xl font-bold text-amber-900">{guests.length}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg">
+          <div className="flex items-center">
+            <div className="p-3 bg-emerald-500 rounded-xl">
+              <Users className="h-6 w-6 text-white" />
+            </div>
+            <div className="ml-4">
+              <p className="text-emerald-700 text-sm font-medium">Confirmés</p>
+              <p className="text-2xl font-bold text-emerald-900">
+                {guests.filter(g => g.confirmed).length}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg">
+          <div className="flex items-center">
+            <div className="p-3 bg-purple-500 rounded-xl shadow-glow-purple">
+              <Calendar className="h-6 w-6 text-white" />
+            </div>
+            <div className="ml-4">
+              <p className="text-purple-700 text-sm font-medium">En attente</p>
+              <p className="text-2xl font-bold text-purple-900">
+                {guests.filter(g => !g.confirmed).length}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200/50 shadow-lg">
+          <div className="flex items-center">
+            <div className="p-3 bg-rose-500 rounded-xl">
+              <BarChart3 className="h-6 w-6 text-white" />
+            </div>
+            <div className="ml-4">
+              <p className="text-rose-700 text-sm font-medium">Templates</p>
+              <p className="text-2xl font-bold text-rose-900">{userModels.length}</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-  const generateInviteLink = (inviteId: string) => {
-    return `${window.location.origin}/invitation/${inviteId}`;
-  };
+      {/* Templates Section */}
+      <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+              Mes Templates
+            </h3>
+            <p className="text-slate-600 mt-1">Gérez vos modèles d'invitation personnalisés</p>
+          </div>
+        </div>
 
-  const copyInviteLink = (inviteId: string) => {
-    const link = generateInviteLink(inviteId);
-    navigator.clipboard.writeText(link).then(() => {
-      alert('Lien copié dans le presse-papiers !');
-    });
-  };
+        {userModels.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {userModels.map((template, index) => {
+              const IconComponent = getIconForCategory(template.category);
+              return (
+                <div
+                  key={template.id}
+                  className="group cursor-pointer animate-slide-up transform hover:scale-105 transition-all duration-500"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="bg-gradient-to-br from-neutral-50 to-amber-50/30 rounded-2xl shadow-lg hover:shadow-glow-amber transition-all duration-500 overflow-hidden backdrop-blur-sm border border-neutral-200/50 hover:border-amber-300/50">
+                    <div className="relative h-32 overflow-hidden">
+                      <img
+                        src={template.backgroundImage}
+                        alt={template.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                      <div className="absolute top-3 right-3">
+                        <div className="bg-amber-500 rounded-full p-2 shadow-lg">
+                          <IconComponent className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4">
+                      <h4 className="font-bold text-slate-900 mb-2">{template.name}</h4>
+                      <p className="text-slate-600 text-sm mb-4 line-clamp-2">{template.title}</p>
+                      
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            setCustomizingTemplate(template);
+                            setShowCustomization(true);
+                          }}
+                          className="flex-1 bg-amber-500 text-white px-3 py-2 rounded-lg hover:bg-amber-600 transition-all duration-300 font-medium text-sm flex items-center justify-center"
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Modifier
+                        </button>
+                        <button className="flex-1 bg-purple-500 text-white px-3 py-2 rounded-lg hover:bg-purple-600 transition-all duration-300 font-medium text-sm flex items-center justify-center">
+                          <Eye className="h-4 w-4 mr-1" />
+                          Aperçu
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Sparkles className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-neutral-500 mb-2">Aucun template personnalisé</h3>
+            <p className="text-neutral-400 mb-6">Commencez par sélectionner un modèle à personnaliser</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
-  const shareInvite = async (inviteId: string, guestName: string) => {
-    const link = generateInviteLink(inviteId);
-    const message = `Bonjour ${guestName}, voici votre invitation : ${link}`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Invitation',
-          text: message,
-          url: link
-        });
-      } catch (error) {
-        // Fallback en cas d'erreur (permission refusée, annulation utilisateur, etc.)
-        const mailtoLink = `mailto:?subject=Votre invitation&body=${encodeURIComponent(message)}`;
-        window.open(mailtoLink);
-      }
-    } else {
-      // Fallback pour les navigateurs qui ne supportent pas l'API Web Share
-      const mailtoLink = `mailto:?subject=Votre invitation&body=${encodeURIComponent(message)}`;
-      window.open(mailtoLink);
-    }
-  };
+  const renderGuests = () => (
+    <div className="space-y-6">
+      {/* Header avec actions */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+            Gestion des Invités
+          </h3>
+          <p className="text-slate-600 mt-1">
+            {guests.length} invité{guests.length > 1 ? 's' : ''} • {guests.filter(g => g.confirmed).length} confirmé{guests.filter(g => g.confirmed).length > 1 ? 's' : ''}
+          </p>
+        </div>
+        
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={openAddGuestModal}
+            className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-2 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center shadow-glow-amber transform hover:scale-105"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter un invité
+          </button>
+          
+          <button
+            onClick={exportGuestsToExcel}
+            className="bg-emerald-500 text-white px-4 py-2 rounded-xl hover:bg-emerald-600 transition-all duration-300 font-semibold flex items-center"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exporter
+          </button>
+          
+          <label className="bg-purple-500 text-white px-4 py-2 rounded-xl hover:bg-purple-600 transition-all duration-300 font-semibold flex items-center cursor-pointer">
+            <Upload className="h-4 w-4 mr-2" />
+            Importer
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={importGuestsFromExcel}
+              className="hidden"
+            />
+          </label>
+          
+          {selectedGuests.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="bg-rose-500 text-white px-4 py-2 rounded-xl hover:bg-rose-600 transition-all duration-300 font-semibold flex items-center"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Supprimer ({selectedGuests.length})
+            </button>
+          )}
+        </div>
+      </div>
 
-  // Si on édite un template, afficher l'éditeur
-  if (editingTemplate) {
+      {/* Filtres et recherche */}
+      <div className="bg-white rounded-2xl shadow-lg border border-neutral-200/50 p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <input
+              type="text"
+              placeholder="Rechercher un invité..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+            />
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Filter className="h-4 w-4 text-neutral-500" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="border border-neutral-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+            >
+              <option value="all">Tous les statuts</option>
+              <option value="confirmed">Confirmés</option>
+              <option value="pending">En attente</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Liste des invités */}
+      <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 overflow-hidden">
+        {/* En-tête du tableau - Desktop */}
+        <div className="hidden md:grid md:grid-cols-6 gap-4 p-4 bg-gradient-to-r from-neutral-50 to-amber-50/30 border-b border-neutral-200/50">
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={selectedGuests.length === filteredGuests.length && filteredGuests.length > 0}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedGuests(filteredGuests.map(g => g.id));
+                } else {
+                  setSelectedGuests([]);
+                }
+              }}
+              className="mr-3 rounded border-neutral-300 text-amber-600 focus:ring-amber-500"
+            />
+            <span className="font-semibold text-slate-700">Nom de l'invité</span>
+          </div>
+          <div className="font-semibold text-slate-700">Table</div>
+          <div className="font-semibold text-slate-700">Type</div>
+          <div className="font-semibold text-slate-700">Statut</div>
+          <div className="font-semibold text-slate-700">Invitation</div>
+          <div className="font-semibold text-slate-700 text-right">Actions</div>
+        </div>
+
+        {/* Corps du tableau */}
+        <div className="divide-y divide-neutral-200/50">
+          {filteredGuests.map((guest, index) => (
+            <div
+              key={guest.id}
+              className="animate-slide-up hover:bg-gradient-to-r hover:from-neutral-50/50 hover:to-amber-50/30 transition-all duration-300"
+              style={{ animationDelay: `${index * 0.05}s` }}
+            >
+              {/* Version Desktop */}
+              <div className="hidden md:grid md:grid-cols-6 gap-4 p-4 items-center">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedGuests.includes(guest.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedGuests([...selectedGuests, guest.id]);
+                      } else {
+                        setSelectedGuests(selectedGuests.filter(id => id !== guest.id));
+                      }
+                    }}
+                    className="mr-3 rounded border-neutral-300 text-amber-600 focus:ring-amber-500"
+                  />
+                  <div className="flex items-center">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg ${
+                      guest.etat === 'couple' 
+                        ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
+                        : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                    }`}>
+                      {guest.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                    </div>
+                    <div className="ml-3">
+                      <p className="font-medium text-slate-900">{guest.nom}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-slate-600">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                    {guest.table || 'Non assigné'}
+                  </span>
+                </div>
+                
+                <div>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    guest.etat === 'couple' 
+                      ? 'bg-pink-100 text-pink-800' 
+                      : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {guest.etat === 'couple' ? 'Couple' : 'Simple'}
+                  </span>
+                </div>
+                
+                <div>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    guest.confirmed 
+                      ? 'bg-emerald-100 text-emerald-800' 
+                      : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {guest.confirmed ? 'Confirmé' : 'En attente'}
+                  </span>
+                </div>
+
+                <div>
+                  <button
+                    onClick={() => openInvitationLinkModal(guest)}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-sm transform hover:scale-105"
+                  >
+                    <Share2 className="h-3 w-3 mr-1" />
+                    Envoyer lien
+                  </button>
+                </div>
+                
+                <div className="flex justify-end space-x-1">
+                  <button
+                    onClick={() => openEditGuestModal(guest)}
+                    className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Modifier"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteGuest(guest.id)}
+                    className="p-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Version Mobile */}
+              <div className="md:hidden p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedGuests.includes(guest.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedGuests([...selectedGuests, guest.id]);
+                        } else {
+                          setSelectedGuests(selectedGuests.filter(id => id !== guest.id));
+                        }
+                      }}
+                      className="mr-3 rounded border-neutral-300 text-amber-600 focus:ring-amber-500"
+                    />
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg ${
+                      guest.etat === 'couple' 
+                        ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
+                        : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                    }`}>
+                      {guest.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                    </div>
+                    <div className="ml-3">
+                      <h4 className="font-medium text-slate-900">{guest.nom}</h4>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                          {guest.table || 'Non assigné'}
+                        </span>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          guest.etat === 'couple' 
+                            ? 'bg-pink-100 text-pink-800' 
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {guest.etat === 'couple' ? 'Couple' : 'Simple'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    guest.confirmed 
+                      ? 'bg-emerald-100 text-emerald-800' 
+                      : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {guest.confirmed ? 'Confirmé' : 'En attente'}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => openInvitationLinkModal(guest)}
+                    className="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <Share2 className="h-4 w-4 mr-1" />
+                    Lien
+                  </button>
+                  <button
+                    onClick={() => openEditGuestModal(guest)}
+                    className="bg-amber-100 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Modifier
+                  </button>
+                  <button
+                    onClick={() => handleDeleteGuest(guest.id)}
+                    className="bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filteredGuests.length === 0 && (
+          <div className="p-12 text-center">
+            <Users className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-neutral-500 mb-2">
+              {searchTerm || filterStatus !== 'all' ? 'Aucun invité trouvé' : 'Aucun invité ajouté'}
+            </h3>
+            <p className="text-neutral-400 mb-6">
+              {searchTerm || filterStatus !== 'all' 
+                ? 'Essayez de modifier vos critères de recherche'
+                : 'Commencez par ajouter votre premier invité'
+              }
+            </p>
+            {!searchTerm && filterStatus === 'all' && (
+              <button
+                onClick={openAddGuestModal}
+                className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
+              >
+                Ajouter un invité
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderTables = () => (
+    <TableManagement 
+      tables={tables}
+      setTables={setTables}
+      guests={guests}
+      onSaveTable={async (table) => {
+        if (table.id && tables.find(t => t.id === table.id)) {
+          await updateTable(table.id.toString(), table);
+        } else {
+          await createTable(table);
+        }
+        await refreshUserData();
+      }}
+      onDeleteTable={async (tableId) => {
+        await deleteTable(tableId.toString());
+        await refreshUserData();
+      }}
+      isLoading={isLoading}
+    />
+  );
+
+  if (showProfile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto">
-          <TemplateCustomization
-            template={editingTemplate}
-            onBack={() => setEditingTemplate(null)}
-            onSave={handleSaveTemplate}
-          />
+        <div className="max-w-4xl mx-auto">
+          <button
+            onClick={() => setShowProfile(false)}
+            className="mb-6 flex items-center text-amber-600 hover:text-amber-700 transition-all duration-300 group"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
+            Retour au dashboard
+          </button>
+          <UserProfile userData={userData} onLogout={onLogout} />
         </div>
       </div>
     );
   }
 
-  // Si on affiche le profil
-  if (showProfile && userData) {
+  if (showCustomization && customizingTemplate) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-4xl mx-auto">
-          <UserProfile 
-            userData={userData} 
-            onLogout={onLogout}
+        <div className="max-w-7xl mx-auto">
+          <TemplateCustomization
+            template={customizingTemplate}
+            onBack={() => {
+              setShowCustomization(false);
+              setCustomizingTemplate(null);
+            }}
+            onSave={(customizedTemplate) => {
+              console.log('Template sauvegardé:', customizedTemplate);
+              setShowCustomization(false);
+              setCustomizingTemplate(null);
+            }}
           />
         </div>
       </div>
@@ -332,731 +840,317 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
   const tabs = [
     { id: 'overview', label: 'Vue d\'ensemble', icon: BarChart3 },
-    { id: 'templates', label: 'Mes Modèles', icon: Sparkles },
     { id: 'guests', label: 'Invités', icon: Users },
-    { id: 'tables', label: 'Tables', icon: Calendar },
-    { id: 'analytics', label: 'Statistiques', icon: TrendingUp }
+    { id: 'tables', label: 'Tables', icon: Calendar }
   ];
 
-  const getOccupiedSeats = (tableName: string) => {
-    return userInvites.filter(invite => invite.table === tableName).length;
-  };
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'overview':
-        return (
-          <div className="space-y-8">
-            {/* Statistiques principales */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-amber-500 rounded-xl shadow-glow-amber">
-                    <Sparkles className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-amber-700 text-sm font-medium">Mes Modèles</p>
-                    <p className="text-2xl font-bold text-amber-900">{userModels.length}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-purple-500 rounded-xl shadow-glow-purple">
-                    <Users className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-purple-700 text-sm font-medium">Total Invités</p>
-                    <p className="text-2xl font-bold text-purple-900">{userInvites.length}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-emerald-500 rounded-xl">
-                    <CheckCircle className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-emerald-700 text-sm font-medium">Confirmés</p>
-                    <p className="text-2xl font-bold text-emerald-900">
-                      {userInvites.filter(invite => invite.confirmed).length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-rose-500 rounded-xl">
-                    <Crown className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-rose-700 text-sm font-medium">Plan Actuel</p>
-                    <p className="text-lg font-bold text-rose-900 capitalize">
-                      {subscription?.plan || 'Gratuit'}
-                    </p>
-                    {subscription?.plan === 'free' && (
-                      <p className="text-xs text-rose-600">
-                        {getRemainingInvites()}/5 restantes
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions rapides */}
-            <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
-              <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-6">
-                Actions rapides
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button
-                  onClick={handleCreateInvite}
-                  className="bg-gradient-to-r from-amber-500 to-amber-600 text-white p-4 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-glow-amber transform hover:scale-105"
-                >
-                  <Plus className="h-5 w-5 mr-2" />
-                  Ajouter un invité
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab('templates')}
-                  className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg transform hover:scale-105"
-                >
-                  <Sparkles className="h-5 w-5 mr-2" />
-                  Gérer mes modèles
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab('analytics')}
-                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-4 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg transform hover:scale-105"
-                >
-                  <BarChart3 className="h-5 w-5 mr-2" />
-                  Voir les statistiques
-                </button>
-              </div>
-            </div>
-
-            {/* Activité récente */}
-            <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
-              <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-6">
-                Activité récente
-              </h3>
-              <div className="space-y-4">
-                {userInvites.slice(0, 5).map((invite, index) => (
-                  <div key={invite.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-neutral-50 to-amber-50/30 rounded-xl border border-neutral-200/50">
-                    <div className="flex items-center">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${
-                        invite.confirmed ? 'bg-emerald-500' : 'bg-amber-500'
-                      }`}>
-                        {invite.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                      </div>
-                      <div className="ml-3">
-                        <p className="font-medium text-slate-900">{invite.nom}</p>
-                        <p className="text-sm text-slate-600">Table {invite.table}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        invite.confirmed 
-                          ? 'bg-emerald-100 text-emerald-800' 
-                          : 'bg-amber-100 text-amber-800'
-                      }`}>
-                        {invite.confirmed ? 'Confirmé' : 'En attente'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                
-                {userInvites.length === 0 && (
-                  <div className="text-center py-8">
-                    <Users className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
-                    <h4 className="text-lg font-medium text-neutral-500 mb-2">Aucun invité pour le moment</h4>
-                    <p className="text-neutral-400 mb-6">Commencez par ajouter vos premiers invités</p>
-                    <button
-                      onClick={handleCreateInvite}
-                      className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
-                    >
-                      Ajouter un invité
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'templates':
-        return (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                  Mes Modèles d'Invitation
-                </h3>
-                <p className="text-slate-600 mt-1">Gérez et personnalisez vos modèles</p>
-              </div>
-            </div>
-
-            {isLoading ? (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-amber-500 rounded-full animate-bounce"></div>
-                  <div className="w-4 h-4 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-4 h-4 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                </div>
-                <p className="text-slate-600 mt-2">Chargement de vos modèles...</p>
-              </div>
-            ) : userModels.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userModels.map((template, index) => {
-                  const IconComponent = getIconForCategory(template.category);
-                  const colorClass = getColorForCategory(template.category);
-                  
-                  return (
-                    <div
-                      key={template.id}
-                      className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 overflow-hidden hover:shadow-glow-amber transition-all duration-500 animate-slide-up"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={template.backgroundImage}
-                          alt={template.name}
-                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                        <div className="absolute top-4 right-4">
-                          <div className={`p-2 bg-gradient-to-r ${colorClass} rounded-full shadow-lg`}>
-                            <IconComponent className="h-5 w-5 text-white" />
-                          </div>
-                        </div>
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <h4 className="text-white font-bold text-lg mb-1">{template.title}</h4>
-                          <p className="text-white/80 text-sm">{template.name}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <p className="text-sm text-slate-600">Catégorie</p>
-                            <p className="font-semibold text-slate-900 capitalize">{template.category}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-slate-600">Créé le</p>
-                            <p className="font-semibold text-slate-900">
-                              {new Date(template.createdAt || '').toLocaleDateString('fr-FR')}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-2">
-                          <button
-                            onClick={() => handleEditTemplate(template)}
-                            className="bg-amber-100 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Modifier
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              const link = `${window.location.origin}/invitation/preview/${template.id}`;
-                              window.open(link, '_blank');
-                            }}
-                            className="bg-purple-100 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Voir
-                          </button>
-                          
-                          <button
-                            onClick={() => handleDeleteTemplate(template.id)}
-                            className="bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Suppr.
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Sparkles className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
-                <h4 className="text-lg font-medium text-neutral-500 mb-2">Aucun modèle personnalisé</h4>
-                <p className="text-neutral-400 mb-6">Créez votre premier modèle d'invitation personnalisé</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
-                >
-                  Retour à l'accueil
-                </button>
-              </div>
-            )}
-          </div>
-        );
-
-      case 'guests':
-        return (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                  Gestion des Invités
-                </h3>
-                <p className="text-slate-600 mt-1">
-                  {subscription?.plan === 'free' 
-                    ? `${userInvites.length}/5 invitations utilisées`
-                    : `${userInvites.length} invités`
-                  }
-                </p>
-              </div>
-              
-              <button
-                onClick={handleCreateInvite}
-                className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center shadow-glow-amber transform hover:scale-105"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Ajouter un invité
-              </button>
-            </div>
-
-            {/* Tableau des invités */}
-            <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 overflow-hidden">
-              {/* En-tête du tableau - Desktop */}
-              <div className="hidden md:grid md:grid-cols-6 gap-4 p-6 bg-gradient-to-r from-neutral-50 to-amber-50/30 border-b border-neutral-200/50">
-                <div className="font-semibold text-slate-700">Nom</div>
-                <div className="font-semibold text-slate-700">Table</div>
-                <div className="font-semibold text-slate-700">Type</div>
-                <div className="font-semibold text-slate-700">Statut</div>
-                <div className="font-semibold text-slate-700">Lien</div>
-                <div className="font-semibold text-slate-700 text-right">Actions</div>
-              </div>
-
-              {/* Corps du tableau */}
-              <div className="divide-y divide-neutral-200/50">
-                {userInvites.map((invite, index) => (
-                  <div
-                    key={invite.id}
-                    className="animate-slide-up hover:bg-gradient-to-r hover:from-neutral-50/50 hover:to-amber-50/30 transition-all duration-300"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    {/* Version Desktop */}
-                    <div className="hidden md:grid md:grid-cols-6 gap-4 p-6 items-center">
-                      <div className="flex items-center">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg ${
-                          invite.etat === 'couple' 
-                            ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
-                            : 'bg-gradient-to-r from-amber-500 to-orange-500'
-                        }`}>
-                          {invite.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                        </div>
-                        <div className="ml-3">
-                          <p className="font-medium text-slate-900">{invite.nom}</p>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
-                          Table {invite.table}
-                        </span>
-                      </div>
-                      
-                      <div>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          invite.etat === 'couple' 
-                            ? 'bg-pink-100 text-pink-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {invite.etat === 'couple' ? 'Couple' : 'Simple'}
-                        </span>
-                      </div>
-                      
-                      <div>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          invite.confirmed 
-                            ? 'bg-emerald-100 text-emerald-800' 
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {invite.confirmed ? 'Confirmé' : 'En attente'}
-                        </span>
-                      </div>
-                      
-                      <div>
-                        <button
-                          onClick={() => copyInviteLink(invite.id)}
-                          className="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all duration-200 text-sm font-medium"
-                        >
-                          <Copy className="h-3 w-3 mr-1" />
-                          Copier
-                        </button>
-                      </div>
-                      
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => shareInvite(invite.id, invite.nom)}
-                          className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                          title="Partager"
-                        >
-                          <Share2 className="h-4 w-4" />
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            const link = generateInviteLink(invite.id);
-                            window.open(link, '_blank');
-                          }}
-                          className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                          title="Voir l'invitation"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleDeleteInvite(invite.id)}
-                          className="p-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                          title="Supprimer"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Version Mobile */}
-                    <div className="md:hidden p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg ${
-                            invite.etat === 'couple' 
-                              ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
-                              : 'bg-gradient-to-r from-amber-500 to-orange-500'
-                          }`}>
-                            {invite.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                          </div>
-                          <div className="ml-3">
-                            <p className="font-medium text-slate-900">{invite.nom}</p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className="text-xs text-purple-600 font-medium">Table {invite.table}</span>
-                              <span className={`text-xs font-medium ${
-                                invite.etat === 'couple' ? 'text-pink-600' : 'text-blue-600'
-                              }`}>
-                                {invite.etat === 'couple' ? 'Couple' : 'Simple'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          invite.confirmed 
-                            ? 'bg-emerald-100 text-emerald-800' 
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {invite.confirmed ? 'Confirmé' : 'En attente'}
-                        </span>
-                      </div>
-                      
-                      <div className="grid grid-cols-4 gap-2">
-                        <button
-                          onClick={() => copyInviteLink(invite.id)}
-                          className="bg-slate-100 text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-200 transition-all duration-200 font-medium flex items-center justify-center text-xs"
-                        >
-                          <Copy className="h-3 w-3 mr-1" />
-                          Copier
-                        </button>
-                        
-                        <button
-                          onClick={() => shareInvite(invite.id, invite.nom)}
-                          className="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all duration-200 font-medium flex items-center justify-center text-xs"
-                        >
-                          <Share2 className="h-3 w-3 mr-1" />
-                          Partager
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            const link = generateInviteLink(invite.id);
-                            window.open(link, '_blank');
-                          }}
-                          className="bg-purple-100 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-200 transition-all duration-200 font-medium flex items-center justify-center text-xs"
-                        >
-                          <ExternalLink className="h-3 w-3 mr-1" />
-                          Voir
-                        </button>
-                        
-                        <button
-                          onClick={() => handleDeleteInvite(invite.id)}
-                          className="bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-xs"
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Suppr.
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {userInvites.length === 0 && (
-                <div className="p-12 text-center">
-                  <Users className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
-                  <h4 className="text-lg font-medium text-neutral-500 mb-2">Aucun invité pour le moment</h4>
-                  <p className="text-neutral-400 mb-6">Commencez par ajouter vos premiers invités</p>
-                  <button
-                    onClick={handleCreateInvite}
-                    className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
-                  >
-                    Ajouter un invité
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-
-      case 'tables':
-        return (
-          <TableManagement 
-            tables={tables} 
-            setTables={setTables}
-            guests={userInvites}
-            onSaveTable={async (table) => {
-              if (table.id && tables.find(t => t.id === table.id)) {
-                await updateTable(table.id.toString(), table);
-              } else {
-                await createTable(table);
-              }
-            }}
-            onDeleteTable={async (tableId) => {
-              await deleteTable(tableId.toString());
-            }}
-            isLoading={isLoading}
-          />
-        );
-
-      case 'analytics':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                Statistiques et Analyses
-              </h3>
-              <p className="text-slate-600 mt-1">Analysez les performances de vos invitations</p>
-            </div>
-
-            {/* Statistiques détaillées */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-blue-500 rounded-xl">
-                    <Mail className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-blue-700 text-sm font-medium">Invitations Envoyées</p>
-                    <p className="text-2xl font-bold text-blue-900">{userInvites.length}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-emerald-500 rounded-xl">
-                    <CheckCircle className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-emerald-700 text-sm font-medium">Taux de Confirmation</p>
-                    <p className="text-2xl font-bold text-emerald-900">
-                      {userInvites.length > 0 
-                        ? Math.round((userInvites.filter(i => i.confirmed).length / userInvites.length) * 100)
-                        : 0
-                      }%
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-amber-500 rounded-xl">
-                    <Clock className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-amber-700 text-sm font-medium">En Attente</p>
-                    <p className="text-2xl font-bold text-amber-900">
-                      {userInvites.filter(i => !i.confirmed).length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-purple-500 rounded-xl">
-                    <Users className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-purple-700 text-sm font-medium">Couples</p>
-                    <p className="text-2xl font-bold text-purple-900">
-                      {userInvites.filter(i => i.etat === 'couple').length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Graphique simple */}
-            <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
-              <h4 className="text-lg font-semibold text-slate-900 mb-6">Répartition des confirmations</h4>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-700">Confirmés</span>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-32 bg-neutral-200 rounded-full h-2">
-                      <div 
-                        className="bg-emerald-500 h-2 rounded-full transition-all duration-1000"
-                        style={{ 
-                          width: userInvites.length > 0 
-                            ? `${(userInvites.filter(i => i.confirmed).length / userInvites.length) * 100}%`
-                            : '0%'
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-slate-900 w-12 text-right">
-                      {userInvites.filter(i => i.confirmed).length}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-700">En attente</span>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-32 bg-neutral-200 rounded-full h-2">
-                      <div 
-                        className="bg-amber-500 h-2 rounded-full transition-all duration-1000"
-                        style={{ 
-                          width: userInvites.length > 0 
-                            ? `${(userInvites.filter(i => !i.confirmed).length / userInvites.length) * 100}%`
-                            : '0%'
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-slate-900 w-12 text-right">
-                      {userInvites.filter(i => !i.confirmed).length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Conseils */}
-            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50">
-              <div className="flex items-center mb-4">
-                <TrendingUp className="h-5 w-5 text-purple-600 mr-2" />
-                <h4 className="text-lg font-semibold text-purple-800">Conseils pour améliorer vos confirmations</h4>
-              </div>
-              <ul className="text-purple-700 space-y-2">
-                <li>• Envoyez des rappels personnalisés aux invités qui n'ont pas encore confirmé</li>
-                <li>• Utilisez les liens de partage pour faciliter la diffusion</li>
-                <li>• Personnalisez vos modèles pour qu'ils reflètent votre événement</li>
-                <li>• Suivez régulièrement les statistiques pour identifier les tendances</li>
-              </ul>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20">
       {/* Header */}
-      <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl shadow-luxury border-b border-neutral-200/50 dark:border-slate-600/50 sticky top-0 z-40">
+      <div className="bg-white/80 backdrop-blur-xl shadow-lg border-b border-amber-200/30 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <div className="relative">
+              <div className="flex items-center space-x-2">
                 <Crown className="h-8 w-8 text-amber-500 animate-glow drop-shadow-lg" />
-                <div className="absolute inset-0 animate-pulse">
-                  <Crown className="h-8 w-8 text-amber-300 opacity-30" />
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 bg-clip-text text-transparent">
+                    Dashboard
+                  </h1>
+                  <p className="text-sm text-slate-600">Bienvenue, {userData.firstName}</p>
                 </div>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-                  Dashboard Furaha-Event
-                </h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Bienvenue, {userData?.firstName} {userData?.lastName}
-                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setShowSettings(true)}
-                className="p-2 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-slate-700 rounded-lg transition-all duration-200 transform hover:scale-110"
-                title="Paramètres"
-              >
-                <Settings className="h-5 w-5" />
-              </button>
-              
+              {subscription && (
+                <div className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-amber-50 to-amber-100 px-3 py-2 rounded-lg border border-amber-200/50">
+                  <Crown className="h-4 w-4 text-amber-600" />
+                  <span className="text-sm font-medium text-amber-800">
+                    Plan {subscription.plan === 'free' ? 'Gratuit' : subscription.plan}
+                  </span>
+                  {subscription.plan === 'free' && (
+                    <span className="text-xs text-amber-600">
+                      ({getRemainingInvites()} invitations)
+                    </span>
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={() => setShowProfile(true)}
                 className="flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-2 rounded-full hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-medium shadow-glow-amber transform hover:scale-105"
               >
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-amber-900 font-bold text-xs">
-                  {userData?.firstName?.[0]}{userData?.lastName?.[0]}
+                <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-amber-600 font-bold text-xs">
+                  {userData.firstName[0]}{userData.lastName[0]}
                 </div>
-                <span className="hidden sm:block">Mon Profil</span>
+                <span className="hidden sm:block">{userData.firstName}</span>
+              </button>
+
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-2 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+              >
+                <Settings className="h-5 w-5" />
               </button>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Navigation Tabs */}
-      <nav className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-b border-neutral-200/50 dark:border-slate-600/50 sticky top-16 z-30">
+      <div className="bg-white/60 backdrop-blur-xl border-b border-neutral-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8 overflow-x-auto">
+          <nav className="flex space-x-8">
             {tabs.map((tab) => {
               const IconComponent = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-all duration-300 whitespace-nowrap ${
+                  className={`flex items-center px-1 py-4 border-b-2 font-medium text-sm transition-all duration-300 ${
                     activeTab === tab.id
-                      ? 'border-amber-500 text-amber-600 dark:text-amber-400'
-                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500'
+                      ? 'border-amber-500 text-amber-600'
+                      : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                   }`}
                 >
-                  <IconComponent className="h-4 w-4" />
-                  <span>{tab.label}</span>
+                  <IconComponent className="h-4 w-4 mr-2" />
+                  {tab.label}
                 </button>
               );
             })}
-          </div>
+          </nav>
         </div>
-      </nav>
+      </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {error && (
-          <div className="mb-6 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/50 rounded-xl p-4">
-            <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-rose-600 dark:text-rose-400 mr-2" />
-              <p className="text-rose-700 dark:text-rose-300">{error}</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === 'overview' && renderOverview()}
+        {activeTab === 'guests' && renderGuests()}
+        {activeTab === 'tables' && renderTables()}
+      </div>
+
+      {/* Modal d'ajout/modification d'invité */}
+      {showAddGuestModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-luxury max-w-md w-full animate-slide-up">
+            <div className="p-6 border-b border-neutral-200/50">
+              <h3 className="text-xl font-bold text-slate-900">
+                {editingGuest ? 'Modifier l\'invité' : 'Ajouter un invité'}
+              </h3>
+            </div>
+
+            <form onSubmit={handleGuestSubmit} className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Nom complet
+                  </label>
+                  <input
+                    type="text"
+                    value={guestFormData.nom}
+                    onChange={(e) => setGuestFormData({ ...guestFormData, nom: e.target.value })}
+                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                    placeholder="Nom et prénom de l'invité"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Numéro de table
+                  </label>
+                  <input
+                    type="text"
+                    value={guestFormData.table}
+                    onChange={(e) => setGuestFormData({ ...guestFormData, table: e.target.value })}
+                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                    placeholder="Ex: Table 1, Table VIP..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Type d'invité
+                  </label>
+                  <select
+                    value={guestFormData.etat}
+                    onChange={(e) => setGuestFormData({ ...guestFormData, etat: e.target.value as 'simple' | 'couple' })}
+                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                  >
+                    <option value="simple">Simple (1 personne)</option>
+                    <option value="couple">Couple (2 personnes)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowAddGuestModal(false)}
+                  className="flex-1 px-4 py-3 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-all duration-200 font-medium"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {isLoading ? 'Sauvegarde...' : (editingGuest ? 'Modifier' : 'Ajouter')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de lien d'invitation personnalisé */}
+      {showInvitationLinkModal && selectedGuestForLink && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-luxury max-w-lg w-full animate-slide-up">
+            <div className="p-6 border-b border-neutral-200/50 bg-gradient-to-r from-blue-50 to-blue-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg mr-4">
+                    <Share2 className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      Invitation personnalisée
+                    </h3>
+                    <p className="text-slate-600 text-sm">
+                      Pour {selectedGuestForLink.nom}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowInvitationLinkModal(false)}
+                  className="p-2 hover:bg-blue-200 rounded-lg transition-colors duration-200"
+                >
+                  <X className="h-5 w-5 text-slate-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Message personnalisé */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-3">
+                  Message d'invitation personnalisé
+                </label>
+                <div className="relative">
+                  <MessageCircle className="absolute left-3 top-3 h-5 w-5 text-blue-500" />
+                  <textarea
+                    value={invitationMessage}
+                    onChange={(e) => setInvitationMessage(e.target.value)}
+                    rows={4}
+                    className="w-full pl-12 pr-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                    placeholder="Rédigez votre message d'invitation personnalisé..."
+                  />
+                </div>
+                
+                {/* Messages prédéfinis */}
+                <div className="mt-3">
+                  <p className="text-xs text-slate-500 mb-2">Messages suggérés :</p>
+                  <div className="flex flex-wrap gap-2">
+                    {invitationMessages.slice(0, 3).map((message, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setInvitationMessage(message)}
+                        className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-all duration-200"
+                      >
+                        Message {index + 1}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Génération du lien */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Lien d'invitation
+                  </label>
+                  {!generatedLink && (
+                    <button
+                      onClick={generateInvitationLink}
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-medium text-sm flex items-center shadow-lg transform hover:scale-105"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Générer le lien
+                    </button>
+                  )}
+                </div>
+
+                {generatedLink && (
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={generatedLink}
+                        readOnly
+                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-300 rounded-xl text-sm font-mono"
+                      />
+                      <button
+                        onClick={copyLinkToClipboard}
+                        className={`absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 rounded-lg text-xs font-medium transition-all duration-300 ${
+                          linkCopied 
+                            ? 'bg-emerald-100 text-emerald-700' 
+                            : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                        }`}
+                      >
+                        {linkCopied ? (
+                          <>
+                            <Check className="h-3 w-3 inline mr-1" />
+                            Copié !
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3 w-3 inline mr-1" />
+                            Copier
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Aperçu du message complet */}
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                      <h4 className="text-sm font-semibold text-blue-800 mb-2">Aperçu du message complet :</h4>
+                      <div className="text-sm text-blue-700 whitespace-pre-wrap">
+                        {invitationMessage}
+                        {'\n\n'}
+                        {generatedLink}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex space-x-3 pt-4 border-t border-neutral-200">
+                <button
+                  onClick={() => setShowInvitationLinkModal(false)}
+                  className="flex-1 px-4 py-3 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-all duration-200 font-medium"
+                >
+                  Fermer
+                </button>
+                
+                {generatedLink && (
+                  <button
+                    onClick={shareInvitation}
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-semibold shadow-lg transform hover:scale-105 flex items-center justify-center"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Partager
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        )}
-        
-        {renderTabContent()}
-      </main>
+        </div>
+      )}
 
       {/* Modals */}
       <DashboardSettings
@@ -1070,149 +1164,6 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         currentPlan={subscription?.plan || 'free'}
         remainingInvites={getRemainingInvites()}
       />
-
-      {/* Modal d'ajout d'invité */}
-      {showInviteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-luxury max-w-md w-full animate-slide-up">
-            <div className="p-6 border-b border-neutral-200/50 dark:border-slate-600/50 bg-gradient-to-r from-neutral-50 to-amber-50/30 dark:from-slate-700 dark:to-slate-600">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <div className="relative mr-3">
-                    <Users className="h-6 w-6 text-amber-500 animate-glow drop-shadow-lg" />
-                    <div className="absolute inset-0 animate-pulse">
-                      <Users className="h-6 w-6 text-amber-300 opacity-30" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-                      Ajouter un invité
-                    </h3>
-                    <p className="text-slate-600 dark:text-slate-400 text-sm">
-                      Créez une nouvelle invitation
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowInviteModal(false);
-                    setInviteFormData({ guestName: '', tableNumber: '', guestType: 'simple' });
-                  }}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200"
-                >
-                  <X className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
-                </button>
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmitInvite} className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Nom de l'invité *
-                  </label>
-                  <input
-                    type="text"
-                    value={inviteFormData.guestName}
-                    onChange={(e) => setInviteFormData(prev => ({ ...prev, guestName: e.target.value }))}
-                    className="w-full px-4 py-3 border border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                    placeholder="Ex: Sophie Martin"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
-                    Table *
-                    <ChevronDown className="h-4 w-4 ml-1 text-slate-500" />
-                  </label>
-                  <select
-                    value={inviteFormData.tableNumber}
-                    onChange={(e) => setInviteFormData(prev => ({ ...prev, tableNumber: e.target.value }))}
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white appearance-none cursor-pointer"
-                  >
-                    <option value="">Sélectionnez une table</option>
-                    {tables.map((table) => (
-                      <option key={table.id} value={table.name}>
-                        {table.name} ({table.seats - getOccupiedSeats(table.name)} places libres)
-                      </option>
-                    ))}
-                    <option value="custom">Autre (saisir manuellement)</option>
-                  </select>
-                  {inviteFormData.tableNumber === 'custom' && (
-                    <input
-                      type="text"
-                      onChange={(e) => setInviteFormData(prev => ({ ...prev, tableNumber: e.target.value }))}
-                      className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 mt-2"
-                      placeholder="Ex: 1, 2, VIP..."
-                      required
-                    />
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Type d'invité
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setInviteFormData(prev => ({ ...prev, guestType: 'simple' }))}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                        inviteFormData.guestType === 'simple'
-                          ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                          : 'border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-amber-300 dark:hover:border-amber-400'
-                      }`}
-                    >
-                      <div className="text-center">
-                        <User className="h-6 w-6 mx-auto mb-2" />
-                        <p className="font-medium">Simple</p>
-                        <p className="text-xs opacity-75">1 personne</p>
-                      </div>
-                    </button>
-                    
-                    <button
-                      type="button"
-                      onClick={() => setInviteFormData(prev => ({ ...prev, guestType: 'couple' }))}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                        inviteFormData.guestType === 'couple'
-                          ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                          : 'border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-amber-300 dark:hover:border-amber-400'
-                      }`}
-                    >
-                      <div className="text-center">
-                        <Users className="h-6 w-6 mx-auto mb-2" />
-                        <p className="font-medium">Couple</p>
-                        <p className="text-xs opacity-75">2 personnes</p>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowInviteModal(false);
-                    setInviteFormData({ guestName: '', tableNumber: '', guestType: 'simple' });
-                  }}
-                  className="flex-1 px-4 py-3 border border-neutral-300 dark:border-slate-600 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-slate-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-slate-600 transition-all duration-200 font-medium"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105"
-                >
-                  <Plus className="h-4 w-4 mr-2 inline" />
-                  Créer l'invité
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
