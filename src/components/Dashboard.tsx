@@ -76,7 +76,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const { 
     userTemplates,
     userInvites: templatesUserInvites,
-    userTables,
+    userTables: templatesUserTables,
     isLoading, 
     error, 
     updateUserModel, 
