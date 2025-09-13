@@ -63,6 +63,14 @@ export interface Invite {
   updatedAt: Timestamp;
 }
 
+export interface Table {
+  id: number;
+  name: string;
+  seats: number;
+  assignedGuests: any[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
 // Service pour les templates par défaut
 export class TemplateService {
   private static readonly TEMPLATES_COLLECTION = 'templates';
