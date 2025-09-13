@@ -41,23 +41,7 @@ Au plaisir de vous voir ! 💎`;
     userModel: UserModel, 
     invitationUrl: string
   ): string {
-    const eventTypeText = this.getEventTypeText(userModel.category);
-    
-    const message = `Bonjour ${invite.nom}! 💎
-
-Vous êtes cordialement invité(e) à ${eventTypeText}.
-
-📅 Date: ${userModel.eventDate}
-🕐 Heure: ${userModel.eventTime}
-📍 Lieu: ${userModel.eventLocation}
-${invite.table ? `🪑 Table: ${invite.table}` : ''}
-
-Voici votre invitation personnalisée :
-${invitationUrl}
-
-Merci de confirmer votre présence directement via le lien.
-
-Au plaisir de vous voir ! 💎`;
+    const message = invitationUrl;
 
     return message;
   }

@@ -175,7 +175,7 @@ const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationS
 
           {/* Type de message */}
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-3">Type de message</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-3">Format d'envoi</h3>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setSelectedMessageType('simple')}
@@ -187,8 +187,8 @@ const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationS
               >
                 <div className="text-center">
                   <MessageCircle className="h-6 w-6 mx-auto mb-2" />
-                  <div className="font-medium">Message simple</div>
-                  <div className="text-xs opacity-75">Court et direct</div>
+                  <div className="font-medium">Message avec texte</div>
+                  <div className="text-xs opacity-75">Texte + lien d'invitation</div>
                 </div>
               </button>
               
@@ -201,9 +201,9 @@ const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationS
                 }`}
               >
                 <div className="text-center">
-                  <Mail className="h-6 w-6 mx-auto mb-2" />
-                  <div className="font-medium">Message détaillé</div>
-                  <div className="text-xs opacity-75">Avec tous les détails</div>
+                  <ExternalLink className="h-6 w-6 mx-auto mb-2" />
+                  <div className="font-medium">Lien seulement</div>
+                  <div className="text-xs opacity-75">Juste le lien d'invitation</div>
                 </div>
               </button>
             </div>
@@ -212,9 +212,11 @@ const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationS
           {/* Aperçu du message */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-slate-900">Aperçu du message</h3>
+              <h3 className="text-lg font-semibold text-slate-900">
+                {selectedMessageType === 'simple' ? 'Aperçu du message' : 'Lien d\'invitation'}
+              </h3>
               <button
-                onClick={handleCopyMessage}
+                onClick={selectedMessageType === 'simple' ? handleCopyMessage : handleCopyUrl}
                 className="flex items-center px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-all duration-300 text-sm font-medium"
               >
                 {copySuccess ? (
@@ -225,18 +227,27 @@ const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationS
                 ) : (
                   <>
                     <Copy className="h-4 w-4 mr-1" />
-                    Copier
+                    {selectedMessageType === 'simple' ? 'Copier le message' : 'Copier le lien'}
                   </>
                 )}
               </button>
             </div>
             
             <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200/50">
-              <div className="bg-emerald-600 text-white p-4 rounded-xl max-w-xs">
-                <div className="whitespace-pre-line text-sm leading-relaxed">
-                  {getCurrentMessage()}
+              {selectedMessageType === 'simple' ? (
+                <div className="bg-emerald-600 text-white p-4 rounded-xl max-w-xs">
+                  <div className="whitespace-pre-line text-sm leading-relaxed">
+                    {getCurrentMessage()}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-blue-600 text-white p-4 rounded-xl">
+                  <div className="flex items-center">
+                    <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <code className="text-sm break-all">{invitationUrl}</code>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
