@@ -30,7 +30,8 @@ import {
   AlertCircle,
   TrendingUp,
   Mail,
-  Phone,
+  X,
+  Save
   MapPin
 } from 'lucide-react';
   Camera,
