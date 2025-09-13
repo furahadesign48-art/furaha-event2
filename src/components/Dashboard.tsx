@@ -23,7 +23,9 @@ import {
   Copy,
   ExternalLink,
   MessageCircle,
-  Send
+  Send,
+  Check,
+  X
 } from 'lucide-react';
 import { UserData } from '../hooks/useAuth';
 import UserProfile from './UserProfile';
