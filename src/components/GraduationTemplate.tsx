@@ -360,23 +360,23 @@ const GraduationTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Gradu
 
             {/* Template Information */}
             <div className="animate-slide-up">
-              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-3xl shadow-luxury border border-emerald-500/20 p-8">
-                <div className="text-center mb-8">
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-3xl shadow-luxury border border-emerald-500/20 p-6">
+                <div className="text-center mb-6">
                   <div className="flex justify-center mb-4">
                     <div className="p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full shadow-lg">
                       <GraduationCap className="h-12 w-12 text-white" />
                     </div>
                   </div>
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent mb-2">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent mb-2">
                     Collation Premium
                   </h2>
                   <p className="text-neutral-300">Marquez votre réussite académique</p>
                 </div>
 
                 {/* Features */}
-                <div className="mb-8">
+                <div className="mb-6">
                   <h3 className="text-emerald-400 font-semibold mb-4">Fonctionnalités incluses</h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {templateData.features.map((feature, index) => (
                       <div key={index} className="flex items-center text-neutral-300">
                         <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3 flex-shrink-0 animate-pulse"></div>
@@ -387,7 +387,7 @@ const GraduationTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Gradu
                 </div>
 
                 {/* Template Stats */}
-                <div className="grid grid-cols-3 gap-4 mb-8">
+                <div className="grid grid-cols-3 gap-4 mb-6">
                   <div className="text-center bg-gradient-to-br from-emerald-900/30 to-emerald-800/30 rounded-2xl p-4 border border-emerald-500/20">
                     <div className="text-2xl font-bold text-emerald-400">Premium</div>
                     <div className="text-neutral-400 text-sm">Qualité</div>
@@ -403,7 +403,7 @@ const GraduationTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Gradu
                 </div>
 
                 {/* Action Buttons */}
-                <div className="space-y-4">
+                <div className="mb-4">
                   <button
                     onClick={handleSelectTemplate}
                     disabled={isLoading}
@@ -424,19 +424,12 @@ const GraduationTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Gradu
                       )}
                     </span>
                   </button>
-                  
-                  <button
-                    onClick={() => setShowPreview(!showPreview)}
-                    className="w-full bg-transparent border-2 border-emerald-500 text-emerald-400 py-3 rounded-2xl hover:bg-emerald-500 hover:text-white transition-all duration-500 font-semibold transform hover:scale-105"
-                  >
-                    Prévisualisation complète
-                  </button>
                 </div>
 
                 {/* Template Description */}
-                <div className="mt-8 p-6 bg-gradient-to-r from-emerald-900/20 to-emerald-800/20 rounded-2xl border border-emerald-500/20">
+                <div className="p-4 bg-gradient-to-r from-emerald-900/20 to-emerald-800/20 rounded-2xl border border-emerald-500/20">
                   <h4 className="text-emerald-400 font-semibold mb-3">À propos de ce modèle</h4>
-                  <p className="text-neutral-300 text-sm leading-relaxed">
+                  <p className="text-neutral-300 text-xs leading-relaxed">
                     Ce modèle premium de collation de grade combine prestige académique et élégance pour 
                     célébrer vos accomplissements. Avec son design sophistiqué et ses fonctionnalités 
                     complètes, il honore dignement cette étape importante de votre parcours.
