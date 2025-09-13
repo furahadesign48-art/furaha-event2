@@ -153,7 +153,6 @@ const PricingSection = () => {
                           <Check className="h-5 w-5 text-amber-300 opacity-30" />
                         </div>
                       </div>
-                      <span className="text-slate-700">{feature}</span>
                       <span className="text-slate-700 dark:text-slate-300">{feature}</span>
                     </li>
                   ))}
