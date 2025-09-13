@@ -47,7 +47,7 @@ export const useSubscription = () => {
             userId: user.id,
             plan: 'free',
             status: 'active',
-            inviteLimit: 5,
+            inviteLimit: 999999,
             currentInvites: 0,
             startDate: new Date().toISOString(),
             createdAt: new Date().toISOString(),
@@ -90,17 +90,11 @@ export const useSubscription = () => {
 
   const canCreateInvite = () => {
     if (!subscription) return false;
-    if (subscription.plan === 'free') {
-      return subscription.currentInvites < 5;
-    }
-    return true; // Plans payants = illimité
+    return true; // Tous les plans = illimité
   };
 
   const getRemainingInvites = () => {
     if (!subscription) return 0;
-    if (subscription.plan === 'free') {
-      return Math.max(0, 5 - subscription.currentInvites);
-    }
     return 999999; // Plans payants = illimité
   };
 
