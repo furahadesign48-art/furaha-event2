@@ -25,6 +25,7 @@ import {
   ExternalLink,
   CheckCircle,
   Clock,
+  Camera,
   XCircle,
   AlertCircle,
   TrendingUp,
