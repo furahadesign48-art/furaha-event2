@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TemplateService, UserModelService, UserModel, TemplateData, InviteService, Invite } from '../services/templateService';
 import { useAuth } from './useAuth';
 import { useSubscription } from './useSubscription';
@@ -27,7 +27,7 @@ export const useTemplates = () => {
   };
 
   // Charger les modèles utilisateur
-  const loadUserModels = async () => {
+  const loadUserModels = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -40,10 +40,10 @@ export const useTemplates = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   // Charger les invités utilisateur
-  const loadUserInvites = async () => {
+  const loadUserInvites = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -56,7 +56,7 @@ export const useTemplates = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   // Charger les modèles utilisateur (pour compatibilité)
   const loadUserTemplateReferences = async () => {
@@ -304,14 +304,14 @@ export const useTemplates = () => {
   }, [user]);
 
   // Fonction pour forcer le rechargement des données
-  const refreshUserData = async () => {
+  const refreshUserData = useCallback(async () => {
     if (user) {
       await Promise.all([
         loadUserModels(),
         loadUserInvites()
       ]);
     }
-  };
+  }, [user, loadUserModels, loadUserInvites]);
 
   return {
     defaultTemplates,
