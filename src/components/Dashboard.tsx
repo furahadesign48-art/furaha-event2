@@ -31,11 +31,6 @@ import {
   TrendingUp,
   Mail,
   X,
-  Save
-  MapPin
-} from 'lucide-react';
-  Camera,
-  X
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
 import UserProfile from './UserProfile';
