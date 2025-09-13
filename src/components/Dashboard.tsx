@@ -30,17 +30,22 @@ import {
   AlertCircle,
   TrendingUp,
   Mail,
-  X,
+  X
+} from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
+import { useTemplates } from '../hooks/useTemplates';
 import UserProfile from './UserProfile';
 import TableManagement from './TableManagement';
 import TemplateCustomization from './TemplateCustomization';
 import DashboardSettings from './DashboardSettings';
 import UpgradeModal from './UpgradeModal';
-  Camera,
-  X
 import { UserModel, Invite } from '../services/templateService';
+
+interface UserData {
+  firstName: string;
+  lastName: string;
+}
 
 interface DashboardProps {
   selectedTemplate?: any;
@@ -208,7 +213,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       } else {
         alert('Erreur lors de la création de l\'invité');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la création de l\'invité:', error);
       if (error.message?.includes('limite')) {
         setShowUpgradeModal(true);
