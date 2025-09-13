@@ -954,7 +954,6 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                 </div>
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
                 <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
                   Dashboard Furaha-Event
                 </h1>
