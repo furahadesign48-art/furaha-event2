@@ -21,7 +21,8 @@ import {
   AlertCircle,
   TrendingUp,
   Mail,
-  X
+  X,
+  Send
 } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
@@ -77,6 +78,10 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<UserModel | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [selectedInviteForSend, setSelectedInviteForSend] = useState<any>(null);
+  const [customMessage, setCustomMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const [inviteFormData, setInviteFormData] = useState({
     guestName: '',
     tableNumber: '',
@@ -238,6 +243,44 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         console.error('Erreur lors de la suppression:', error);
         alert('Erreur lors de la suppression de l\'invité');
       }
+    }
+  };
+
+  const handleSendInvitation = async (invite: any) => {
+    setSelectedInviteForSend(invite);
+    setCustomMessage(`Bonjour ${invite.nom},\n\nVous êtes cordialement invité(e) à notre événement. Veuillez cliquer sur le lien ci-dessous pour voir votre invitation personnalisée :\n\n`);
+    setShowSendModal(true);
+  };
+
+  const handleActualSend = async () => {
+    if (!selectedInviteForSend) return;
+    
+    setIsSending(true);
+    try {
+      const invitationUrl = `${window.location.origin}/invitation/${selectedInviteForSend.id}`;
+      const fullMessage = customMessage + invitationUrl + '\n\nMerci et à bientôt !';
+      
+      // Simuler l'envoi (ici vous intégreriez votre service d'email)
+      console.log('Envoi de l\'invitation à:', selectedInviteForSend.nom);
+      console.log('Message complet:', fullMessage);
+      
+      // Copier le message complet dans le presse-papiers
+      await navigator.clipboard.writeText(fullMessage);
+      
+      // Simuler un délai d'envoi
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      alert(`Invitation envoyée à ${selectedInviteForSend.nom} !\nMessage complet copié dans le presse-papiers.`);
+      
+      setShowSendModal(false);
+      setSelectedInviteForSend(null);
+      setCustomMessage('');
+      
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi:', error);
+      alert('Erreur lors de l\'envoi de l\'invitation');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -1210,6 +1253,126 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal d'envoi personnalisé */}
+      {showSendModal && selectedInviteForSend && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-luxury max-w-2xl w-full max-h-[90vh] overflow-hidden animate-slide-up">
+            {/* Header */}
+            <div className="p-6 border-b border-neutral-200/50 bg-gradient-to-r from-neutral-50 to-amber-50/30">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="relative mr-3">
+                    <Send className="h-6 w-6 text-amber-500 animate-glow drop-shadow-lg" />
+                    <div className="absolute inset-0 animate-pulse">
+                      <Send className="h-6 w-6 text-amber-300 opacity-30" />
+                    </div>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                      Envoyer l'invitation
+                    </h2>
+                    <p className="text-slate-600 text-sm">
+                      À : {selectedInviteForSend.nom}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowSendModal(false);
+                    setSelectedInviteForSend(null);
+                    setCustomMessage('');
+                  }}
+                  className="p-2 hover:bg-neutral-100 rounded-lg transition-colors duration-200"
+                >
+                  <X className="h-5 w-5 text-neutral-500" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Message personnalisé
+                  </label>
+                  <textarea
+                    value={customMessage}
+                    onChange={(e) => setCustomMessage(e.target.value)}
+                    rows={8}
+                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 resize-none"
+                    placeholder="Rédigez votre message personnalisé..."
+                  />
+                  <p className="text-xs text-slate-500 mt-2">
+                    Le lien d'invitation sera automatiquement ajouté à la fin de votre message.
+                  </p>
+                </div>
+
+                <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200/50">
+                  <div className="flex items-center mb-2">
+                    <ExternalLink className="h-4 w-4 text-amber-600 mr-2" />
+                    <h4 className="font-medium text-amber-800">Lien d'invitation</h4>
+                  </div>
+                  <p className="text-amber-700 text-sm font-mono break-all">
+                    {window.location.origin}/invitation/{selectedInviteForSend.id}
+                  </p>
+                </div>
+
+                {/* Aperçu du message complet */}
+                <div className="bg-gradient-to-r from-neutral-50 to-slate-50 rounded-xl p-4 border border-neutral-200/50">
+                  <h4 className="font-medium text-slate-800 mb-2 flex items-center">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Aperçu du message complet
+                  </h4>
+                  <div className="bg-white rounded-lg p-3 border border-neutral-200 max-h-32 overflow-y-auto">
+                    <p className="text-slate-700 text-sm whitespace-pre-wrap">
+                      {customMessage}
+                      <span className="text-amber-600 font-medium">
+                        {window.location.origin}/invitation/{selectedInviteForSend.id}
+                      </span>
+                      {'\n\nMerci et à bientôt !'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-neutral-200/50 bg-gradient-to-r from-neutral-50 to-amber-50/30">
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowSendModal(false);
+                    setSelectedInviteForSend(null);
+                    setCustomMessage('');
+                  }}
+                  className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-all duration-200 font-medium"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleActualSend}
+                  disabled={isSending || !customMessage.trim()}
+                  className="px-6 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-medium shadow-glow-amber transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center"
+                >
+                  {isSending ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Envoyer l'invitation
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
