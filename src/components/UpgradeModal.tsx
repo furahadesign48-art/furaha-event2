@@ -1,5 +1,7 @@
 import React from 'react';
 import { X, Crown, Sparkles, Check, Zap } from 'lucide-react';
+import { useAuth } from './AuthContext';
+import { StripeService } from '../services/stripeService';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -9,8 +11,27 @@ interface UpgradeModalProps {
 }
 
 const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: UpgradeModalProps) => {
+  const { user, isAuthenticated } = useAuth();
+
   if (!isOpen) return null;
 
+  const handleUpgrade = async (planName: string) => {
+    if (!isAuthenticated || !user) {
+      alert('Veuillez vous connecter pour souscrire à un abonnement');
+      return;
+    }
+
+    const plan = planName.toLowerCase() as 'standard' | 'premium';
+    
+    try {
+      const { url } = await StripeService.createCheckoutSession(plan, user.id);
+      // Redirection directe vers Stripe Checkout
+      window.location.href = url;
+    } catch (error) {
+      console.error('Erreur lors de la redirection vers Stripe:', error);
+      alert('Erreur lors de l\'initialisation du paiement. Veuillez réessayer.');
+    }
+  };
   const plans = [
     {
       name: 'Standard',
@@ -49,11 +70,6 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
     }
   ];
 
-  const handleUpgrade = (planName: string) => {
-    // Rediriger vers la page de paiement Stripe
-    alert(`Redirection vers le paiement pour le plan ${planName}...`);
-    // Ici vous intégreriez Stripe
-  };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">

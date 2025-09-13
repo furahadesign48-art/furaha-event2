@@ -51,6 +51,8 @@ interface Table {
   assignedGuests: any[];
 }
 
+import { useEffect } from 'react';
+
 const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => {
   const { 
     userModels, 
@@ -76,6 +78,26 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [showSettings, setShowSettings] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<UserModel | null>(null);
+  // Vérifier les paramètres URL pour les retours de Stripe
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const canceled = urlParams.get('canceled');
+    const plan = urlParams.get('plan');
+
+    if (success === 'true') {
+      alert(`Paiement réussi ! Votre abonnement ${plan} est maintenant actif.`);
+      // Nettoyer l'URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Rafraîchir les données d'abonnement
+      refreshUserData();
+    } else if (canceled === 'true') {
+      alert('Paiement annulé. Vous pouvez réessayer à tout moment.');
+      // Nettoyer l'URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [refreshUserData]);
+
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteFormData, setInviteFormData] = useState({
     guestName: '',

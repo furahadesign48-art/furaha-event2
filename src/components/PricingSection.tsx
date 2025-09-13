@@ -1,9 +1,28 @@
 import React from 'react';
 import { Check, Star, Crown, Gem, Zap } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from './AuthContext';
+import { StripeService } from '../services/stripeService';
 
 const PricingSection = () => {
   const { t } = useLanguage();
+  const { user, isAuthenticated } = useAuth();
+
+  const handleUpgrade = async (plan: 'standard' | 'premium') => {
+    if (!isAuthenticated || !user) {
+      alert('Veuillez vous connecter pour souscrire à un abonnement');
+      return;
+    }
+
+    try {
+      const { url } = await StripeService.createCheckoutSession(plan, user.id);
+      // Redirection directe vers Stripe Checkout
+      window.location.href = url;
+    } catch (error) {
+      console.error('Erreur lors de la redirection vers Stripe:', error);
+      alert('Erreur lors de l\'initialisation du paiement. Veuillez réessayer.');
+    }
+  };
 
   const plans = [
     {
@@ -164,7 +183,16 @@ const PricingSection = () => {
                     : index === 2 
                       ? 'bg-gradient-to-r from-slate-900 to-purple-900 text-neutral-50 hover:from-purple-900 hover:to-slate-800 shadow-glow-purple' 
                       : 'bg-gradient-to-r from-neutral-100 to-slate-100 text-slate-900 hover:from-slate-100 hover:to-neutral-200 cursor-default opacity-75'
-                }`}>
+                }`}
+                onClick={() => {
+                  if (index === 1) { // Standard
+                    handleUpgrade('standard');
+                  } else if (index === 2) { // Premium
+                    handleUpgrade('premium');
+                  }
+                }}
+                disabled={index === 0} // Plan gratuit désactivé
+                >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-1000"></div>
                   <span className="relative flex items-center justify-center">
                     {index === 0 && <Zap className="h-4 w-4 mr-2" />}
