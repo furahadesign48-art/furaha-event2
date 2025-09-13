@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import NewHeroSection from './components/NewHeroSection';
@@ -13,6 +13,8 @@ import BirthdayTemplate from './components/BirthdayTemplate';
 import GraduationTemplate from './components/GraduationTemplate';
 import AuthModal from './components/AuthModal';
 import InvitationPreview from './components/InvitationPreview';
+import PaymentSuccess from './components/PaymentSuccess';
+import PaymentCancel from './components/PaymentCancel';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -178,6 +180,9 @@ function App() {
           <Routes>
             <Route path="/" element={<AppContent />} />
             <Route path="/invitation/:inviteId" element={<InvitationPreview />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/cancel" element={<PaymentCancel />} />
+            <Route path="/pricing" element={<Navigate to="/" replace />} />
           </Routes>
         </AuthProvider>
       </LanguageProvider>

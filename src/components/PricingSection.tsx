@@ -1,9 +1,14 @@
 import React from 'react';
 import { Check, Star, Crown, Gem, Zap } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from './AuthContext';
+import PaymentModal from './PaymentModal';
 
 const PricingSection = () => {
   const { t } = useLanguage();
+  const { isAuthenticated } = useAuth();
+  const [showPaymentModal, setShowPaymentModal] = React.useState(false);
+  const [selectedPlan, setSelectedPlan] = React.useState<'standard' | 'premium'>('standard');
 
   const plans = [
     {
@@ -58,6 +63,14 @@ const PricingSection = () => {
     }
   ];
 
+  const handlePlanSelection = (planId: 'standard' | 'premium') => {
+    if (!isAuthenticated) {
+      alert('Vous devez être connecté pour souscrire à un plan payant');
+      return;
+    }
+    setSelectedPlan(planId);
+    setShowPaymentModal(true);
+  };
   return (
     <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-neutral-100 via-amber-50/30 to-purple-50/20 dark:from-slate-800 dark:via-slate-700/30 dark:to-slate-800/80 relative overflow-hidden">
       {/* Background decorative elements */}
@@ -163,10 +176,16 @@ const PricingSection = () => {
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 hover:from-amber-600 hover:to-amber-700 shadow-glow-amber' 
                     : index === 2 
                       ? 'bg-gradient-to-r from-slate-900 to-purple-900 text-neutral-50 hover:from-purple-900 hover:to-slate-800 shadow-glow-purple' 
-                      : 'bg-gradient-to-r from-neutral-100 to-slate-100 text-slate-900 hover:from-slate-100 hover:to-neutral-200 cursor-default opacity-75'
+                      : 'bg-gradient-to-r from-neutral-100 to-slate-100 text-slate-900 hover:from-slate-100 hover:to-neutral-200'
                 }`}>
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-1000"></div>
-                  <span className="relative flex items-center justify-center">
+                  <span 
+                    className="relative flex items-center justify-center cursor-pointer"
+                    onClick={() => {
+                      if (index === 1) handlePlanSelection('standard');
+                      else if (index === 2) handlePlanSelection('premium');
+                    }}
+                  >
                     {index === 0 && <Zap className="h-4 w-4 mr-2" />}
                     {plan.buttonText}
                   </span>
@@ -176,6 +195,13 @@ const PricingSection = () => {
           })}
         </div>
       </div>
+      
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        selectedPlan={selectedPlan}
+      />
     </section>
   );
 };

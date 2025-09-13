@@ -103,13 +103,15 @@ export const useSubscription = () => {
 
     try {
       const subscriptionRef = doc(db, 'subscriptions', user.id);
-      const newLimit = plan === 'standard' ? 999999 : 999999; // Illimité pour les plans payants
+      const newLimit = plan === 'standard' ? 200 : 999999; // Standard: 200, Premium: illimité
       
       await setDoc(subscriptionRef, {
         ...subscription,
         plan,
         inviteLimit: newLimit,
         status: 'active',
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 jours
         updatedAt: new Date().toISOString()
       });
       

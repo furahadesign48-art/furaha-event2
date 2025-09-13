@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Crown, Sparkles, Check, Zap } from 'lucide-react';
+import PaymentModal from './PaymentModal';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -9,6 +10,9 @@ interface UpgradeModalProps {
 }
 
 const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: UpgradeModalProps) => {
+  const [showPaymentModal, setShowPaymentModal] = React.useState(false);
+  const [selectedPlan, setSelectedPlan] = React.useState<'standard' | 'premium'>('standard');
+
   if (!isOpen) return null;
 
   const plans = [
@@ -50,9 +54,9 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
   ];
 
   const handleUpgrade = (planName: string) => {
-    // Rediriger vers la page de paiement Stripe
-    alert(`Redirection vers le paiement pour le plan ${planName}...`);
-    // Ici vous intégreriez Stripe
+    const planId = planName.toLowerCase() as 'standard' | 'premium';
+    setSelectedPlan(planId);
+    setShowPaymentModal(true);
   };
 
   return (
@@ -173,13 +177,16 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
 
                   <button 
                     onClick={() => handleUpgrade(plan.name)}
-                    className={`w-full py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-luxury relative overflow-hidden text-sm ${
+                    className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-luxury relative overflow-hidden text-sm transform hover:scale-105 ${
                       plan.popular 
                         ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 hover:from-amber-600 hover:to-amber-700 shadow-glow-amber' 
                         : 'bg-gradient-to-r from-slate-900 to-slate-800 text-neutral-50 hover:from-slate-800 hover:to-slate-700'
                     }`}
                   >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-1000"></div>
+                    <span className="relative">
                     {plan.buttonText}
+                    </span>
                   </button>
                 </div>
               );
@@ -195,6 +202,13 @@ const UpgradeModal = ({ isOpen, onClose, currentPlan, remainingInvites }: Upgrad
           </div>
         </div>
       </div>
+      
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        selectedPlan={selectedPlan}
+      />
     </div>
   );
 };
