@@ -36,7 +36,7 @@ interface TableManagementProps {
 }
 
 const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDeleteTable, isLoading }: TableManagementProps) => {
-  const { userInvites } = useTemplates();
+  const { userInvites, deleteTable } = useTemplates();
   const [isSaving, setIsSaving] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
