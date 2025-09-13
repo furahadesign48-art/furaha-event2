@@ -136,10 +136,25 @@ const GraduationTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Gradu
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Template Preview */}
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-3xl shadow-luxury border border-emerald-500/20 overflow-hidden">
-              <div className="relative h-full min-h-[800px] bg-gradient-to-br from-slate-900 via-emerald-900/30 to-slate-800 p-8 text-center">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 via-transparent to-emerald-800/20"></div>
-                <div className="relative z-10">
+            <div className="flex justify-center animate-slide-up">
+              <div className="relative">
+                {/* Phone Frame */}
+                <div className="relative w-80 h-[700px] bg-gradient-to-br from-slate-900 to-slate-800 rounded-[3rem] p-6 shadow-luxury border border-slate-700">
+                  <div className="w-full h-full bg-gradient-to-br from-neutral-50 to-emerald-50/30 rounded-[2rem] overflow-hidden relative shadow-inner">
+                    {/* Status Bar */}
+                    <div className="bg-gradient-to-r from-slate-900 to-slate-800 h-6 flex items-center justify-between px-6 text-neutral-50 text-xs">
+                      <span>9:41</span>
+                      <div className="flex space-x-1">
+                        <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse"></div>
+                        <div className="w-1 h-1 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+                        <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                      </div>
+                    </div>
+                    
+                    {/* Invitation Content */}
+                    <div className="h-full bg-gradient-to-br from-slate-900 via-emerald-900/30 to-slate-800 p-6 text-center relative overflow-y-auto">
+                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 via-transparent to-emerald-800/20"></div>
+                      <div className="relative z-10 text-white">
                   <div className="mb-6">
                     <div className="w-24 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent mx-auto mb-4"></div>
                     <div className="flex justify-center space-x-2 mb-4">
@@ -325,6 +340,15 @@ const GraduationTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Gradu
                     </div>
                   </div>
                 </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Decorative Elements */}
+                <div className="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full opacity-20 animate-float blur-lg"></div>
+                <div className="absolute -bottom-8 -left-8 w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full opacity-15 animate-float blur-lg" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute top-1/4 -left-6 w-10 h-10 bg-gradient-to-r from-blue-400 to-emerald-400 rounded-full opacity-25 animate-bounce-slow blur-sm"></div>
+                <div className="absolute bottom-1/4 -right-4 w-8 h-8 bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full opacity-30 animate-float blur-sm" style={{ animationDelay: '2s' }}></div>
               </div>
             </div>
 

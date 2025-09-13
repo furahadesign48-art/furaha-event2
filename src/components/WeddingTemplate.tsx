@@ -134,14 +134,26 @@ const WeddingTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: WeddingT
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Template Preview */}
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-3xl shadow-luxury border border-amber-500/20 overflow-hidden">
-              <div 
-                className="relative h-full min-h-[800px] bg-cover bg-center bg-no-repeat"
-                style={{ backgroundImage: `url(${templateData.backgroundImage})` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
-                
-                <div className="relative z-10 p-8 h-full flex flex-col justify-between text-center text-white">
+            <div className="flex justify-center animate-slide-up">
+              <div className="relative">
+                {/* Phone Frame */}
+                <div className="relative w-80 h-[700px] bg-gradient-to-br from-slate-900 to-slate-800 rounded-[3rem] p-6 shadow-luxury border border-slate-700">
+                  <div className="w-full h-full bg-gradient-to-br from-neutral-50 to-amber-50/30 rounded-[2rem] overflow-hidden relative shadow-inner">
+                    {/* Status Bar */}
+                    <div className="bg-gradient-to-r from-slate-900 to-slate-800 h-6 flex items-center justify-between px-6 text-neutral-50 text-xs">
+                      <span>9:41</span>
+                      <div className="flex space-x-1">
+                        <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse"></div>
+                        <div className="w-1 h-1 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+                        <div className="w-1 h-1 bg-rose-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                      </div>
+                    </div>
+                    
+                    {/* Invitation Content */}
+                    <div className="h-full bg-cover bg-center bg-no-repeat relative overflow-y-auto" style={{ backgroundImage: `url(${templateData.backgroundImage})` }}>
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
+                      
+                      <div className="relative z-10 p-6 h-full flex flex-col justify-between text-center text-white">
                   <div>
                     <div className="mb-6">
                       <div className="flex justify-center space-x-2 mb-4">
@@ -333,6 +345,15 @@ const WeddingTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: WeddingT
                     </div>
                   </div>
                 </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Decorative Elements */}
+                <div className="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-r from-amber-400 to-rose-400 rounded-full opacity-20 animate-float blur-lg"></div>
+                <div className="absolute -bottom-8 -left-8 w-16 h-16 bg-gradient-to-r from-purple-500 to-emerald-500 rounded-full opacity-15 animate-float blur-lg" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute top-1/4 -left-6 w-10 h-10 bg-gradient-to-r from-rose-400 to-amber-400 rounded-full opacity-25 animate-bounce-slow blur-sm"></div>
+                <div className="absolute bottom-1/4 -right-4 w-8 h-8 bg-gradient-to-r from-emerald-400 to-purple-400 rounded-full opacity-30 animate-float blur-sm" style={{ animationDelay: '2s' }}></div>
               </div>
             </div>
 
