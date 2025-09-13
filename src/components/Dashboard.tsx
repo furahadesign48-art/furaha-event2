@@ -51,8 +51,6 @@ interface Table {
   assignedGuests: any[];
 }
 
-import { useEffect } from 'react';
-
 const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => {
   const { 
     userModels, 
