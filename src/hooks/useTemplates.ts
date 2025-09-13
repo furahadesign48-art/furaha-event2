@@ -288,6 +288,76 @@ export const useTemplates = () => {
     }
   };
 
+  // Fonctions pour les tables
+  const createTable = async (tableData: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
+    if (!user) {
+      setError('Vous devez être connecté pour créer une table');
+      return null;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const tableId = await TableService.createTable(user.id, tableData);
+      
+      // Recharger les tables
+      await loadUserTables();
+      
+      return tableId;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la création de la table');
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateTable = async (tableId: string, updates: Partial<Table>): Promise<boolean> => {
+    if (!user) {
+      setError('Vous devez être connecté pour modifier une table');
+      return false;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      await TableService.updateTable(user.id, tableId, updates);
+      
+      // Recharger les tables
+      await loadUserTables();
+      
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour de la table');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteTable = async (tableId: string): Promise<boolean> => {
+    if (!user) {
+      setError('Vous devez être connecté pour supprimer une table');
+      return false;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      await TableService.deleteTable(user.id, tableId);
+      
+      // Recharger les tables
+      await loadUserTables();
+      
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la suppression de la table');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Charger les templates au montage du composant
   useEffect(() => {
     loadDefaultTemplates();
@@ -309,10 +379,11 @@ export const useTemplates = () => {
     if (user) {
       await Promise.all([
         loadUserModels(),
-        loadUserInvites()
+        loadUserInvites(),
+        loadUserTables()
       ]);
     }
-  }, [user, loadUserModels, loadUserInvites]);
+  }, [user, loadUserModels, loadUserInvites, loadUserTables]);
 
   return {
     defaultTemplates,
