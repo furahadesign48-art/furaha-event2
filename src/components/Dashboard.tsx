@@ -73,7 +73,6 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [showSendModal, setShowSendModal] = useState<any>(null);
   const [customMessage, setCustomMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
-
   const { 
     userModels, 
     userInvites, 
@@ -88,7 +87,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     createTable,
     updateTable,
     deleteTable,
-    refreshUserData 
+    userTemplates: userModels
   } = useTemplates();
   const { user } = useAuth();
   const { subscription, canCreateInvite, getRemainingInvites } = useSubscription();
