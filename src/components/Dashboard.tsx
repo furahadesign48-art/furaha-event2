@@ -347,6 +347,10 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     { id: 'analytics', label: 'Statistiques', icon: TrendingUp }
   ];
 
+  const getOccupiedSeats = (tableName: string) => {
+    return userInvites.filter(invite => invite.table === tableName).length;
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -808,29 +812,14 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
               {userInvites.length === 0 && (
                 <div className="p-12 text-center">
-              <select
+                  <Users className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+                  <h4 className="text-lg font-medium text-neutral-500 mb-2">Aucun invité pour le moment</h4>
                   <p className="text-neutral-400 mb-6">Commencez par ajouter vos premiers invités</p>
                   <button
-                className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white appearance-none cursor-pointer"
+                    onClick={handleCreateInvite}
+                    className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
                   >
-              >
-                <option value="">Sélectionnez une table</option>
-                {tables.map((table) => (
-                  <option key={table.id} value={table.name}>
-                    {table.name} ({table.seats - getOccupiedSeats(table.name)} places libres)
-                  </option>
-                ))}
-                <option value="custom">Autre (saisir manuellement)</option>
-              </select>
-              {formData.table === 'custom' && (
-                <input
-                  type="text"
-                  onChange={(e) => setFormData({ ...formData, table: e.target.value })}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 mt-2"
-                  placeholder="Ex: 1, 2, VIP..."
-                  required
-                />
-              )}
+                    Ajouter un invité
                   </button>
                 </div>
               )}
@@ -862,9 +851,8 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center">
-                Table *
-                <ChevronDown className="h-4 w-4 ml-1 text-slate-500" />
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                Statistiques et Analyses
               </h3>
               <p className="text-slate-600 mt-1">Analysez les performances de vos invitations</p>
             </div>
@@ -1143,17 +1131,32 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Numéro de table *
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
+                    Table *
+                    <ChevronDown className="h-4 w-4 ml-1 text-slate-500" />
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={inviteFormData.tableNumber}
                     onChange={(e) => setInviteFormData(prev => ({ ...prev, tableNumber: e.target.value }))}
-                    className="w-full px-4 py-3 border border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                    placeholder="Ex: 1, 2, VIP..."
-                    required
-                  />
+                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white appearance-none cursor-pointer"
+                  >
+                    <option value="">Sélectionnez une table</option>
+                    {tables.map((table) => (
+                      <option key={table.id} value={table.name}>
+                        {table.name} ({table.seats - getOccupiedSeats(table.name)} places libres)
+                      </option>
+                    ))}
+                    <option value="custom">Autre (saisir manuellement)</option>
+                  </select>
+                  {inviteFormData.tableNumber === 'custom' && (
+                    <input
+                      type="text"
+                      onChange={(e) => setInviteFormData(prev => ({ ...prev, tableNumber: e.target.value }))}
+                      className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 mt-2"
+                      placeholder="Ex: 1, 2, VIP..."
+                      required
+                    />
+                  )}
                 </div>
 
                 <div>
