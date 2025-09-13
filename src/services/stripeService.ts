@@ -1,7 +1,7 @@
 import { loadStripe } from '@stripe/stripe-js';
 
 // Clé publique Stripe (à remplacer par votre vraie clé)
-const stripePromise = loadStripe('pk_test_51234567890abcdef...');
+const stripePromise = loadStripe('pk_test_51S5oDh0PYTC9Tov9fdmCskecUbB6SucRqXh2NmvvjutjFPyFuM1Fzspamz57dZc2jAFSpC2lkvAkbHwOBfDveud900ziUGPeMk');
 
 export interface PricingPlan {
   id: string;
