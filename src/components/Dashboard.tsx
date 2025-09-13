@@ -75,7 +75,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [isSending, setIsSending] = useState(false);
   const { 
     userTemplates,
-    userInvites, 
+    userInvites: templatesUserInvites,
     userTables,
     isLoading, 
     error, 
