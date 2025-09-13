@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { TemplateService, UserModelService, UserModel, TemplateData, InviteService, Invite } from '../services/templateService';
+import { TemplateService, UserModelService, UserModel, TemplateData, InviteService, Invite, TableService, Table } from '../services/templateService';
 import { useAuth } from './useAuth';
 import { useSubscription } from './useSubscription';
 
@@ -9,6 +9,7 @@ export const useTemplates = () => {
   const [defaultTemplates, setDefaultTemplates] = useState<TemplateData[]>([]);
   const [userModels, setUserModels] = useState<UserModel[]>([]);
   const [userInvites, setUserInvites] = useState<Invite[]>([]);
+  const [userTables, setUserTables] = useState<Table[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +54,22 @@ export const useTemplates = () => {
       setUserInvites(invites);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement de vos invités');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  // Charger les tables utilisateur
+  const loadUserTables = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      const tables = await TableService.getUserTables(user.id);
+      setUserTables(tables);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors du chargement de vos tables');
     } finally {
       setIsLoading(false);
     }
