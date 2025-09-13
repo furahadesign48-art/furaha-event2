@@ -486,6 +486,100 @@ export class InviteService {
   }
 }
 
+// Service pour les tables
+export class TableService {
+  private static readonly USERS_COLLECTION = 'users';
+
+  // Créer une table
+  static async createTable(userId: string, tableData: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    try {
+      const tableId = `table_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      console.log('Création de la table avec ID:', tableId, 'pour l\'utilisateur:', userId);
+      
+      const table: Table = {
+        id: parseInt(tableId.replace(/\D/g, '')) || Math.floor(Math.random() * 1000000),
+        ...tableData,
+        assignedGuests: [],
+        createdAt: serverTimestamp() as Timestamp,
+        updatedAt: serverTimestamp() as Timestamp
+      };
+
+      // Sauvegarder dans users/{userId}/Tables/{tableId}
+      const tableRef = doc(db, this.USERS_COLLECTION, userId, 'Tables', tableId);
+      await setDoc(tableRef, table);
+      
+      console.log('Table créée avec succès:', tableId);
+      return tableId;
+    } catch (error) {
+      console.error('Erreur lors de la création de la table:', error);
+      throw new Error('Impossible de créer la table');
+    }
+  }
+
+  // Récupérer toutes les tables d'un utilisateur
+  static async getUserTables(userId: string): Promise<Table[]> {
+    try {
+      console.log('Chargement des tables pour l\'utilisateur:', userId);
+      const tablesRef = collection(db, this.USERS_COLLECTION, userId, 'Tables');
+      const querySnapshot = await getDocs(tablesRef);
+      
+      const tables: Table[] = [];
+      querySnapshot.forEach((doc) => {
+        console.log('Table trouvée:', doc.id, doc.data());
+        tables.push({
+          id: doc.data().id || parseInt(doc.id.replace(/\D/g, '')) || Math.floor(Math.random() * 1000000),
+          ...doc.data()
+        } as Table);
+      });
+      
+      console.log('Total tables chargées:', tables.length);
+      return tables.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis() || 0;
+        const bTime = b.createdAt?.toMillis() || 0;
+        return bTime - aTime;
+      });
+    } catch (error) {
+      console.error('Erreur lors de la récupération des tables:', error);
+      throw new Error('Impossible de récupérer les tables');
+    }
+  }
+
+  // Mettre à jour une table
+  static async updateTable(
+    userId: string,
+    tableId: string,
+    updates: Partial<Table>
+  ): Promise<void> {
+    try {
+      const tableRef = doc(db, this.USERS_COLLECTION, userId, 'Tables', tableId);
+      
+      const updateData = {
+        ...updates,
+        updatedAt: serverTimestamp()
+      };
+      
+      await updateDoc(tableRef, updateData);
+      console.log('Table mise à jour:', tableId);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la table:', error);
+      throw new Error('Impossible de mettre à jour la table');
+    }
+  }
+
+  // Supprimer une table
+  static async deleteTable(userId: string, tableId: string): Promise<void> {
+    try {
+      const tableRef = doc(db, this.USERS_COLLECTION, userId, 'Tables', tableId);
+      await deleteDoc(tableRef);
+      
+      console.log('Table supprimée:', tableId);
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la table:', error);
+      throw new Error('Impossible de supprimer la table');
+    }
+  }
+}
+
 // Service pour les abonnements
 export class SubscriptionService {
   private static readonly SUBSCRIPTIONS_COLLECTION = 'subscriptions';

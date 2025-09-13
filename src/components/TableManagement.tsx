@@ -147,16 +147,14 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
       try {
         setIsSaving(true);
         
-        if (onDeleteTable) {
-          await onDeleteTable(id);
-        }
+        const success = await deleteTable(id.toString());
         
-        setTables(tables.filter(table => table.id !== id));
+        if (success) {
+          setTables(tables.filter(table => table.id !== id));
+        }
       } catch (error) {
         console.error('Erreur lors de la suppression:', error);
         alert('Erreur lors de la suppression de la table');
-        // Recharger les tables en cas d'erreur
-        window.location.reload();
       } finally {
         setIsSaving(false);
       }
