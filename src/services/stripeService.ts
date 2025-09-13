@@ -20,7 +20,7 @@ export const pricingPlans: PricingPlan[] = [
     price: 100,
     currency: 'usd',
     interval: 'month',
-    stripePriceId: 'price_standard_monthly', // À remplacer par votre vrai Price ID
+    stripePriceId: 'price_1S6F6Q0PYTC9Tov97eby2PNf', // À remplacer par votre vrai Price ID
     features: [
       '200 invitations maximum',
       '1 mois de validité',
