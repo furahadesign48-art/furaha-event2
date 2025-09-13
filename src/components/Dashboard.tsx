@@ -33,7 +33,8 @@ import {
   Phone,
   MapPin
 } from 'lucide-react';
-import { useTemplates } from '../hooks/useTemplates';
+  Camera,
+  X
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
 import UserProfile from './UserProfile';
