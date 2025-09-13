@@ -74,7 +74,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [customMessage, setCustomMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const { 
-    userModels, 
+    userTemplates,
     userInvites, 
     userTables,
     isLoading, 
