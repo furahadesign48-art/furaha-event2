@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, Users, X, Eye } from 'lucide-react';
 import { useTemplates } from '../hooks/useTemplates';
+import { useAuth } from './AuthContext';
 
 interface Guest {
   id: number;
@@ -36,7 +37,8 @@ interface TableManagementProps {
 }
 
 const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDeleteTable, isLoading }: TableManagementProps) => {
-  const { userInvites, deleteTable } = useTemplates();
+  const { userInvites, createTable, updateTable, deleteTable } = useTemplates();
+  const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -103,20 +105,37 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user) {
+      alert('Vous devez être connecté pour gérer les tables');
+      return;
+    }
+    
     setIsSaving(true);
     
     try {
       if (editingTable) {
         // Modifier une table existante
-        const updatedTable = { ...editingTable, name: formData.name, seats: formData.seats };
+        const updatedTable = { 
+          ...editingTable, 
+          name: formData.name, 
+          seats: formData.seats,
+          assignedGuests: editingTable.assignedGuests || []
+        };
         
-        if (onSaveTable) {
-          await onSaveTable(updatedTable);
+        // Utiliser la fonction updateTable du hook
+        const success = await updateTable(editingTable.id.toString(), {
+          name: formData.name,
+          seats: formData.seats,
+          assignedGuests: editingTable.assignedGuests || []
+        });
+        
+        if (success) {
+          setTables(tables.map(table => 
+            table.id === editingTable.id ? updatedTable : table
+          ));
+        } else {
+          alert('Erreur lors de la modification de la table');
         }
-        
-        setTables(tables.map(table => 
-          table.id === editingTable.id ? updatedTable : table
-        ));
       } else {
         // Ajouter une nouvelle table
         const newTable: Table = {
@@ -126,11 +145,18 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
           assignedGuests: []
         };
         
-        if (onSaveTable) {
-          await onSaveTable(newTable);
-        }
+        // Utiliser la fonction createTable du hook
+        const tableId = await createTable({
+          name: formData.name,
+          seats: formData.seats,
+          assignedGuests: []
+        });
         
-        setTables([...tables, newTable]);
+        if (tableId) {
+          setTables([...tables, newTable]);
+        } else {
+          alert('Erreur lors de la création de la table');
+        }
       }
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
@@ -144,6 +170,11 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette table ?')) {
+      if (!user) {
+        alert('Vous devez être connecté pour supprimer une table');
+        return;
+      }
+      
       try {
         setIsSaving(true);
         
@@ -151,6 +182,8 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
         
         if (success) {
           setTables(tables.filter(table => table.id !== id));
+        } else {
+          alert('Erreur lors de la suppression de la table');
         }
       } catch (error) {
         console.error('Erreur lors de la suppression:', error);

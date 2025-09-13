@@ -493,13 +493,13 @@ export class TableService {
   // Créer une table
   static async createTable(userId: string, tableData: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
-      const tableId = `table_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const tableId = `table_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
       console.log('Création de la table avec ID:', tableId, 'pour l\'utilisateur:', userId);
       
       const table: Table = {
-        id: parseInt(tableId.replace(/\D/g, '')) || Math.floor(Math.random() * 1000000),
+        id: tableData.id || Date.now(),
         ...tableData,
-        assignedGuests: [],
+        assignedGuests: tableData.assignedGuests || [],
         createdAt: serverTimestamp() as Timestamp,
         updatedAt: serverTimestamp() as Timestamp
       };

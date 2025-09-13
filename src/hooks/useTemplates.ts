@@ -64,14 +64,11 @@ export const useTemplates = () => {
     if (!user) return;
     
     try {
-      setIsLoading(true);
       setError(null);
       const tables = await TableService.getUserTables(user.id);
       setUserTables(tables);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement de vos tables');
-    } finally {
-      setIsLoading(false);
     }
   }, [user]);
 
@@ -368,11 +365,13 @@ export const useTemplates = () => {
     if (user) {
       loadUserModels();
       loadUserInvites();
+      loadUserTables();
     } else {
       setUserModels([]);
       setUserInvites([]);
+      setUserTables([]);
     }
-  }, [user]);
+  }, [user, loadUserModels, loadUserInvites, loadUserTables]);
 
   // Fonction pour forcer le rechargement des données
   const refreshUserData = useCallback(async () => {
