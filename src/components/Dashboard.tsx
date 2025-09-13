@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, Calendar, BarChart3, Plus, Edit, Trash2, Eye, Settings, ChevronDown,
+  Users, Calendar, BarChart3, Plus, Edit, Trash2, Eye, Settings, ChevronDown, Crown,
   Sparkles,
   Heart,
   Gift,
