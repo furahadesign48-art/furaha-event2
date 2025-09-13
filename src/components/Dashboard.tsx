@@ -941,9 +941,9 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-xl shadow-luxury border-b border-neutral-200/50 sticky top-0 z-40">
+      <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl shadow-luxury border-b border-neutral-200/50 dark:border-slate-600/50 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
@@ -955,9 +955,10 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
               </div>
               <div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
                   Dashboard Furaha-Event
                 </h1>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   Bienvenue, {userData?.firstName} {userData?.lastName}
                 </p>
               </div>
@@ -966,7 +967,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setShowSettings(true)}
-                className="p-2 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                className="p-2 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-slate-700 rounded-lg transition-all duration-200 transform hover:scale-110"
                 title="Paramètres"
               >
                 <Settings className="h-5 w-5" />
@@ -987,7 +988,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       </header>
 
       {/* Navigation Tabs */}
-      <nav className="bg-white/60 backdrop-blur-xl border-b border-neutral-200/50 sticky top-16 z-30">
+      <nav className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-b border-neutral-200/50 dark:border-slate-600/50 sticky top-16 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8 overflow-x-auto">
             {tabs.map((tab) => {
@@ -998,8 +999,8 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-all duration-300 whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'border-amber-500 text-amber-600'
-                      : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                      ? 'border-amber-500 text-amber-600 dark:text-amber-400'
+                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500'
                   }`}
                 >
                   <IconComponent className="h-4 w-4" />
@@ -1014,10 +1015,10 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <div className="mb-6 bg-rose-50 border border-rose-200 rounded-xl p-4">
+          <div className="mb-6 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/50 rounded-xl p-4">
             <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-rose-600 mr-2" />
-              <p className="text-rose-700">{error}</p>
+              <AlertCircle className="h-5 w-5 text-rose-600 dark:text-rose-400 mr-2" />
+              <p className="text-rose-700 dark:text-rose-300">{error}</p>
             </div>
           </div>
         )}
