@@ -122,20 +122,25 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
           assignedGuests: editingTable.assignedGuests || []
         };
         
-        // Utiliser la fonction updateTable du hook
-        const success = await updateTable(editingTable.id.toString(), {
-          name: formData.name,
-          seats: formData.seats,
-          assignedGuests: editingTable.assignedGuests || []
-        });
-        
-        if (success) {
-          setTables(tables.map(table => 
-            table.id === editingTable.id ? updatedTable : table
-          ));
+        // Utiliser la fonction onSaveTable si elle existe, sinon utiliser le hook
+        if (onSaveTable) {
+          await onSaveTable(updatedTable);
         } else {
-          alert('Erreur lors de la modification de la table');
+          const success = await updateTable(editingTable.id.toString(), {
+            name: formData.name,
+            seats: formData.seats,
+            assignedGuests: editingTable.assignedGuests || []
+          });
+        
+          if (!success) {
+            alert('Erreur lors de la modification de la table');
+            return;
+          }
         }
+        
+        setTables(tables.map(table => 
+          table.id === editingTable.id ? updatedTable : table
+        ));
       } else {
         // Ajouter une nouvelle table
         const newTable: Table = {
@@ -145,18 +150,23 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
           assignedGuests: []
         };
         
-        // Utiliser la fonction createTable du hook
-        const tableId = await createTable({
-          name: formData.name,
-          seats: formData.seats,
-          assignedGuests: []
-        });
-        
-        if (tableId) {
-          setTables([...tables, newTable]);
+        // Utiliser la fonction onSaveTable si elle existe, sinon utiliser le hook
+        if (onSaveTable) {
+          await onSaveTable(newTable);
         } else {
-          alert('Erreur lors de la création de la table');
+          const tableId = await createTable({
+            name: formData.name,
+            seats: formData.seats,
+            assignedGuests: []
+          });
+        
+          if (!tableId) {
+            alert('Erreur lors de la création de la table');
+            return;
+          }
         }
+        
+        setTables([...tables, newTable]);
       }
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
@@ -178,13 +188,19 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
       try {
         setIsSaving(true);
         
-        const success = await deleteTable(id.toString());
-        
-        if (success) {
-          setTables(tables.filter(table => table.id !== id));
+        // Utiliser la fonction onDeleteTable si elle existe, sinon utiliser le hook
+        if (onDeleteTable) {
+          await onDeleteTable(id);
         } else {
-          alert('Erreur lors de la suppression de la table');
+          const success = await deleteTable(id.toString());
+        
+          if (!success) {
+            alert('Erreur lors de la suppression de la table');
+            return;
+          }
         }
+        
+        setTables(tables.filter(table => table.id !== id));
       } catch (error) {
         console.error('Erreur lors de la suppression:', error);
         alert('Erreur lors de la suppression de la table');

@@ -497,7 +497,7 @@ export class TableService {
       console.log('Création de la table avec ID:', tableId, 'pour l\'utilisateur:', userId);
       
       const table: Table = {
-        id: tableData.id || Date.now(),
+        id: parseInt(tableId.replace(/\D/g, '')) || Date.now(),
         ...tableData,
         assignedGuests: tableData.assignedGuests || [],
         createdAt: serverTimestamp() as Timestamp,

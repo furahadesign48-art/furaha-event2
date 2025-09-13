@@ -64,6 +64,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const { 
     userModels, 
     userInvites, 
+    userTables,
     isLoading, 
     error, 
     updateUserModel, 
@@ -71,6 +72,9 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     createInvite, 
     updateInvite, 
     deleteInvite,
+    createTable,
+    updateTable,
+    deleteTable,
     refreshUserData 
   } = useTemplates();
   const { user } = useAuth();
@@ -87,11 +91,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     tableNumber: '',
     guestType: 'simple' as 'simple' | 'couple'
   });
-  const [tables, setTables] = useState<Table[]>([
-    { id: 1, name: 'Table des Mariés', seats: 8, assignedGuests: [] },
-    { id: 2, name: 'Table Famille', seats: 10, assignedGuests: [] },
-    { id: 3, name: 'Table Amis', seats: 8, assignedGuests: [] }
-  ]);
+  const [tables, setTables] = useState<Table[]>([]);
 
   // Charger les données au montage et quand selectedTemplate change
   useEffect(() => {
@@ -100,6 +100,15 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       refreshUserData();
     }
   }, [selectedTemplate, user, refreshUserData]);
+
+  // Charger les données utilisateur au montage
+  useEffect(() => {
+    if (user) {
+      console.log('Utilisateur connecté, chargement des données...');
+      // Les tables sont automatiquement chargées par le hook useTemplates
+      setTables(userTables);
+    }
+  }, [user, userTables]);
 
   // Fonction pour sauvegarder les modifications du template
   const handleSaveTemplate = async (customizedTemplate: any) => {
@@ -820,6 +829,17 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             tables={tables} 
             setTables={setTables}
             guests={userInvites}
+            onSaveTable={async (table) => {
+              if (table.id && tables.find(t => t.id === table.id)) {
+                await updateTable(table.id.toString(), table);
+              } else {
+                await createTable(table);
+              }
+            }}
+            onDeleteTable={async (tableId) => {
+              await deleteTable(tableId.toString());
+            }}
+            isLoading={isLoading}
           />
         );
 
