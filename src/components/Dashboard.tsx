@@ -260,16 +260,22 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     });
   };
 
-  const shareInvite = (inviteId: string, guestName: string) => {
+  const shareInvite = async (inviteId: string, guestName: string) => {
     const link = generateInviteLink(inviteId);
     const message = `Bonjour ${guestName}, voici votre invitation : ${link}`;
     
     if (navigator.share) {
-      navigator.share({
-        title: 'Invitation',
-        text: message,
-        url: link
-      });
+      try {
+        await navigator.share({
+          title: 'Invitation',
+          text: message,
+          url: link
+        });
+      } catch (error) {
+        // Fallback en cas d'erreur (permission refusée, annulation utilisateur, etc.)
+        const mailtoLink = `mailto:?subject=Votre invitation&body=${encodeURIComponent(message)}`;
+        window.open(mailtoLink);
+      }
     } else {
       // Fallback pour les navigateurs qui ne supportent pas l'API Web Share
       const mailtoLink = `mailto:?subject=Votre invitation&body=${encodeURIComponent(message)}`;
