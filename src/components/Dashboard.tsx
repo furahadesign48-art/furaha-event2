@@ -22,7 +22,11 @@ import {
   TrendingUp,
   Mail,
   X,
-  Send
+  Send,
+  MapPin,
+  Phone,
+  MessageSquare,
+  Download
 } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
@@ -53,6 +57,23 @@ interface Table {
 }
 
 const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => {
+  const { userModels, userInvites, userTables, createInvite, updateInvite, deleteInvite, refreshUserData } = useTemplates();
+  const { subscription, getRemainingInvites } = useSubscription();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [showSettings, setShowSettings] = useState(false);
+  const [isCreatingInvite, setIsCreatingInvite] = useState(false);
+  const [editingInvite, setEditingInvite] = useState<any>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [tables, setTables] = useState<any[]>([]);
+  const [newInvite, setNewInvite] = useState({
+    nom: '',
+    table: '',
+    etat: 'simple' as 'simple' | 'couple'
+  });
+  const [showSendModal, setShowSendModal] = useState<any>(null);
+  const [customMessage, setCustomMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+
   const { 
     userModels, 
     userInvites, 
@@ -247,9 +268,51 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   };
 
   const handleSendInvitation = async (invite: any) => {
-    setSelectedInviteForSend(invite);
-    setCustomMessage(`Bonjour ${invite.nom},\n\nVous êtes cordialement invité(e) à notre événement. Veuillez cliquer sur le lien ci-dessous pour voir votre invitation personnalisée :\n\n`);
-    setShowSendModal(true);
+    const invitationUrl = `${window.location.origin}/invitation/${invite.id}`;
+    const defaultMessage = `Bonjour ${invite.nom},\n\nJ'ai le plaisir de vous inviter à mon événement ! Voici votre invitation personnalisée :\n\n`;
+    
+    setShowSendModal(invite);
+    setCustomMessage(defaultMessage);
+  };
+
+  const handleSendCustomMessage = async () => {
+    if (!showSendModal || !customMessage.trim()) return;
+    
+    setIsSending(true);
+    
+    try {
+      const invitationUrl = `${window.location.origin}/invitation/${showSendModal.id}`;
+      const fullMessage = `${customMessage}\n${invitationUrl}\n\nMerci et à bientôt !`;
+      
+      // Utiliser l'API Web Share si disponible
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Invitation à mon événement',
+          text: fullMessage
+        });
+      } else {
+        // Fallback : copier le message complet dans le presse-papiers
+        await navigator.clipboard.writeText(fullMessage);
+        alert('Message d\'invitation copié dans le presse-papiers !');
+      }
+      
+      // Simuler un délai d'envoi
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setShowSendModal(null);
+      setCustomMessage('');
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi:', error);
+      // Fallback en cas d'erreur
+      const invitationUrl = `${window.location.origin}/invitation/${showSendModal.id}`;
+      const fullMessage = `${customMessage}\n${invitationUrl}\n\nMerci et à bientôt !`;
+      await navigator.clipboard.writeText(fullMessage);
+      alert('Message d\'invitation copié dans le presse-papiers !');
+      setShowSendModal(null);
+      setCustomMessage('');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleActualSend = async () => {
@@ -1257,8 +1320,8 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         </div>
       )}
 
-      {/* Modal d'envoi personnalisé */}
-      {showSendModal && selectedInviteForSend && (
+      {/* Send Custom Message Modal */}
+      {showSendModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-luxury max-w-2xl w-full max-h-[90vh] overflow-hidden animate-slide-up">
             {/* Header */}
@@ -1276,14 +1339,13 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                       Envoyer l'invitation
                     </h2>
                     <p className="text-slate-600 text-sm">
-                      À : {selectedInviteForSend.nom}
+                      Personnalisez votre message pour {showSendModal.nom}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => {
-                    setShowSendModal(false);
-                    setSelectedInviteForSend(null);
+                    setShowSendModal(null);
                     setCustomMessage('');
                   }}
                   className="p-2 hover:bg-neutral-100 rounded-lg transition-colors duration-200"
@@ -1293,49 +1355,94 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
               </div>
             </div>
 
-            {/* Content */}
-            <div className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Message personnalisé
-                  </label>
-                  <textarea
-                    value={customMessage}
-                    onChange={(e) => setCustomMessage(e.target.value)}
-                    rows={8}
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 resize-none"
-                    placeholder="Rédigez votre message personnalisé..."
-                  />
-                  <p className="text-xs text-slate-500 mt-2">
-                    Le lien d'invitation sera automatiquement ajouté à la fin de votre message.
-                  </p>
-                </div>
+            <div className="p-6 max-h-[70vh] overflow-y-auto">
+              {/* Message personnalisé */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-700 mb-3">
+                  <MessageSquare className="h-4 w-4 inline mr-2" />
+                  Votre message personnalisé
+                </label>
+                <textarea
+                  value={customMessage}
+                  onChange={(e) => setCustomMessage(e.target.value)}
+                  placeholder="Rédigez votre message d'invitation personnalisé..."
+                  className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 resize-none"
+                  rows={6}
+                />
+                <p className="text-xs text-slate-500 mt-2">
+                  Le lien d'invitation sera automatiquement ajouté à la fin de votre message
+                </p>
+              </div>
 
+              {/* Lien d'invitation */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-700 mb-3">
+                  <ExternalLink className="h-4 w-4 inline mr-2" />
+                  Lien d'invitation (ajouté automatiquement)
+                </label>
                 <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200/50">
-                  <div className="flex items-center mb-2">
-                    <ExternalLink className="h-4 w-4 text-amber-600 mr-2" />
-                    <h4 className="font-medium text-amber-800">Lien d'invitation</h4>
+                  <div className="flex items-center justify-between">
+                    <code className="text-sm text-amber-800 break-all">
+                      {`${window.location.origin}/invitation/${showSendModal.id}`}
+                    </code>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/invitation/${showSendModal.id}`);
+                        alert('Lien copié !');
+                      }}
+                      className="ml-3 p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-200 rounded-lg transition-all duration-200"
+                      title="Copier le lien"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </button>
                   </div>
-                  <p className="text-amber-700 text-sm font-mono break-all">
-                    {window.location.origin}/invitation/{selectedInviteForSend.id}
-                  </p>
                 </div>
+              </div>
 
-                {/* Aperçu du message complet */}
-                <div className="bg-gradient-to-r from-neutral-50 to-slate-50 rounded-xl p-4 border border-neutral-200/50">
-                  <h4 className="font-medium text-slate-800 mb-2 flex items-center">
-                    <Eye className="h-4 w-4 mr-2" />
-                    Aperçu du message complet
-                  </h4>
-                  <div className="bg-white rounded-lg p-3 border border-neutral-200 max-h-32 overflow-y-auto">
-                    <p className="text-slate-700 text-sm whitespace-pre-wrap">
-                      {customMessage}
-                      <span className="text-amber-600 font-medium">
-                        {window.location.origin}/invitation/{selectedInviteForSend.id}
-                      </span>
-                      {'\n\nMerci et à bientôt !'}
-                    </p>
+              {/* Aperçu du message complet */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-700 mb-3">
+                  <Eye className="h-4 w-4 inline mr-2" />
+                  Aperçu du message final
+                </label>
+                <div className="bg-gradient-to-r from-neutral-50 to-slate-50 rounded-xl p-4 border border-neutral-200/50 max-h-40 overflow-y-auto">
+                  <div className="whitespace-pre-wrap text-sm text-slate-700">
+                    {customMessage}
+                    {customMessage && '\n'}
+                    <span className="text-amber-600 font-medium">
+                      {`${window.location.origin}/invitation/${showSendModal.id}`}
+                    </span>
+                    {'\n\nMerci et à bientôt !'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Informations de l'invité */}
+              <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200/50">
+                <div className="flex items-center mb-2">
+                  <User className="h-4 w-4 text-purple-600 mr-2" />
+                  <h4 className="font-medium text-purple-800">Informations de l'invité</h4>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-purple-700 font-medium">Nom :</span>
+                    <span className="text-purple-900 ml-2">{showSendModal.nom}</span>
+                  </div>
+                  <div>
+                    <span className="text-purple-700 font-medium">Table :</span>
+                    <span className="text-purple-900 ml-2">{showSendModal.table || 'Non assigné'}</span>
+                  </div>
+                  <div>
+                    <span className="text-purple-700 font-medium">Type :</span>
+                    <span className="text-purple-900 ml-2">
+                      {showSendModal.etat === 'couple' ? 'Couple' : 'Simple'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-purple-700 font-medium">Statut :</span>
+                    <span className={`ml-2 ${showSendModal.confirmed ? 'text-emerald-700' : 'text-amber-700'}`}>
+                      {showSendModal.confirmed ? 'Confirmé' : 'En attente'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1343,30 +1450,29 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
             {/* Footer */}
             <div className="p-6 border-t border-neutral-200/50 bg-gradient-to-r from-neutral-50 to-amber-50/30">
-              <div className="flex justify-end space-x-3">
+              <div className="flex space-x-3">
                 <button
                   onClick={() => {
-                    setShowSendModal(false);
-                    setSelectedInviteForSend(null);
+                    setShowSendModal(null);
                     setCustomMessage('');
                   }}
-                  className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-all duration-200 font-medium"
+                  className="flex-1 px-4 py-3 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-all duration-200 font-medium"
                 >
                   Annuler
                 </button>
                 <button
-                  onClick={handleActualSend}
-                  disabled={isSending || !customMessage.trim()}
-                  className="px-6 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-medium shadow-glow-amber transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center"
+                  onClick={handleSendCustomMessage}
+                  disabled={!customMessage.trim() || isSending}
+                  className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
                 >
                   {isSending ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
                       Envoi en cours...
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4 mr-2" />
+                      <Send className="h-5 w-5 mr-2" />
                       Envoyer l'invitation
                     </>
                   )}
