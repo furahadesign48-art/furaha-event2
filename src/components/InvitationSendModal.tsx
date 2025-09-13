@@ -27,12 +27,9 @@ interface InvitationSendModalProps {
 const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationSendModalProps) => {
   const [invitationUrl, setInvitationUrl] = useState('');
   const [invitationMessage, setInvitationMessage] = useState('');
-  const [detailedMessage, setDetailedMessage] = useState('');
-  const [selectedMessageType, setSelectedMessageType] = useState<'simple' | 'detailed'>('simple');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
-  const [shareSupported, setShareSupported] = useState(false);
 
   useEffect(() => {
     if (isOpen && invite) {
@@ -40,32 +37,14 @@ const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationS
       const url = InvitationService.generateInvitationUrl(invite.id);
       setInvitationUrl(url);
 
-      // Générer les messages
-      const simpleMsg = InvitationService.generateInvitationMessage(invite, userModel, url);
-      const detailedMsg = InvitationService.generateDetailedInvitationMessage(invite, userModel, url);
-      
-      setInvitationMessage(simpleMsg);
-      setDetailedMessage(detailedMsg);
-
-      // Vérifier si l'API Web Share est supportée
-      setShareSupported(!!navigator.share);
+      // Générer le message (juste le lien)
+      const msg = InvitationService.generateInvitationMessage(invite, userModel, url);
+      setInvitationMessage(msg);
     }
   }, [isOpen, invite, userModel]);
 
-  const getCurrentMessage = () => {
-    return selectedMessageType === 'simple' ? invitationMessage : detailedMessage;
-  };
-
   const handleCopyMessage = async () => {
-    const success = await InvitationService.copyToClipboard(getCurrentMessage());
-    if (success) {
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    }
-  };
-
-  const handleCopyUrl = async () => {
-    const success = await InvitationService.copyToClipboard(invitationUrl);
+    const success = await InvitationService.copyToClipboard(invitationMessage);
     if (success) {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
@@ -74,7 +53,7 @@ const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationS
 
   const handleWhatsAppSend = () => {
     if (phoneNumber.trim()) {
-      InvitationService.openWhatsApp(phoneNumber, getCurrentMessage());
+      InvitationService.openWhatsApp(phoneNumber, invitationMessage);
     } else {
       alert('Veuillez saisir un numéro de téléphone');
     }
@@ -83,7 +62,7 @@ const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationS
   const handleEmailSend = () => {
     if (email.trim()) {
       const subject = `Invitation - ${userModel.title}`;
-      InvitationService.openEmail(email, subject, getCurrentMessage());
+      InvitationService.openEmail(email, subject, invitationMessage);
     } else {
       alert('Veuillez saisir une adresse email');
     }
@@ -91,17 +70,9 @@ const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationS
 
   const handleSMSSend = () => {
     if (phoneNumber.trim()) {
-      InvitationService.openSMS(phoneNumber, getCurrentMessage());
+      InvitationService.openSMS(phoneNumber, invitationMessage);
     } else {
       alert('Veuillez saisir un numéro de téléphone');
-    }
-  };
-
-  const handleWebShare = async () => {
-    const success = await InvitationService.shareViaWebShare(invite, userModel, invitationUrl);
-    if (!success) {
-      // Fallback vers la copie
-      handleCopyMessage();
     }
   };
 
@@ -173,91 +144,13 @@ const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationS
             </div>
           </div>
 
-          {/* Type de message */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-3">Format d'envoi</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setSelectedMessageType('simple')}
-                className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                  selectedMessageType === 'simple'
-                    ? 'border-amber-400 bg-amber-50 text-amber-700'
-                    : 'border-neutral-200 hover:border-amber-300 text-slate-700'
-                }`}
-              >
-                <div className="text-center">
-                  <MessageCircle className="h-6 w-6 mx-auto mb-2" />
-                  <div className="font-medium">Message avec texte</div>
-                  <div className="text-xs opacity-75">Texte + lien d'invitation</div>
-                </div>
-              </button>
-              
-              <button
-                onClick={() => setSelectedMessageType('detailed')}
-                className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                  selectedMessageType === 'detailed'
-                    ? 'border-amber-400 bg-amber-50 text-amber-700'
-                    : 'border-neutral-200 hover:border-amber-300 text-slate-700'
-                }`}
-              >
-                <div className="text-center">
-                  <ExternalLink className="h-6 w-6 mx-auto mb-2" />
-                  <div className="font-medium">Lien seulement</div>
-                  <div className="text-xs opacity-75">Juste le lien d'invitation</div>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Aperçu du message */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-slate-900">
-                {selectedMessageType === 'simple' ? 'Aperçu du message' : 'Lien d\'invitation'}
-              </h3>
-              <button
-                onClick={selectedMessageType === 'simple' ? handleCopyMessage : handleCopyUrl}
-                className="flex items-center px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-all duration-300 text-sm font-medium"
-              >
-                {copySuccess ? (
-                  <>
-                    <Check className="h-4 w-4 mr-1" />
-                    Copié !
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4 mr-1" />
-                    {selectedMessageType === 'simple' ? 'Copier le message' : 'Copier le lien'}
-                  </>
-                )}
-              </button>
-            </div>
-            
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200/50">
-              {selectedMessageType === 'simple' ? (
-                <div className="bg-emerald-600 text-white p-4 rounded-xl max-w-xs">
-                  <div className="whitespace-pre-line text-sm leading-relaxed">
-                    {getCurrentMessage()}
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-blue-600 text-white p-4 rounded-xl">
-                  <div className="flex items-center">
-                    <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <code className="text-sm break-all">{invitationUrl}</code>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Lien d'invitation */}
+          {/* Aperçu du lien d'invitation */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-slate-900">Lien d'invitation</h3>
               <button
-                onClick={handleCopyUrl}
-                className="flex items-center px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-300 text-sm font-medium"
+                onClick={handleCopyMessage}
+                className="flex items-center px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-all duration-300 text-sm font-medium"
               >
                 {copySuccess ? (
                   <>
@@ -273,10 +166,12 @@ const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationS
               </button>
             </div>
             
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200/50">
-              <div className="flex items-center">
-                <ExternalLink className="h-4 w-4 text-blue-600 mr-2 flex-shrink-0" />
-                <code className="text-blue-800 text-sm break-all">{invitationUrl}</code>
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200/50">
+              <div className="bg-emerald-600 text-white p-4 rounded-xl">
+                <div className="flex items-center">
+                  <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <code className="text-sm break-all">{invitationMessage}</code>
+                </div>
               </div>
             </div>
           </div>
@@ -314,40 +209,39 @@ const InvitationSendModal = ({ isOpen, onClose, invite, userModel }: InvitationS
           </div>
 
           {/* Boutons d'envoi */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             <button
               onClick={handleWhatsAppSend}
-              className="flex flex-col items-center p-4 bg-green-100 text-green-700 rounded-xl hover:bg-green-200 transition-all duration-300 font-medium"
+              className="flex flex-col items-center p-6 bg-green-100 text-green-700 rounded-xl hover:bg-green-200 transition-all duration-300 font-medium transform hover:scale-105"
             >
-              <MessageCircle className="h-6 w-6 mb-2" />
-              <span className="text-sm">WhatsApp</span>
-            </button>
-            
-            <button
-              onClick={handleSMSSend}
-              className="flex flex-col items-center p-4 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-all duration-300 font-medium"
-            >
-              <Smartphone className="h-6 w-6 mb-2" />
-              <span className="text-sm">SMS</span>
+              <MessageCircle className="h-8 w-8 mb-3" />
+              <span className="text-base font-semibold">WhatsApp</span>
             </button>
             
             <button
               onClick={handleEmailSend}
-              className="flex flex-col items-center p-4 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-all duration-300 font-medium"
+              className="flex flex-col items-center p-6 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-all duration-300 font-medium transform hover:scale-105"
             >
-              <Mail className="h-6 w-6 mb-2" />
-              <span className="text-sm">Email</span>
+              <Mail className="h-8 w-8 mb-3" />
+              <span className="text-base font-semibold">Email</span>
             </button>
             
-            {shareSupported && (
-              <button
-                onClick={handleWebShare}
-                className="flex flex-col items-center p-4 bg-amber-100 text-amber-700 rounded-xl hover:bg-amber-200 transition-all duration-300 font-medium"
-              >
-                <Share2 className="h-6 w-6 mb-2" />
-                <span className="text-sm">Partager</span>
-              </button>
-            )}
+            <button
+              onClick={handleCopyMessage}
+              className="flex flex-col items-center p-6 bg-amber-100 text-amber-700 rounded-xl hover:bg-amber-200 transition-all duration-300 font-medium transform hover:scale-105"
+            >
+              {copySuccess ? (
+                <>
+                  <Check className="h-8 w-8 mb-3" />
+                  <span className="text-base font-semibold">Copié !</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-8 w-8 mb-3" />
+                  <span className="text-base font-semibold">Copier</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 

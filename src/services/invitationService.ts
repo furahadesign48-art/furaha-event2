@@ -23,16 +23,7 @@ export class InvitationService {
     userModel: UserModel, 
     invitationUrl: string
   ): string {
-    const message = `Bonjour ${invite.nom}! 💎
-
-Vous êtes cordialement invité(e) à notre événement.
-
-Voici votre invitation personnalisée :
-${invitationUrl}
-
-Au plaisir de vous voir ! 💎`;
-
-    return message;
+    return invitationUrl;
   }
 
   // Générer le message d'invitation avec plus de détails
@@ -41,9 +32,7 @@ Au plaisir de vous voir ! 💎`;
     userModel: UserModel, 
     invitationUrl: string
   ): string {
-    const message = invitationUrl;
-
-    return message;
+    return invitationUrl;
   }
 
   // Obtenir le texte du type d'événement
