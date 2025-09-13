@@ -153,9 +153,9 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
                     
                     {/* Invitation Content */}
                     <div className="h-full bg-cover bg-center bg-no-repeat relative overflow-y-auto" style={{ backgroundImage: `url(${templateData.backgroundImage})` }}>
-                      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70"></div>
                       
-                      <div className="relative z-10 p-6 h-full flex flex-col justify-center items-center text-center text-white">
+                      <div className="relative z-10 p-6 text-center text-white space-y-4">
                   <div className="mb-6">
                     <div className="flex justify-center space-x-2 mb-4">
                       <Sparkles className="h-6 w-6 text-purple-400 animate-pulse" />
@@ -185,7 +185,7 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
 
                   {/* Invitation Text */}
                   <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-purple-500/20">
-                    <p className="text-neutral-200 leading-relaxed text-sm">
+                    <p className="text-neutral-200 leading-relaxed text-xs">
                       {templateData.invitationText}
                     </p>
                   </div>
@@ -202,7 +202,7 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
                     
                     <div className="flex items-center justify-center text-purple-200">
                       <MapPin className="h-5 w-5 mr-3 text-purple-400" />
-                      <p className="text-sm">{templateData.eventLocation}</p>
+                      <p className="text-xs text-center">{templateData.eventLocation}</p>
                     </div>
                   </div>
 
@@ -210,7 +210,7 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
                   <div className="bg-gradient-to-r from-purple-900/50 to-purple-800/50 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-purple-500/30">
                     <h3 className="text-purple-200 font-semibold mb-3 flex items-center justify-center">
                       <Users className="h-4 w-4 mr-2" />
-                      Confirmation de présence
+                      Confirmation
                     </h3>
                     <button
                       onClick={handleConfirmation}
@@ -235,12 +235,12 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
                   <div className="bg-gradient-to-r from-purple-900/50 to-purple-800/50 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-purple-500/30">
                     <h3 className="text-purple-200 font-semibold mb-3 flex items-center justify-center">
                       <Cake className="h-4 w-4 mr-2" />
-                      Choix de boisson
+                      Boisson
                     </h3>
                     <select
                       value={selectedDrink}
                       onChange={(e) => setSelectedDrink(e.target.value)}
-                      className="w-full bg-slate-800/80 text-purple-200 border border-purple-500/30 rounded-xl px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                      className="w-full bg-slate-800/80 text-purple-200 border border-purple-500/30 rounded-xl px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 text-xs"
                     >
                       <option value="">Sélectionnez votre boisson</option>
                       {templateData.drinkOptions.map((drink) => (
@@ -258,11 +258,11 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
                     <textarea
                       value={guestMessage}
                       onChange={(e) => setGuestMessage(e.target.value)}
-                      placeholder="Laissez un message d'anniversaire..."
-                      className="w-full bg-slate-800/80 text-purple-200 border border-purple-500/30 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 resize-none"
-                      rows={3}
+                      placeholder="Message d'anniversaire..."
+                      className="w-full bg-slate-800/80 text-purple-200 border border-purple-500/30 rounded-xl px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 resize-none text-xs"
+                      rows={2}
                     />
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-3 grid grid-cols-2 gap-2">
                       <button 
                         onClick={() => {
                           if (guestMessage.trim()) {
@@ -272,15 +272,14 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
                             alert('Veuillez écrire un message avant d\'envoyer.');
                           }
                         }}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold text-sm shadow-lg transform hover:scale-105 relative overflow-hidden group"
+                        className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2 rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold text-xs shadow-lg transform hover:scale-105"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                        <MessageCircle className="h-4 w-4 inline mr-2" />
-                        Envoyer le message
+                        <MessageCircle className="h-3 w-3 inline mr-1" />
+                        Envoyer
                       </button>
-                      <button className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-2 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-300 font-semibold text-sm">
-                        <Camera className="h-4 w-4 inline mr-2" />
-                        Ajouter une photo
+                      <button className="bg-gradient-to-r from-purple-600 to-purple-700 text-white py-2 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-300 font-semibold text-xs">
+                        <Camera className="h-3 w-3 inline mr-1" />
+                        Photo
                       </button>
                     </div>
                   </div>
@@ -289,15 +288,15 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
                   <div className="bg-gradient-to-r from-purple-900/50 to-purple-800/50 backdrop-blur-sm rounded-2xl p-4 border border-purple-500/30">
                     <h3 className="text-purple-200 font-semibold mb-3 flex items-center justify-center">
                       <QrCode className="h-4 w-4 mr-2" />
-                      QR Code Invité
+                      QR Code
                     </h3>
                     <div className="text-center">
                       <div 
                         className="bg-white rounded-xl p-4 inline-block cursor-pointer hover:scale-105 transition-transform duration-300"
                         onClick={() => setShowQRInfo(!showQRInfo)}
                       >
-                        <div className="w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg flex items-center justify-center">
-                          <QrCode className="h-12 w-12 text-purple-400" />
+                        <div className="w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg flex items-center justify-center">
+                          <QrCode className="h-10 w-10 text-purple-400" />
                         </div>
                       </div>
                       
@@ -327,7 +326,7 @@ const BirthdayTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: Birthda
                             </div>
                             <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
                               <div className="flex items-center">
-                                <Wine className="h-3 w-3 text-slate-600 mr-2" />
+                                <Cake className="h-3 w-3 text-slate-600 mr-2" />
                                 <span className="font-medium text-slate-700">Boisson:</span>
                               </div>
                               <span className="font-bold text-slate-900">{selectedDrink || 'Non sélectionnée'}</span>
