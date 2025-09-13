@@ -40,7 +40,8 @@ import TableManagement from './TableManagement';
 import TemplateCustomization from './TemplateCustomization';
 import DashboardSettings from './DashboardSettings';
 import UpgradeModal from './UpgradeModal';
-import { UserData } from '../hooks/useAuth';
+  Camera,
+  X
 import { UserModel, Invite } from '../services/templateService';
 
 interface DashboardProps {
