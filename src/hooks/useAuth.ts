@@ -29,11 +29,6 @@ export const useAuth = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Configurer la persistance pour maintenir la session
-    setPersistence(auth, browserLocalPersistence).catch((error) => {
-      console.error('Erreur lors de la configuration de la persistance:', error);
-    });
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setIsLoading(true);
       setError(null);
