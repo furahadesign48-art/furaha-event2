@@ -39,8 +39,6 @@ const checkEmailExists = async (email: string) => {
 };
 
 
-  
-
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
