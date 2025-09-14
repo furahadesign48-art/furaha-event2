@@ -177,9 +177,6 @@ const UserProfile = ({ userData, onLogout }: UserProfileProps) => {
       
 
         
-            </div>
-          </div>
-        </div>
       
 
       {/* Footer */}
