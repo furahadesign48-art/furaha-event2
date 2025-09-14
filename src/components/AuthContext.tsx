@@ -33,28 +33,6 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const firebaseAuth = useFirebaseAuth();
 
-  // Écouter les changements d'état d'authentification pour maintenir la session
-React.useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    if (user) {
-      console.log('Session utilisateur maintenue:', user.email);
-
-      // 🔹 Met à jour le state global avec les infos utilisateur
-      firebaseAuth.setUser({
-        uid: user.uid,
-        email: user.email,
-        firstName: user.displayName?.split(' ')[0] || '',
-        lastName: user.displayName?.split(' ')[1] || '',
-      });
-    } else {
-      console.log('Aucune session utilisateur active');
-      firebaseAuth.setUser(null); // Déconnecte l'utilisateur
-    }
-  });
-
-  return () => unsubscribe();
-}, [firebaseAuth]);
-
   return (
     <AuthContext.Provider value={firebaseAuth}>
       {children}
