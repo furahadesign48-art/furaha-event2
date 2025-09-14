@@ -897,15 +897,21 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Numéro de table
+                    Table
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={newGuest.table}
                     onChange={(e) => setNewGuest({ ...newGuest, table: e.target.value })}
                     className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                    placeholder="1"
-                  />
+                  >
+                    <option value="">Sélectionner une table</option>
+                    <option value="Non assigné">Non assigné</option>
+                    {tables.map((table) => (
+                      <option key={table.id} value={table.name}>
+                        {table.name} ({table.seats} places)
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 
                 <div>
