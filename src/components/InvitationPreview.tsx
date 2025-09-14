@@ -36,9 +36,9 @@ const InvitationPreview = () => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
 
   // Déterminer le style bohème dès le début du composant
-  const isBohoStyle = inviteData?.originalTemplateId?.includes('boheme') || 
-                     inviteData?.name?.toLowerCase().includes('bohème') || 
-                     inviteData?.name?.toLowerCase().includes('nature') ||
+  const isBohoStyle = invite?.originalTemplateId?.includes('boheme') || 
+                     invite?.name?.toLowerCase().includes('bohème') || 
+                     invite?.name?.toLowerCase().includes('nature') ||
                      false;
 
   useEffect(() => {
@@ -243,10 +243,15 @@ const InvitationPreview = () => {
       secondary: '#059669',
       accent: '#14b8a6',
       light: '#6ee7b7',
+      teal: '#14b8a6'
+    };
+  };
+
+  const getFinalColors = () => {
     if (isBohoStyle) {
       return getBohemeColors();
     }
-    return userModel?.colors || userModel?.customizations?.colors || getColorScheme(userModel.category);
+    return userModel?.colors || userModel?.customizations?.colors || getColorScheme(userModel?.category || 'wedding');
   };
 
   if (isLoading) {
@@ -306,17 +311,17 @@ const InvitationPreview = () => {
   const colors = getFinalColors();
   
   // Déterminer le style du template (classique ou bohème)
-  const isBohoStyle = userModel.name?.includes('Bohème') || userModel.name?.includes('Nature');
+  const isBohoStyleFinal = userModel.name?.includes('Bohème') || userModel.name?.includes('Nature');
 
   return (
 <div className={`min-h-screen relative overflow-hidden ${
-  isBohoStyle 
+  isBohoStyleFinal 
     ? 'bg-gradient-to-br from-slate-900 via-emerald-900/30 to-slate-800'
     : 'bg-gradient-to-br from-slate-900 via-amber-900/20 to-slate-800'
 }`}>
   {/* Background decorative elements - différents selon le style */}
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {isBohoStyle ? (
+    {isBohoStyleFinal ? (
       // Éléments décoratifs bohèmes
       <>
         <div className="absolute top-10 right-10 w-60 h-60 bg-gradient-to-r from-emerald-300/8 to-teal-300/8 rounded-full blur-3xl animate-float"></div>
@@ -367,7 +372,7 @@ const InvitationPreview = () => {
           <div className="text-center text-white space-y-6 sm:space-y-8">
             {/* Decorative Header - différent selon le style */}
             <div>
-              {isBohoStyle ? (
+              {isBohoStyleFinal ? (
                 // Header bohème avec éléments naturels et animations spécifiques
                 <div className="flex justify-center items-center mb-8">
                   <div className="relative">
@@ -435,7 +440,7 @@ const InvitationPreview = () => {
             </div>
 
             {/* Title - style différent selon le template */}
-            {isBohoStyle ? (
+            {isBohoStyleFinal ? (
               <div className="mb-8">
                 <div 
                   className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-lg mx-auto shadow-2xl relative overflow-hidden" 
@@ -481,7 +486,7 @@ const InvitationPreview = () => {
             )}
 
             {/* Guest Info - style différent selon le template */}
-            {isBohoStyle ? (
+            {isBohoStyleFinal ? (
               <div 
                 className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto shadow-xl relative overflow-hidden" 
                 style={{ 
@@ -529,7 +534,7 @@ const InvitationPreview = () => {
             )}
 
             {/* Invitation Text - style différent selon le template */}
-            {isBohoStyle ? (
+            {isBohoStyleFinal ? (
               <div 
                 className="bg-black/20 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-2xl mx-auto shadow-xl relative overflow-hidden" 
                 style={{ 
@@ -569,7 +574,7 @@ const InvitationPreview = () => {
 
             {/* Event Details - style différent selon le template */}
             <div className="space-y-6 max-w-lg mx-auto">
-              {isBohoStyle ? (
+              {isBohoStyleFinal ? (
                 // Style bohème avec cartes séparées et animations naturelles
                 <>
                   <div 
@@ -646,16 +651,16 @@ const InvitationPreview = () => {
 
             {/* RSVP Section - style différent selon le template */}
             <div 
-              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto relative overflow-hidden ${isBohoStyle ? 'shadow-2xl' : ''}`} 
+              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto relative overflow-hidden ${isBohoStyleFinal ? 'shadow-2xl' : ''}`} 
               style={{ 
-                background: isBohoStyle 
+                background: isBohoStyleFinal 
                   ? `linear-gradient(135deg, ${colors.primary}60, ${colors.secondary}50, ${colors.teal}60)`
                   : `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                borderColor: `${colors.primary}${isBohoStyle ? '50' : '30'}`,
-                boxShadow: isBohoStyle ? `0 25px 50px ${colors.primary}25` : undefined
+                borderColor: `${colors.primary}${isBohoStyleFinal ? '50' : '30'}`,
+                boxShadow: isBohoStyleFinal ? `0 25px 50px ${colors.primary}25` : undefined
               }}
             >
-              {isBohoStyle && (
+              {isBohoStyleFinal && (
                 <>
                   {/* Effet de brillance naturelle */}
                   <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/8 to-transparent animate-pulse"></div>
@@ -670,42 +675,42 @@ const InvitationPreview = () => {
               )}
               
               <h3 
-                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl relative z-10 ${isBohoStyle ? 'tracking-wide font-bold drop-shadow-lg' : ''}`} 
-                style={{ color: isBohoStyle ? colors.light : `${colors.primary}cc` }}
+                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl relative z-10 ${isBohoStyleFinal ? 'tracking-wide font-bold drop-shadow-lg' : ''}`} 
+                style={{ color: isBohoStyleFinal ? colors.light : `${colors.primary}cc` }}
               >
                 <Users className="h-5 w-5 sm:h-6 sm:w-6 mr-3 animate-glow drop-shadow-lg" />
-                {isBohoStyle ? 'Confirmation Naturelle' : 'Confirmation de présence'}
+                {isBohoStyleFinal ? 'Confirmation Naturelle' : 'Confirmation de présence'}
               </h3>
               <button
                 onClick={handleConfirmation}
                 className={`w-full py-4 sm:py-5 font-semibold transition-all duration-300 transform hover:scale-105 text-lg sm:text-xl relative overflow-hidden group ${
-                  isBohoStyle ? 'rounded-2xl tracking-wide font-bold shadow-2xl' : 'rounded-xl'
+                  isBohoStyleFinal ? 'rounded-2xl tracking-wide font-bold shadow-2xl' : 'rounded-xl'
                 }`}
                 style={{
                   background: isConfirmed 
-                    ? isBohoStyle 
+                    ? isBohoStyleFinal 
                       ? `linear-gradient(135deg, ${colors.teal}, ${colors.primary}, ${colors.secondary})`
                       : 'linear-gradient(to right, #10b981, #059669)'
-                    : isBohoStyle
+                    : isBohoStyleFinal
                       ? `linear-gradient(135deg, ${colors.primary}, ${colors.teal}, ${colors.secondary})`
                       : `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
                   color: isConfirmed ? 'white' : '#1e293b',
-                  boxShadow: isBohoStyle ? `0 20px 40px ${colors.primary}30` : undefined
+                  boxShadow: isBohoStyleFinal ? `0 20px 40px ${colors.primary}30` : undefined
                 }}
               >
-                {isBohoStyle && (
+                {isBohoStyleFinal && (
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 group-hover:translate-x-full transition-transform duration-1000"></div>
                 )}
                 
                 {isConfirmed ? (
                   <span className="flex items-center justify-center relative z-10">
                     <Check className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
-                    {isBohoStyle ? 'Je serai présent(e)' : 'Présence confirmée'}
+                    {isBohoStyleFinal ? 'Je serai présent(e)' : 'Présence confirmée'}
                   </span>
                 ) : (
                   <span className="flex items-center justify-center relative z-10">
-                    {isBohoStyle && <Heart className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />}
-                    {isBohoStyle ? 'Confirmer ma Présence' : 'Confirmer ma présence'}
+                    {isBohoStyleFinal && <Heart className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />}
+                    {isBohoStyleFinal ? 'Confirmer ma Présence' : 'Confirmer ma présence'}
                   </span>
                 )}
               </button>
@@ -713,16 +718,16 @@ const InvitationPreview = () => {
 
             {/* Drink Selection - style différent selon le template */}
             <div 
-              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto relative overflow-hidden ${isBohoStyle ? 'shadow-2xl' : ''}`} 
+              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto relative overflow-hidden ${isBohoStyleFinal ? 'shadow-2xl' : ''}`} 
               style={{ 
-                background: isBohoStyle 
+                background: isBohoStyleFinal 
                   ? `linear-gradient(135deg, ${colors.teal}60, ${colors.primary}50, ${colors.secondary}60)`
                   : `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                borderColor: `${colors.primary}${isBohoStyle ? '50' : '30'}`,
-                boxShadow: isBohoStyle ? `0 25px 50px ${colors.teal}25` : undefined
+                borderColor: `${colors.primary}${isBohoStyleFinal ? '50' : '30'}`,
+                boxShadow: isBohoStyleFinal ? `0 25px 50px ${colors.teal}25` : undefined
               }}
             >
-              {isBohoStyle && (
+              {isBohoStyleFinal && (
                 <>
                   {/* Effet de brillance naturelle */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/8 to-transparent animate-pulse"></div>
@@ -737,25 +742,25 @@ const InvitationPreview = () => {
               )}
               
               <h3 
-                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl relative z-10 ${isBohoStyle ? 'tracking-wide font-bold drop-shadow-lg' : ''}`} 
-                style={{ color: isBohoStyle ? colors.light : `${colors.primary}cc` }}
+                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl relative z-10 ${isBohoStyleFinal ? 'tracking-wide font-bold drop-shadow-lg' : ''}`} 
+                style={{ color: isBohoStyleFinal ? colors.light : `${colors.primary}cc` }}
               >
                 <Wine className="h-5 w-5 sm:h-6 sm:w-6 mr-3 animate-glow drop-shadow-lg" />
-                {isBohoStyle ? 'Sélection Bio' : 'Choix de boisson'}
+                {isBohoStyleFinal ? 'Sélection Bio' : 'Choix de boisson'}
               </h3>
               <select
                 value={selectedDrink}
                 onChange={(e) => handleDrinkSelection(e.target.value)}
                 className={`w-full bg-slate-800/90 text-white border px-4 py-4 focus:ring-2 transition-all duration-200 text-base sm:text-lg font-medium relative z-10 ${
-                  isBohoStyle ? 'rounded-2xl shadow-xl' : 'rounded-xl'
+                  isBohoStyleFinal ? 'rounded-2xl shadow-xl' : 'rounded-xl'
                 }`}
                 style={{ 
-                  borderColor: isBohoStyle ? `${colors.primary}50` : `${colors.primary}30`,
+                  borderColor: isBohoStyleFinal ? `${colors.primary}50` : `${colors.primary}30`,
                   focusRingColor: colors.primary,
-                  boxShadow: isBohoStyle ? `0 10px 20px ${colors.primary}20` : undefined
+                  boxShadow: isBohoStyleFinal ? `0 10px 20px ${colors.primary}20` : undefined
                 }}
               >
-                <option value="">{isBohoStyle ? 'Choisissez votre nectar' : 'Sélectionnez votre boisson'}</option>
+                <option value="">{isBohoStyleFinal ? 'Choisissez votre nectar' : 'Sélectionnez votre boisson'}</option>
                 {userModel.drinkOptions.map((drink) => (
                   <option key={drink} value={drink}>{drink}</option>
                 ))}
@@ -764,16 +769,16 @@ const InvitationPreview = () => {
 
             {/* Guest Book - style différent selon le template */}
             <div 
-              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-lg mx-auto relative overflow-hidden ${isBohoStyle ? 'shadow-2xl' : ''}`} 
+              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-lg mx-auto relative overflow-hidden ${isBohoStyleFinal ? 'shadow-2xl' : ''}`} 
               style={{ 
-                background: isBohoStyle 
+                background: isBohoStyleFinal 
                   ? `linear-gradient(135deg, ${colors.primary}60, ${colors.teal}50, ${colors.secondary}60)`
                   : `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                borderColor: `${colors.primary}${isBohoStyle ? '50' : '30'}`,
-                boxShadow: isBohoStyle ? `0 25px 50px ${colors.primary}25` : undefined
+                borderColor: `${colors.primary}${isBohoStyleFinal ? '50' : '30'}`,
+                boxShadow: isBohoStyleFinal ? `0 25px 50px ${colors.primary}25` : undefined
               }}
             >
-              {isBohoStyle && (
+              {isBohoStyleFinal && (
                 <>
                   {/* Effet de brillance naturelle */}
                   <div className="absolute inset-0 bg-gradient-to-bl from-transparent via-white/8 to-transparent animate-pulse"></div>
@@ -791,44 +796,44 @@ const InvitationPreview = () => {
               )}
               
               <h3 
-                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl relative z-10 ${isBohoStyle ? 'tracking-wide font-bold drop-shadow-lg' : ''}`} 
-                style={{ color: isBohoStyle ? colors.light : `${colors.primary}cc` }}
+                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl relative z-10 ${isBohoStyleFinal ? 'tracking-wide font-bold drop-shadow-lg' : ''}`} 
+                style={{ color: isBohoStyleFinal ? colors.light : `${colors.primary}cc` }}
               >
                 <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 mr-3 animate-glow drop-shadow-lg" />
-                {isBohoStyle ? 'Livre de Nature' : 'Livre d\'or'}
+                {isBohoStyleFinal ? 'Livre de Nature' : 'Livre d\'or'}
               </h3>
               <textarea
                 value={guestMessage}
                 onChange={(e) => setGuestMessage(e.target.value)}
-                placeholder={isBohoStyle ? 'Partagez vos vœux authentiques...' : 'Laissez un message...'}
+                placeholder={isBohoStyleFinal ? 'Partagez vos vœux authentiques...' : 'Laissez un message...'}
                 className={`w-full bg-slate-800/90 text-white border px-4 py-4 focus:ring-2 transition-all duration-200 resize-none text-base sm:text-lg font-medium relative z-10 ${
-                  isBohoStyle ? 'rounded-2xl shadow-xl' : 'rounded-xl'
+                  isBohoStyleFinal ? 'rounded-2xl shadow-xl' : 'rounded-xl'
                 }`}
                 rows={4}
                 style={{ 
-                  borderColor: isBohoStyle ? `${colors.primary}50` : `${colors.primary}30`,
+                  borderColor: isBohoStyleFinal ? `${colors.primary}50` : `${colors.primary}30`,
                   focusRingColor: colors.primary,
-                  boxShadow: isBohoStyle ? `0 10px 20px ${colors.primary}20` : undefined
+                  boxShadow: isBohoStyleFinal ? `0 10px 20px ${colors.primary}20` : undefined
                 }}
               />
               <div className="mt-6 space-y-4">
                 <button 
                   onClick={handleSendMessage}
                   className={`w-full text-white py-4 transition-all duration-300 font-semibold text-base sm:text-lg shadow-lg transform hover:scale-105 relative overflow-hidden group ${
-                    isBohoStyle ? 'rounded-2xl font-bold shadow-2xl' : 'rounded-xl'
+                    isBohoStyleFinal ? 'rounded-2xl font-bold shadow-2xl' : 'rounded-xl'
                   }`}
                   style={{
-                    background: isBohoStyle 
+                    background: isBohoStyleFinal 
                       ? `linear-gradient(135deg, ${colors.teal}, ${colors.primary}, ${colors.secondary})`
                       : 'linear-gradient(to right, #10b981, #059669)',
-                    boxShadow: isBohoStyle ? `0 20px 40px ${colors.teal}30` : undefined
+                    boxShadow: isBohoStyleFinal ? `0 20px 40px ${colors.teal}30` : undefined
                   }}
                 >
-                  {isBohoStyle && (
+                  {isBohoStyleFinal && (
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 group-hover:translate-x-full transition-transform duration-1000"></div>
                   )}
                   
-                  {isBohoStyle ? (
+                  {isBohoStyleFinal ? (
                     <span className="flex items-center justify-center relative z-10">
                       <Heart className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
                       Partager mes Vœux
@@ -848,14 +853,14 @@ const InvitationPreview = () => {
               <div 
                 className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-sm mx-auto shadow-2xl relative overflow-hidden" 
                 style={{ 
-                  background: isBohoStyle 
+                  background: isBohoStyleFinal 
                     ? `linear-gradient(135deg, ${colors.primary}60, ${colors.teal}50, ${colors.secondary}60)`
                     : `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                  borderColor: `${colors.primary}${isBohoStyle ? '50' : '30'}`,
-                  boxShadow: isBohoStyle ? `0 30px 60px ${colors.primary}30` : undefined
+                  borderColor: `${colors.primary}${isBohoStyleFinal ? '50' : '30'}`,
+                  boxShadow: isBohoStyleFinal ? `0 30px 60px ${colors.primary}30` : undefined
                 }}
               >
-                {isBohoStyle && (
+                {isBohoStyleFinal && (
                   <>
                     {/* Effet de brillance organique */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-pulse"></div>
@@ -873,8 +878,8 @@ const InvitationPreview = () => {
                 )}
                 
                 <h3 
-                  className={`font-bold mb-6 flex items-center justify-center text-lg sm:text-xl tracking-wide relative z-10 ${isBohoStyle ? 'font-bold drop-shadow-lg' : ''}`} 
-                  style={{ color: isBohoStyle ? colors.light : `${colors.primary}cc` }}
+                  className={`font-bold mb-6 flex items-center justify-center text-lg sm:text-xl tracking-wide relative z-10 ${isBohoStyleFinal ? 'font-bold drop-shadow-lg' : ''}`} 
+                  style={{ color: isBohoStyleFinal ? colors.light : `${colors.primary}cc` }}
                 >
                   <div className="relative mr-3">
                     <QrCode className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-lg animate-glow" />
@@ -882,20 +887,20 @@ const InvitationPreview = () => {
                       <QrCode className="h-6 w-6 sm:h-7 sm:w-7" />
                     </div>
                   </div>
-                  {isBohoStyle ? 'Code Naturel' : 'Code d\'Invitation'}
+                  {isBohoStyleFinal ? 'Code Naturel' : 'Code d\'Invitation'}
                 </h3>
                 
                 <div className={`bg-white p-6 mb-6 shadow-inner border-4 backdrop-blur-sm relative overflow-hidden ${
-                  isBohoStyle ? 'rounded-3xl border-white/30' : 'rounded-2xl border-white/20'
+                  isBohoStyleFinal ? 'rounded-3xl border-white/30' : 'rounded-2xl border-white/20'
                 }`}>
-                  {isBohoStyle && (
+                  {isBohoStyleFinal && (
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 via-transparent to-teal-50/50 animate-pulse"></div>
                   )}
                   <img 
                     src={qrCodeDataUrl} 
                     alt="QR Code" 
                     className={`w-full max-w-[180px] sm:max-w-[200px] mx-auto drop-shadow-lg relative z-10 ${
-                      isBohoStyle ? 'filter drop-shadow-2xl' : ''
+                      isBohoStyleFinal ? 'filter drop-shadow-2xl' : ''
                     }`}
                   />
                 </div>
@@ -903,17 +908,17 @@ const InvitationPreview = () => {
                 <button
                   onClick={() => setShowQRInfo(!showQRInfo)}
                   className={`w-full py-4 sm:py-5 text-base sm:text-lg font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl relative overflow-hidden group ${
-                    isBohoStyle ? 'rounded-3xl shadow-2xl' : 'rounded-2xl'
+                    isBohoStyleFinal ? 'rounded-3xl shadow-2xl' : 'rounded-2xl'
                   }`}
                   style={{ 
-                    background: isBohoStyle 
+                    background: isBohoStyleFinal 
                       ? `linear-gradient(135deg, ${colors.primary}, ${colors.teal}, ${colors.secondary})`
                       : `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
                     color: '#1e293b',
-                    boxShadow: isBohoStyle ? `0 15px 30px ${colors.primary}40` : `0 10px 25px ${colors.primary}30`
+                    boxShadow: isBohoStyleFinal ? `0 15px 30px ${colors.primary}40` : `0 10px 25px ${colors.primary}30`
                   }}
                 >
-                  {isBohoStyle && (
+                  {isBohoStyleFinal && (
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 group-hover:translate-x-full transition-transform duration-1000"></div>
                   )}
                   
@@ -925,15 +930,15 @@ const InvitationPreview = () => {
                         <Eye className="h-5 w-5 sm:h-6 sm:w-6" />
                       )}
                     </div>
-                    {showQRInfo ? 'Masquer les détails' : (isBohoStyle ? 'Découvrir les détails' : 'Voir les détails')}
+                    {showQRInfo ? 'Masquer les détails' : (isBohoStyleFinal ? 'Découvrir les détails' : 'Voir les détails')}
                   </div>
                 </button>
                 
                 {showQRInfo && (
                   <div className={`mt-6 bg-white/95 backdrop-blur-sm p-4 sm:p-6 animate-slide-up shadow-xl border border-white/30 ${
-                    isBohoStyle ? 'rounded-3xl relative overflow-hidden' : 'rounded-2xl'
+                    isBohoStyleFinal ? 'rounded-3xl relative overflow-hidden' : 'rounded-2xl'
                   }`}>
-                    {isBohoStyle && (
+                    {isBohoStyleFinal && (
                       <>
                         {/* Effet de brillance dans la modal QR */}
                         <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/30 via-transparent to-teal-50/30 animate-pulse"></div>
@@ -948,12 +953,12 @@ const InvitationPreview = () => {
                     )}
                     
                     <div className="text-center mb-4">
-                      <h4 className={`font-bold text-slate-900 text-base sm:text-lg mb-2 relative z-10 ${isBohoStyle ? 'tracking-wide' : ''}`}>
-                        {isBohoStyle ? 'Informations Naturelles' : 'Informations QR Code'}
+                      <h4 className={`font-bold text-slate-900 text-base sm:text-lg mb-2 relative z-10 ${isBohoStyleFinal ? 'tracking-wide' : ''}`}>
+                        {isBohoStyleFinal ? 'Informations Naturelles' : 'Informations QR Code'}
                       </h4>
                       <div 
                         className="w-20 h-px mx-auto relative z-10" 
-                        style={{ background: isBohoStyle 
+                        style={{ background: isBohoStyleFinal 
                           ? `linear-gradient(to right, transparent, ${colors.primary}, ${colors.teal}, transparent)`
                           : `linear-gradient(to right, transparent, ${colors.primary}, transparent)` 
                         }}
@@ -962,28 +967,28 @@ const InvitationPreview = () => {
                     
                     <div className="space-y-3 relative z-10">
                       <div className={`flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200/50 shadow-sm ${
-                        isBohoStyle ? 'rounded-2xl relative overflow-hidden' : 'rounded-xl'
+                        isBohoStyleFinal ? 'rounded-2xl relative overflow-hidden' : 'rounded-xl'
                       }`}>
-                        {isBohoStyle && (
+                        {isBohoStyleFinal && (
                           <div className="absolute inset-0 bg-gradient-to-r from-emerald-50/20 via-transparent to-teal-50/20"></div>
                         )}
                         <div className="flex items-center">
-                          <User className={`h-4 w-4 sm:h-5 sm:w-5 mr-3 relative z-10 ${isBohoStyle ? 'animate-glow' : ''}`} style={{ color: isBohoStyle ? colors.primary : '#475569' }} />
+                          <User className={`h-4 w-4 sm:h-5 sm:w-5 mr-3 relative z-10 ${isBohoStyleFinal ? 'animate-glow' : ''}`} style={{ color: isBohoStyleFinal ? colors.primary : '#475569' }} />
                           <span className="font-semibold text-slate-700 text-sm sm:text-base relative z-10">Nom</span>
                         </div>
                         <span className="font-bold text-slate-900 text-sm sm:text-base relative z-10">{invite.nom}</span>
                       </div>
                       
                       <div className={`flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200/50 shadow-sm ${
-                        isBohoStyle ? 'rounded-2xl relative overflow-hidden' : 'rounded-xl'
+                        isBohoStyleFinal ? 'rounded-2xl relative overflow-hidden' : 'rounded-xl'
                       }`}>
-                        {isBohoStyle && (
+                        {isBohoStyleFinal && (
                           <div className="absolute inset-0 bg-gradient-to-r from-teal-50/20 via-transparent to-emerald-50/20"></div>
                         )}
                         <div className="flex items-center">
-                          <MapPin className={`h-4 w-4 sm:h-5 sm:w-5 mr-3 relative z-10 ${isBohoStyle ? 'animate-glow' : ''}`} style={{ color: isBohoStyle ? colors.teal : '#475569' }} />
+                          <MapPin className={`h-4 w-4 sm:h-5 sm:w-5 mr-3 relative z-10 ${isBohoStyleFinal ? 'animate-glow' : ''}`} style={{ color: isBohoStyleFinal ? colors.teal : '#475569' }} />
                           <span className="font-semibold text-slate-700 text-sm sm:text-base relative z-10">
-                            {userModel.category === 'graduation' ? 'Place' : (isBohoStyle ? 'Espace' : 'Table')}
+                            {userModel.category === 'graduation' ? 'Place' : (isBohoStyleFinal ? 'Espace' : 'Table')}
                           </span>
                         </div>
                         <span className="font-bold text-slate-900 text-sm sm:text-base relative z-10">
@@ -992,15 +997,15 @@ const InvitationPreview = () => {
                       </div>
                       
                       <div className={`flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200/50 shadow-sm ${
-                        isBohoStyle ? 'rounded-2xl relative overflow-hidden' : 'rounded-xl'
+                        isBohoStyleFinal ? 'rounded-2xl relative overflow-hidden' : 'rounded-xl'
                       }`}>
-                        {isBohoStyle && (
+                        {isBohoStyleFinal && (
                           <div className="absolute inset-0 bg-gradient-to-r from-emerald-50/20 via-transparent to-teal-50/20"></div>
                         )}
                         <div className="flex items-center">
-                          <Wine className={`h-4 w-4 sm:h-5 sm:w-5 mr-3 relative z-10 ${isBohoStyle ? 'animate-glow' : ''}`} style={{ color: isBohoStyle ? colors.accent : '#475569' }} />
+                          <Wine className={`h-4 w-4 sm:h-5 sm:w-5 mr-3 relative z-10 ${isBohoStyleFinal ? 'animate-glow' : ''}`} style={{ color: isBohoStyleFinal ? colors.accent : '#475569' }} />
                           <span className="font-semibold text-slate-700 text-sm sm:text-base relative z-10">
-                            {isBohoStyle ? 'Nectar' : 'Boisson'}
+                            {isBohoStyleFinal ? 'Nectar' : 'Boisson'}
                           </span>
                         </div>
                         <span className="font-bold text-slate-900 text-sm sm:text-base relative z-10">
@@ -1012,8 +1017,8 @@ const InvitationPreview = () => {
                     <div className="mt-4 pt-4 border-t border-slate-200/50">
                       <p className="text-xs sm:text-sm text-slate-600 text-center leading-relaxed relative z-10">
                         <span className="inline-flex items-center">
-                          <Sparkles className={`h-3 w-3 mr-1 ${isBohoStyle ? 'animate-pulse' : ''}`} style={{ color: colors.primary }} />
-                          {isBohoStyle 
+                          <Sparkles className={`h-3 w-3 mr-1 ${isBohoStyleFinal ? 'animate-pulse' : ''}`} style={{ color: colors.primary }} />
+                          {isBohoStyleFinal 
                             ? 'Scannez ce code pour une connexion authentique' 
                             : 'Scannez ce code pour accéder rapidement à vos informations'
                           }
@@ -1026,7 +1031,7 @@ const InvitationPreview = () => {
             )}
             
             {/* Éléments décoratifs de fin - spécifiques au style bohème */}
-            {isBohoStyle && (
+            {isBohoStyleFinal && (
               <div className="flex justify-center mt-12">
                 <div className="flex items-center space-x-6">
                   <div className="w-2 h-2 rounded-full animate-float" style={{ backgroundColor: colors.light }}></div>
