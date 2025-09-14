@@ -18,7 +18,10 @@ import {
   LogOut,
   ArrowLeft,
   X,
-  Heart
+  Heart,
+  Send,
+  Mail,
+  MessageSquare
 } from 'lucide-react';
 import UserProfile from './UserProfile';
 import TableManagement from './TableManagement';
@@ -275,6 +278,96 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     return `${baseUrl}/invitation/${guestId}`;
   };
 
+  const sendWhatsAppInvitation = (guest: Guest) => {
+    const invitationLink = generateInvitationLink(userModels[0]?.id || 'demo', guest.id);
+    const eventName = userModels[0]?.title || 'Notre Événement Spécial';
+    const eventDate = userModels[0]?.eventDate || 'Bientôt';
+    const eventLocation = userModels[0]?.eventLocation || 'Lieu à confirmer';
+    
+    const message = `🎉 *Invitation Spéciale* 🎉
+
+Bonjour ${guest.nom} !
+
+Vous êtes cordialement invité(e) à :
+✨ *${eventName}*
+📅 Date : ${eventDate}
+📍 Lieu : ${eventLocation}
+🪑 Table : ${guest.table}
+
+Pour confirmer votre présence et découvrir tous les détails, cliquez sur votre invitation personnalisée :
+👇 ${invitationLink}
+
+Nous avons hâte de célébrer avec vous ! 💫
+
+Avec toute notre affection,
+L'équipe organisatrice ❤️`;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const sendEmailInvitation = (guest: Guest) => {
+    const invitationLink = generateInvitationLink(userModels[0]?.id || 'demo', guest.id);
+    const eventName = userModels[0]?.title || 'Notre Événement Spécial';
+    const eventDate = userModels[0]?.eventDate || 'Bientôt';
+    const eventTime = userModels[0]?.eventTime || 'Heure à confirmer';
+    const eventLocation = userModels[0]?.eventLocation || 'Lieu à confirmer';
+    
+    const subject = `🎉 Invitation Spéciale - ${eventName}`;
+    const body = `Bonjour ${guest.nom},
+
+Vous êtes cordialement invité(e) à notre événement spécial !
+
+📋 DÉTAILS DE L'ÉVÉNEMENT :
+✨ Événement : ${eventName}
+📅 Date : ${eventDate}
+🕐 Heure : ${eventTime}
+📍 Lieu : ${eventLocation}
+🪑 Table assignée : ${guest.table}
+
+🎯 VOTRE INVITATION PERSONNALISÉE :
+Cliquez sur le lien ci-dessous pour accéder à votre invitation interactive où vous pourrez :
+• Confirmer votre présence
+• Choisir votre boisson préférée
+• Laisser un message dans notre livre d'or
+• Voir tous les détails de l'événement
+
+👉 ${invitationLink}
+
+Nous sommes impatients de célébrer ce moment spécial avec vous !
+
+Avec toute notre affection,
+L'équipe organisatrice
+
+---
+💌 Cette invitation a été créée avec Furaha-Event
+🔗 Découvrez nos services : https://furaha-event.com`;
+
+    const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoUrl;
+  };
+
+  const sendAllInvitations = (method: 'whatsapp' | 'email') => {
+    if (guests.length === 0) {
+      alert('Aucun invité à qui envoyer les invitations');
+      return;
+    }
+    
+    const confirmMessage = `Êtes-vous sûr de vouloir envoyer les invitations par ${method === 'whatsapp' ? 'WhatsApp' : 'Email'} à tous les ${guests.length} invités ?`;
+    
+    if (window.confirm(confirmMessage)) {
+      guests.forEach(guest => {
+        if (method === 'whatsapp') {
+          sendWhatsAppInvitation(guest);
+        } else {
+          sendEmailInvitation(guest);
+        }
+      });
+      
+      alert(`Invitations ${method === 'whatsapp' ? 'WhatsApp' : 'Email'} envoyées à tous les invités !`);
+    }
+  };
+
   if (showProfile && userData) {
     return <UserProfile userData={userData} onLogout={onLogout} />;
   }
@@ -368,6 +461,22 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
             >
               <Plus className="h-5 w-5 mr-2" />
               Ajouter un invité
+            </button>
+            
+            <button
+              onClick={() => sendAllInvitations('whatsapp')}
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg transform hover:scale-105"
+            >
+              <MessageSquare className="h-5 w-5 mr-2" />
+              Envoyer par WhatsApp
+            </button>
+            
+            <button
+              onClick={() => sendAllInvitations('email')}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg transform hover:scale-105"
+            >
+              <Mail className="h-5 w-5 mr-2" />
+              Envoyer par Email
             </button>
             
             <button
@@ -670,6 +779,22 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                     title="Copier le lien d'invitation"
                   >
                     <Eye className="h-4 w-4" />
+                  </button>
+                  
+                  <button
+                    onClick={() => sendWhatsAppInvitation(guest)}
+                    className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Envoyer par WhatsApp"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </button>
+                  
+                  <button
+                    onClick={() => sendEmailInvitation(guest)}
+                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Envoyer par Email"
+                  >
+                    <Mail className="h-4 w-4" />
                   </button>
                   
                   <button

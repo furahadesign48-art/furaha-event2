@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Wine, User, Calendar, Filter, Search, Download, Eye, X, Heart, Gift, GraduationCap } from 'lucide-react';
+import { MessageCircle, Wine, User, Calendar, Filter, Search, Download, Eye, X, Heart, Gift, GraduationCap, Send, Mail, MessageSquare } from 'lucide-react';
 import { useTemplates } from '../hooks/useTemplates';
 import { useAuth } from './AuthContext';
 import { InviteService } from '../services/templateService';
@@ -183,6 +183,75 @@ const GuestMessagesViewer = ({ isOpen, onClose }: GuestMessagesViewerProps) => {
   const closeMessageModal = () => {
     setSelectedMessage(null);
     setShowMessageModal(false);
+  };
+
+  const sendWhatsAppToGuest = (guestMessage: GuestMessage) => {
+    const invitationLink = `${window.location.origin}/invitation/${guestMessage.id}`;
+    const eventName = userModels[0]?.title || 'Notre Événement Spécial';
+    const eventDate = userModels[0]?.eventDate || 'Bientôt';
+    const eventLocation = userModels[0]?.eventLocation || 'Lieu à confirmer';
+    
+    const message = `🎉 *Invitation Spéciale* 🎉
+
+Bonjour ${guestMessage.guestName} !
+
+Vous êtes cordialement invité(e) à :
+✨ *${eventName}*
+📅 Date : ${eventDate}
+📍 Lieu : ${eventLocation}
+🪑 Table : ${guestMessage.table}
+
+Pour confirmer votre présence et découvrir tous les détails, cliquez sur votre invitation personnalisée :
+👇 ${invitationLink}
+
+Nous avons hâte de célébrer avec vous ! 💫
+
+Avec toute notre affection,
+L'équipe organisatrice ❤️`;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const sendEmailToGuest = (guestMessage: GuestMessage) => {
+    const invitationLink = `${window.location.origin}/invitation/${guestMessage.id}`;
+    const eventName = userModels[0]?.title || 'Notre Événement Spécial';
+    const eventDate = userModels[0]?.eventDate || 'Bientôt';
+    const eventTime = userModels[0]?.eventTime || 'Heure à confirmer';
+    const eventLocation = userModels[0]?.eventLocation || 'Lieu à confirmer';
+    
+    const subject = `🎉 Invitation Spéciale - ${eventName}`;
+    const body = `Bonjour ${guestMessage.guestName},
+
+Vous êtes cordialement invité(e) à notre événement spécial !
+
+📋 DÉTAILS DE L'ÉVÉNEMENT :
+✨ Événement : ${eventName}
+📅 Date : ${eventDate}
+🕐 Heure : ${eventTime}
+📍 Lieu : ${eventLocation}
+🪑 Table assignée : ${guestMessage.table}
+
+🎯 VOTRE INVITATION PERSONNALISÉE :
+Cliquez sur le lien ci-dessous pour accéder à votre invitation interactive où vous pourrez :
+• Confirmer votre présence
+• Choisir votre boisson préférée
+• Laisser un message dans notre livre d'or
+• Voir tous les détails de l'événement
+
+👉 ${invitationLink}
+
+Nous sommes impatients de célébrer ce moment spécial avec vous !
+
+Avec toute notre affection,
+L'équipe organisatrice
+
+---
+💌 Cette invitation a été créée avec Furaha-Event
+🔗 Découvrez nos services : https://furaha-event.com`;
+
+    const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoUrl, '_blank');
   };
 
   const exportMessages = () => {
@@ -471,6 +540,22 @@ const GuestMessagesViewer = ({ isOpen, onClose }: GuestMessagesViewerProps) => {
 
                     {/* Actions */}
                     <div className="flex flex-col space-y-2">
+                      <button
+                        onClick={() => sendWhatsAppToGuest(message)}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                        title="Envoyer par WhatsApp"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </button>
+                      
+                      <button
+                        onClick={() => sendEmailToGuest(message)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                        title="Envoyer par Email"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </button>
+                      
                       {message.message && message.message.trim() && (
                         <button
                           onClick={() => openMessageModal(message)}

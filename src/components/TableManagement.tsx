@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Users, X, Eye, Download } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, X, Eye, Download, MessageSquare, Mail, Send } from 'lucide-react';
 import { useTemplates } from '../hooks/useTemplates';
 import { useAuth } from './AuthContext';
 import GuestExportModal from './GuestExportModal';
@@ -212,6 +212,93 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
     }
   };
 
+  const sendTableInvitations = (table: Table) => {
+    const tableGuests = getGuestsForTable(table.name);
+    
+    if (tableGuests.length === 0) {
+      alert('Aucun invité assigné à cette table');
+      return;
+    }
+    
+    tableGuests.forEach(guest => {
+      const invitationLink = `${window.location.origin}/invitation/${guest.id}`;
+      const eventName = 'Notre Événement Spécial';
+      const eventDate = 'Bientôt';
+      const eventLocation = 'Lieu à confirmer';
+      
+      const message = `🎉 *Invitation Spéciale* 🎉
+
+Bonjour ${guest.nom} !
+
+Vous êtes cordialement invité(e) à :
+✨ *${eventName}*
+📅 Date : ${eventDate}
+📍 Lieu : ${eventLocation}
+🪑 Table : ${guest.table}
+
+Pour confirmer votre présence et découvrir tous les détails, cliquez sur votre invitation personnalisée :
+👇 ${invitationLink}
+
+Nous avons hâte de célébrer avec vous ! 💫
+
+Avec toute notre affection,
+L'équipe organisatrice ❤️`;
+
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    });
+  };
+
+  const sendTableEmailInvitations = (table: Table) => {
+    const tableGuests = getGuestsForTable(table.name);
+    
+    if (tableGuests.length === 0) {
+      alert('Aucun invité assigné à cette table');
+      return;
+    }
+    
+    tableGuests.forEach(guest => {
+      const invitationLink = `${window.location.origin}/invitation/${guest.id}`;
+      const eventName = 'Notre Événement Spécial';
+      const eventDate = 'Bientôt';
+      const eventTime = 'Heure à confirmer';
+      const eventLocation = 'Lieu à confirmer';
+      
+      const subject = `🎉 Invitation Spéciale - ${eventName}`;
+      const body = `Bonjour ${guest.nom},
+
+Vous êtes cordialement invité(e) à notre événement spécial !
+
+📋 DÉTAILS DE L'ÉVÉNEMENT :
+✨ Événement : ${eventName}
+✨ Date : ${eventDate}
+🕐 Heure : ${eventTime}
+📍 Lieu : ${eventLocation}
+🪑 Table assignée : ${guest.table}
+
+🎯 VOTRE INVITATION PERSONNALISÉE :
+Cliquez sur le lien ci-dessous pour accéder à votre invitation interactive où vous pourrez :
+• Confirmer votre présence
+• Choisir votre boisson préférée
+• Laisser un message dans notre livre d'or
+• Voir tous les détails de l'événement
+
+👉 ${invitationLink}
+
+Nous sommes impatients de célébrer ce moment spécial avec vous !
+
+Avec toute notre affection,
+L'équipe organisatrice
+
+---
+💌 Cette invitation a été créée avec Furaha-Event
+🔗 Découvrez nos services : https://furaha-event.com`;
+
+      const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.open(mailtoUrl, '_blank');
+    });
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -399,6 +486,20 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
                     <Eye className="h-4 w-4" />
                   </button>
                   <button
+                    onClick={() => sendTableInvitations(table)}
+                    className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Envoyer invitations WhatsApp"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => sendTableEmailInvitations(table)}
+                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Envoyer invitations Email"
+                  >
+                    <Mail className="h-4 w-4" />
+                  </button>
+                  <button
                     onClick={() => openModal(table)}
                     className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all duration-200 transform hover:scale-110"
                     title="Modifier"
@@ -462,6 +563,20 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
                   >
                     <Eye className="h-4 w-4 mr-1" />
                     Invités
+                  </button>
+                  <button
+                    onClick={() => sendTableInvitations(table)}
+                    className="bg-green-100 text-green-700 px-3 py-2 rounded-lg hover:bg-green-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-1" />
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={() => sendTableEmailInvitations(table)}
+                    className="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <Mail className="h-4 w-4 mr-1" />
+                    Email
                   </button>
                   <button
                     onClick={() => openModal(table)}
