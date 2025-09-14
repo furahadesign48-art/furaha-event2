@@ -37,11 +37,12 @@ export const useAuth = () => {
       console.log('Changement d\'état d\'authentification:', firebaseUser?.email || 'Déconnecté');
 
       if (firebaseUser) {
-        // Vérifier si l'email est vérifié
+        // IMPORTANT: Bloquer complètement l'accès si l'email n'est pas vérifié
         if (!firebaseUser.emailVerified) {
           console.log('Email non vérifié pour:', firebaseUser.email);
           setFirebaseUser(firebaseUser);
-          setUser(null); // Ne pas définir l'utilisateur tant que l'email n'est pas vérifié
+          setUser(null); // Aucun accès tant que l'email n'est pas vérifié
+          setEmailVerificationSent(true); // Indiquer qu'une vérification est nécessaire
           setIsLoading(false);
           return;
         }
@@ -125,32 +126,38 @@ export const useAuth = () => {
     try {
       setError(null);
       setIsLoading(true);
+      console.log('Début de l\'inscription pour:', email);
 
       // S'assurer que la persistance est configurée avant l'inscription
       await setPersistence(auth, browserLocalPersistence);
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
+      console.log('Utilisateur Firebase créé:', firebaseUser.uid);
 
-      // Envoyer l'email de vérification
+      // IMPORTANT: Envoyer l'email de vérification IMMÉDIATEMENT
       await sendEmailVerification(firebaseUser);
+      console.log('Email de vérification envoyé à:', email);
       setEmailVerificationSent(true);
 
       // Mettre à jour le profil Firebase
       await updateProfile(firebaseUser, {
         displayName: `${firstName} ${lastName}`
       });
+      console.log('Profil Firebase mis à jour');
 
-      // Ne pas créer le document utilisateur tant que l'email n'est pas vérifié
-      // Le document sera créé lors de la première connexion après vérification
+      // IMPORTANT: Déconnecter immédiatement l'utilisateur pour forcer la vérification
+      await signOut(auth);
+      console.log('Utilisateur déconnecté pour forcer la vérification');
       
       return { 
         success: true, 
         user: null, 
         emailVerificationSent: true,
-        message: 'Un email de vérification a été envoyé à votre adresse. Veuillez vérifier votre boîte mail et cliquer sur le lien de confirmation avant de vous connecter.'
+        message: `Un email de vérification a été envoyé à ${email}. Veuillez vérifier votre boîte mail (et le dossier spam) et cliquer sur le lien de confirmation avant de vous connecter.`
       };
     } catch (error: any) {
+      console.error('Erreur lors de l\'inscription:', error);
       const errorMessage = getFirebaseErrorMessage(error.code);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -184,11 +191,14 @@ export const useAuth = () => {
     }
 
     try {
+      console.log('Vérification du statut de l\'email pour:', firebaseUser.email);
       // Recharger les données utilisateur pour vérifier le statut de vérification
       await firebaseUser.reload();
+      console.log('Données utilisateur rechargées, email vérifié:', firebaseUser.emailVerified);
       
       if (firebaseUser.emailVerified) {
-        // L'email est maintenant vérifié, créer le document utilisateur
+        console.log('Email vérifié, création du document utilisateur');
+        // L'email est maintenant vérifié, créer le document utilisateur dans Firestore
         const userData = {
           email: firebaseUser.email || '',
           firstName: firebaseUser.displayName?.split(' ')[0] || 'Utilisateur',
@@ -202,6 +212,7 @@ export const useAuth = () => {
 
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         await setDoc(userDocRef, userData);
+        console.log('Document utilisateur créé dans Firestore');
 
         const newUser: UserData = {
           id: firebaseUser.uid,
@@ -218,12 +229,14 @@ export const useAuth = () => {
           message: 'Email vérifié avec succès ! Vous pouvez maintenant utiliser votre compte.' 
         };
       } else {
+        console.log('Email toujours non vérifié');
         return { 
           success: false, 
-          error: 'Email non encore vérifié. Veuillez vérifier votre boîte mail.' 
+          error: 'Email non encore vérifié. Veuillez vérifier votre boîte mail (et le dossier spam) et cliquer sur le lien de confirmation.' 
         };
       }
     } catch (error: any) {
+      console.error('Erreur lors de la vérification de l\'email:', error);
       const errorMessage = getFirebaseErrorMessage(error.code);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -234,26 +247,33 @@ export const useAuth = () => {
     try {
       setError(null);
       setIsLoading(true);
+      console.log('Tentative de connexion pour:', email);
 
       // S'assurer que la persistance est configurée avant la connexion
       await setPersistence(auth, browserLocalPersistence);
       
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
+      console.log('Connexion Firebase réussie pour:', email, 'Email vérifié:', firebaseUser.emailVerified);
       
-      // Vérifier si l'email est vérifié
+      // IMPORTANT: Vérification stricte de l'email
       if (!firebaseUser.emailVerified) {
+        console.log('Email non vérifié, déconnexion forcée');
         await signOut(auth); // Déconnecter l'utilisateur
+        setFirebaseUser(firebaseUser); // Garder la référence pour le renvoi d'email
+        setEmailVerificationSent(true);
         return { 
           success: false, 
-          error: 'Veuillez vérifier votre email avant de vous connecter. Vérifiez votre boîte mail et cliquez sur le lien de confirmation.',
+          error: `Votre email ${email} n'est pas encore vérifié. Veuillez vérifier votre boîte mail (et le dossier spam) et cliquer sur le lien de confirmation avant de vous connecter.`,
           emailNotVerified: true
         };
       }
       
+      console.log('Email vérifié, connexion autorisée');
       // L'utilisateur sera automatiquement défini via onAuthStateChanged
       return { success: true };
     } catch (error: any) {
+      console.error('Erreur lors de la connexion:', error);
       const errorMessage = getFirebaseErrorMessage(error.code);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -345,14 +365,19 @@ const getFirebaseErrorMessage = (errorCode: string): string => {
     case 'auth/weak-password':
       return 'Le mot de passe doit contenir au moins 6 caractères';
     case 'auth/invalid-email':
-      return 'Adresse email invalide';
+      return 'Adresse email invalide. Veuillez vérifier le format de votre email';
+    case 'auth/invalid-credential':
+      return 'Email ou mot de passe incorrect';
     case 'auth/too-many-requests':
       return 'Trop de tentatives. Veuillez réessayer plus tard';
     case 'auth/network-request-failed':
       return 'Erreur de connexion. Vérifiez votre connexion internet';
     case 'auth/user-disabled':
       return 'Ce compte a été désactivé';
+    case 'auth/operation-not-allowed':
+      return 'L\'inscription par email/mot de passe n\'est pas activée';
     default:
+      console.error('Erreur Firebase non gérée:', errorCode);
       return 'Une erreur est survenue. Veuillez réessayer';
   }
 };

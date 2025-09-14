@@ -111,10 +111,16 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
             <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 mb-6">
               <h4 className="text-amber-800 font-semibold mb-3">Instructions :</h4>
               <ol className="text-amber-700 text-sm space-y-2">
-                <li>1. Vérifiez votre boîte mail (et le dossier spam)</li>
+                <li>1. Vérifiez votre boîte mail <strong>ET le dossier spam/courrier indésirable</strong></li>
                 <li>2. Cliquez sur le lien de vérification</li>
                 <li>3. Revenez ici et cliquez sur "Vérifier"</li>
               </ol>
+              <div className="mt-4 p-3 bg-amber-200/50 rounded-lg">
+                <p className="text-amber-800 text-xs font-medium">
+                  ⚠️ Important : L'email peut arriver dans le dossier spam. 
+                  Vérifiez tous vos dossiers de messagerie.
+                </p>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -226,6 +232,11 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         if (result.success) {
           onSuccess();
           onClose();
+        } else if ((result as any).emailNotVerified) {
+          // Email non vérifié, afficher la modal de vérification
+          console.log('Email non vérifié, affichage de la modal de vérification');
+          setVerificationEmail(formData.email);
+          setShowEmailVerification(true);
         } else {
           setErrors({ general: result.error || 'Erreur de connexion' });
         }
@@ -233,23 +244,13 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         const result = await register(formData.email, formData.password, formData.firstName, formData.lastName);
         console.log('Résultat de l\'inscription:', result);
         if (result.success) {
-          if (result.emailVerificationSent) {
-            console.log('Inscription réussie, email de vérification envoyé');
-            setVerificationEmail(formData.email);
-            setShowEmailVerification(true);
-          } else {
-            console.log('Inscription réussie, fermeture du modal');
-            onSuccess();
-            onClose();
-          }
+          // TOUJOURS afficher la modal de vérification après inscription
+          console.log('Inscription réussie, email de vérification envoyé');
+          setVerificationEmail(formData.email);
+          setShowEmailVerification(true);
         } else {
           console.error('Erreur d\'inscription:', result.error);
-          if (result.error?.includes('vérifier votre email')) {
-            setVerificationEmail(formData.email);
-            setShowEmailVerification(true);
-          } else {
-            setErrors({ general: result.error || 'Erreur d\'inscription' });
-          }
+          setErrors({ general: result.error || 'Erreur d\'inscription' });
         }
       }
     } catch (error) {
