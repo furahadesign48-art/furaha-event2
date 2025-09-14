@@ -99,6 +99,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   const [tables, setTables] = useState<Table[]>([]);
   const [newGuest, setNewGuest] = useState({ nom: '', table: '', etat: 'simple' as 'simple' | 'couple' });
   const [isAddingGuest, setIsAddingGuest] = useState(false);
+  const [showAddGuestModal, setShowAddGuestModal] = useState(false);
 
   // Synchroniser les données avec les hooks
   useEffect(() => {
@@ -132,11 +133,6 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   }, [refreshUserData]);
 
   const handleAddGuest = async () => {
-    if (!newGuest.nom.trim()) {
-      alert('Veuillez saisir le nom de l\'invité');
-      return;
-    }
-
     setIsAddingGuest(true);
     try {
       const inviteId = await createInvite({
@@ -148,6 +144,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
       if (inviteId) {
         setNewGuest({ nom: '', table: '', etat: 'simple' });
+        setShowAddGuestModal(false);
         await refreshUserData();
       } else {
         alert('Erreur lors de l\'ajout de l\'invité');
@@ -158,6 +155,11 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     } finally {
       setIsAddingGuest(false);
     }
+  };
+
+  const openAddGuestModal = () => {
+    setNewGuest({ nom: '', table: '', etat: 'simple' });
+    setShowAddGuestModal(true);
   };
 
   const handleDeleteGuest = async (guestId: string) => {
@@ -359,7 +361,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <button
-              onClick={() => setActiveTab('guests')}
+              onClick={openAddGuestModal}
               className="bg-gradient-to-r from-amber-500 to-amber-600 text-white p-4 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-glow-amber transform hover:scale-105"
             >
               <Plus className="h-5 w-5 mr-2" />
@@ -469,7 +471,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                 <h4 className="text-lg font-medium text-neutral-500 mb-2">Aucun invité ajouté</h4>
                 <p className="text-neutral-400 mb-6">Commencez par ajouter vos premiers invités</p>
                 <button
-                  onClick={() => setActiveTab('guests')}
+                  onClick={openAddGuestModal}
                   className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
                 >
                   Ajouter un invité
@@ -596,73 +598,18 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       </div>
 
       {/* Formulaire d'ajout d'invité */}
-      <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
-        <h4 className="text-lg font-semibold text-slate-900 mb-4">Ajouter un nouvel invité</h4>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Nom complet
-            </label>
-            <input
-              type="text"
-              value={newGuest.nom}
-              onChange={(e) => setNewGuest({ ...newGuest, nom: e.target.value })}
-              className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-              placeholder="Ex: Sophie Martin"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Table
-            </label>
-            <select
-              value={newGuest.table}
-              onChange={(e) => setNewGuest({ ...newGuest, table: e.target.value })}
-              className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-            >
-              <option value="">Sélectionner une table</option>
-              {tables.map((table) => (
-                <option key={table.id} value={table.name}>{table.name}</option>
-              ))}
-              <option value="Non assigné">Non assigné</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Type d'invité
-            </label>
-            <select
-              value={newGuest.etat}
-              onChange={(e) => setNewGuest({ ...newGuest, etat: e.target.value as 'simple' | 'couple' })}
-              className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-            >
-              <option value="simple">Simple (1 place)</option>
-              <option value="couple">Couple (2 places)</option>
-            </select>
-          </div>
-          
-          <div className="flex items-end">
-            <button
-              onClick={handleAddGuest}
-              disabled={isAddingGuest || !newGuest.nom.trim()}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-            >
-              {isAddingGuest ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                  Ajout...
-                </div>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Ajouter
-                </>
-              )}
-            </button>
-          </div>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h4 className="text-lg font-semibold text-slate-900">Liste des invités ({guests.length})</h4>
+          <p className="text-slate-600 text-sm">Gérez vos invités et leurs confirmations</p>
         </div>
+        <button
+          onClick={openAddGuestModal}
+          className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center shadow-glow-amber transform hover:scale-105"
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          Ajouter un invité
+        </button>
       </div>
 
       {/* Liste des invités */}
@@ -914,6 +861,111 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         isOpen={showGuestMessages}
         onClose={() => setShowGuestMessages(false)}
       />
+
+      {/* Modal d'ajout d'invité */}
+      {showAddGuestModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-luxury max-w-md w-full animate-slide-up">
+            <div className="p-6 border-b border-neutral-200/50 bg-gradient-to-r from-neutral-50 to-amber-50/30">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold text-slate-900">Ajouter un invité</h3>
+                <button
+                  onClick={() => setShowAddGuestModal(false)}
+                  className="p-2 hover:bg-neutral-100 rounded-lg transition-colors duration-200"
+                >
+                  <X className="h-5 w-5 text-neutral-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Nom complet
+                  </label>
+                  <input
+                    type="text"
+                    value={newGuest.nom}
+                    onChange={(e) => setNewGuest({ ...newGuest, nom: e.target.value })}
+                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                    placeholder="Ex: Sophie Martin"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Numéro de table
+                  </label>
+                  <input
+                    type="text"
+                    value={newGuest.table}
+                    onChange={(e) => setNewGuest({ ...newGuest, table: e.target.value })}
+                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                    placeholder="1"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Statut
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setNewGuest({ ...newGuest, etat: 'simple' })}
+                      className={`flex items-center justify-center px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
+                        newGuest.etat === 'simple'
+                          ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
+                          : 'border-neutral-200 hover:border-emerald-300 text-slate-600'
+                      }`}
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Simple
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setNewGuest({ ...newGuest, etat: 'couple' })}
+                      className={`flex items-center justify-center px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
+                        newGuest.etat === 'couple'
+                          ? 'border-rose-400 bg-rose-50 text-rose-700'
+                          : 'border-neutral-200 hover:border-rose-300 text-slate-600'
+                      }`}
+                    >
+                      <Heart className="h-4 w-4 mr-2" />
+                      Couple
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 mt-6">
+                <button
+                  onClick={() => setShowAddGuestModal(false)}
+                  className="flex-1 px-4 py-3 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-all duration-200 font-medium"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleAddGuest}
+                  disabled={isAddingGuest || !newGuest.nom.trim()}
+                  className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {isAddingGuest ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                      Ajout...
+                    </div>
+                  ) : (
+                    'Ajouter'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
