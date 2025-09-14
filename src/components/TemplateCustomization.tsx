@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, Palette, Type, Layout, Eye, EyeOff, Crown, Sparkles, Heart, Gift, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Save, Palette, Type, Layout, Eye, EyeOff, Crown, Sparkles, Heart, Gift, GraduationCap, X } from 'lucide-react';
 
 interface TemplateData {
   id: string;
