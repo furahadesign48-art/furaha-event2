@@ -464,22 +464,6 @@ L'équipe organisatrice
             </button>
             
             <button
-              onClick={() => sendAllInvitations('whatsapp')}
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg transform hover:scale-105"
-            >
-              <MessageSquare className="h-5 w-5 mr-2" />
-              Envoyer par WhatsApp
-            </button>
-            
-            <button
-              onClick={() => sendAllInvitations('email')}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg transform hover:scale-105"
-            >
-              <Mail className="h-5 w-5 mr-2" />
-              Envoyer par Email
-            </button>
-            
-            <button
               onClick={() => setActiveTab('tables')}
               className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg transform hover:scale-105"
             >
