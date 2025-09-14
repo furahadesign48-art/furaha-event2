@@ -212,39 +212,37 @@ const DashboardSettings = ({ isOpen, onClose }: DashboardSettingsProps) => {
         );
 
       case 'account':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
-                {t('account')}
-              </h3>
-              <div className="space-y-4">
-                <div className="bg-gradient-to-r from-rose-50 to-rose-100 dark:from-slate-700 dark:to-slate-600 rounded-xl p-4 border border-rose-200/50 dark:border-slate-600/50">
-                  <div className="flex items-center mb-2">
-                    <User className="h-4 w-4 text-rose-600 dark:text-rose-400 mr-2" />
-                    <h4 className="font-medium text-rose-800 dark:text-rose-300">Gestion du compte</h4>
-                  </div>
-                  <div className="space-y-3">
-                    <button className="w-full text-left p-3 bg-white dark:bg-slate-800 rounded-lg hover:bg-rose-50 dark:hover:bg-slate-700 transition-all duration-200 border border-rose-200/50 dark:border-slate-600/50">
-                      <div className="font-medium text-slate-900 dark:text-slate-100">Changer le mot de passe</div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">Modifier votre mot de passe actuel</div>
-                    </button>
-                    
-                    <button className="w-full text-left p-3 bg-white dark:bg-slate-800 rounded-lg hover:bg-rose-50 dark:hover:bg-slate-700 transition-all duration-200 border border-rose-200/50 dark:border-slate-600/50">
-                      <div className="font-medium text-slate-900 dark:text-slate-100">Exporter les données</div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">Télécharger toutes vos données</div>
-                    </button>
-                    
-                    <button className="w-full text-left p-3 bg-white dark:bg-slate-800 rounded-lg hover:bg-rose-50 dark:hover:bg-slate-700 transition-all duration-200 border border-rose-200/50 dark:border-slate-600/50">
-                      <div className="font-medium text-rose-600 dark:text-rose-400">Supprimer le compte</div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">Supprimer définitivement votre compte</div>
-                    </button>
-                  </div>
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+          {t('account')}
+        </h3>
+        <div className="space-y-4">
+          <div className="bg-gradient-to-r from-rose-50 to-rose-100 dark:from-slate-700 dark:to-slate-600 rounded-xl p-4 border border-rose-200/50 dark:border-slate-600/50">
+            <div className="flex items-center mb-2">
+              <User className="h-4 w-4 text-rose-600 dark:text-rose-400 mr-2" />
+              <h4 className="font-medium text-rose-800 dark:text-rose-300">Gestion du compte</h4>
+            </div>
+            <div className="space-y-3">
+              <button
+                onClick={handlePasswordReset}
+                className="w-full text-left p-3 bg-white dark:bg-slate-800 rounded-lg hover:bg-rose-50 dark:hover:bg-slate-700 transition-all duration-200 border border-rose-200/50 dark:border-slate-600/50"
+              >
+                <div className="font-medium text-slate-900 dark:text-slate-100">
+                  Changer le mot de passe
                 </div>
-              </div>
+                <div className="text-sm text-slate-600 dark:text-slate-400">
+                  Recevez un lien par email pour modifier votre mot de passe
+                </div>
+              </button>
             </div>
           </div>
-        );
+        </div>
+      </div>
+    </div>
+  );
+
 
       default:
         return null;
