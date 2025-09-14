@@ -137,11 +137,6 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
       return;
     }
 
-    if (!canCreateInvite()) {
-      setShowUpgradeModal(true);
-      return;
-    }
-
     setIsAddingGuest(true);
     try {
       const inviteId = await createInvite({
