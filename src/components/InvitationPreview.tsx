@@ -204,11 +204,20 @@ const InvitationPreview = () => {
   const getColorScheme = (category: string) => {
     switch (category) {
       case 'wedding':
-        return {
-          primary: '#f59e0b',
-          secondary: '#d97706',
-          accent: '#f43f5e'
-        };
+        // Déterminer le style basé sur le nom du modèle
+        if (userModel?.name?.includes('Bohème') || userModel?.name?.includes('Nature')) {
+          return {
+            primary: '#10b981',
+            secondary: '#059669',
+            accent: '#14b8a6'
+          };
+        } else {
+          return {
+            primary: '#f59e0b',
+            secondary: '#d97706',
+            accent: '#f43f5e'
+          };
+        }
       case 'birthday':
         return {
           primary: '#8b5cf6',
@@ -286,6 +295,9 @@ const InvitationPreview = () => {
   const IconComponent = getIconForCategory(userModel.category);
   // Utiliser les couleurs personnalisées si elles existent, sinon les couleurs par défaut
   const colors = userModel.colors || userModel.customizations?.colors || getColorScheme(userModel.category);
+  
+  // Déterminer le style du template (classique ou bohème)
+  const isBohoStyle = userModel.name?.includes('Bohème') || userModel.name?.includes('Nature');
 
   return (
 <div className="min-h-screen relative overflow-hidden">
@@ -320,308 +332,491 @@ const InvitationPreview = () => {
       <div className="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-2xl mx-auto">
           <div className="text-center text-white space-y-6 sm:space-y-8">
-                  {/* Decorative Header */}
-                  <div>
-                    <div className="flex justify-center items-center mb-6">
-                      <div className="relative">
-                        <IconComponent 
-                          className="h-16 w-16 sm:h-20 sm:w-20 animate-glow drop-shadow-2xl" 
-                          style={{ color: colors.accent }} 
-                        />
-                        <div className="absolute inset-0 animate-ping">
-                          <IconComponent 
-                            className="h-16 w-16 sm:h-20 sm:w-20 opacity-30" 
-                            style={{ color: colors.accent }} 
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div 
-                      className="w-32 sm:w-48 h-px mx-auto mb-6" 
-                      style={{ 
-                        background: `linear-gradient(to right, transparent, ${colors.primary}, transparent)` 
-                      }}
-                    ></div>
-                    <div className="flex justify-center space-x-3 mb-6">
-                      <Sparkles 
-                        className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" 
+            {/* Decorative Header - différent selon le style */}
+            <div>
+              {isBohoStyle ? (
+                // Header bohème avec éléments naturels
+                <div className="flex justify-center items-center mb-8">
+                  <div className="relative">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+                      <IconComponent 
+                        className="h-16 w-16 sm:h-20 sm:w-20 animate-float drop-shadow-2xl" 
                         style={{ color: colors.primary }} 
                       />
-                      <Sparkles 
-                        className="h-4 w-4 sm:h-5 sm:w-5 animate-pulse" 
-                        style={{ color: colors.secondary, animationDelay: '0.5s' }} 
-                      />
-                      <Sparkles 
-                        className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" 
-                        style={{ color: colors.primary, animationDelay: '1s' }} 
-                      />
+                      <div className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                      <div className="w-3 h-3 bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: '0.9s' }}></div>
                     </div>
                   </div>
+                </div>
+              ) : (
+                // Header classique
+                <div>
+                  <div className="flex justify-center items-center mb-6">
+                    <div className="relative">
+                      <IconComponent 
+                        className="h-16 w-16 sm:h-20 sm:w-20 animate-glow drop-shadow-2xl" 
+                        style={{ color: colors.accent }} 
+                      />
+                      <div className="absolute inset-0 animate-ping">
+                        <IconComponent 
+                          className="h-16 w-16 sm:h-20 sm:w-20 opacity-30" 
+                          style={{ color: colors.accent }} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className="w-32 sm:w-48 h-px mx-auto mb-6" 
+                    style={{ 
+                      background: `linear-gradient(to right, transparent, ${colors.primary}, transparent)` 
+                    }}
+                  ></div>
+                  <div className="flex justify-center space-x-3 mb-6">
+                    <Sparkles 
+                      className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" 
+                      style={{ color: colors.primary }} 
+                    />
+                    <Sparkles 
+                      className="h-4 w-4 sm:h-5 sm:w-5 animate-pulse" 
+                      style={{ color: colors.secondary, animationDelay: '0.5s' }} 
+                    />
+                    <Sparkles 
+                      className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" 
+                      style={{ color: colors.primary, animationDelay: '1s' }} 
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
 
-                  {/* Title */}
+            {/* Title - style différent selon le template */}
+            {isBohoStyle ? (
+              <div className="mb-8">
+                <div 
+                  className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-lg mx-auto shadow-2xl" 
+                  style={{ 
+                    background: `linear-gradient(to right, ${colors.primary}30, ${colors.secondary}30)`,
+                    borderColor: `${colors.primary}20`
+                  }}
+                >
                   <h1 
-                    className="text-3xl sm:text-4xl lg:text-5xl font-bold font-luxury drop-shadow-lg" 
+                    className="text-2xl sm:text-3xl lg:text-4xl font-bold font-luxury drop-shadow-lg tracking-wide" 
                     style={{ color: colors.primary }}
                   >
                     {userModel.title}
                   </h1>
+                  <div className="flex justify-center space-x-2 mt-4">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <div 
+                      className="w-16 h-px mt-1" 
+                      style={{ background: `linear-gradient(to right, transparent, ${colors.primary}, transparent)` }}
+                    ></div>
+                    <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <h1 
+                className="text-3xl sm:text-4xl lg:text-5xl font-bold font-luxury drop-shadow-lg" 
+                style={{ color: colors.primary }}
+              >
+                {userModel.title}
+              </h1>
+            )}
 
-                  {/* Guest Info */}
+            {/* Guest Info - style différent selon le template */}
+            {isBohoStyle ? (
+              <div 
+                className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto shadow-xl" 
+                style={{ 
+                  background: `linear-gradient(to right, ${colors.secondary}40, ${colors.primary}40)`,
+                  borderColor: `${colors.primary}40`
+                }}
+              >
+                <div className="flex justify-center mb-4">
+                  <div className="flex space-x-2">
+                    <div className="w-2 h-2 bg-emerald-300 rounded-full animate-float"></div>
+                    <div className="w-2 h-2 bg-teal-300 rounded-full animate-float" style={{ animationDelay: '0.5s' }}></div>
+                    <div className="w-2 h-2 bg-emerald-300 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
+                  </div>
+                </div>
+                <p className="text-base sm:text-lg mb-3 tracking-wide" style={{ color: `${colors.primary}cc` }}>
+                  Invité d'honneur
+                </p>
+                <p className="text-2xl sm:text-3xl font-semibold text-white tracking-wide">{invite.nom}</p>
+                <div 
+                  className="w-16 h-px mx-auto my-4" 
+                  style={{ background: `linear-gradient(to right, transparent, ${colors.primary}, transparent)` }}
+                ></div>
+                <p className="text-base sm:text-lg tracking-wide" style={{ color: `${colors.primary}dd` }}>
+                  {userModel.category === 'graduation' ? 'Place' : 'Table'} n° {invite.table || 'Non assigné'}
+                </p>
+              </div>
+            ) : (
+              <div 
+                className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
+                style={{ 
+                  background: `linear-gradient(to right, ${colors.primary}40, ${colors.secondary}40)`,
+                  borderColor: `${colors.primary}30`
+                }}
+              >
+                <p className="text-base sm:text-lg mb-3" style={{ color: `${colors.primary}cc` }}>Cher(e)</p>
+                <p className="text-2xl sm:text-3xl font-semibold text-white">{invite.nom}</p>
+                <p className="text-base sm:text-lg mt-3" style={{ color: `${colors.primary}dd` }}>
+                  {userModel.category === 'graduation' ? 'Place' : 'Table'} n° {invite.table || 'Non assigné'}
+                </p>
+              </div>
+            )}
+
+            {/* Invitation Text - style différent selon le template */}
+            {isBohoStyle ? (
+              <div 
+                className="bg-black/20 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-2xl mx-auto shadow-xl" 
+                style={{ borderColor: `${colors.primary}20` }}
+              >
+                <div className="flex justify-center mb-4">
+                  <div className="flex space-x-2">
+                    <div className="w-1 h-1 bg-emerald-300 rounded-full animate-pulse"></div>
+                    <div className="w-1 h-1 bg-teal-300 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+                    <div className="w-1 h-1 bg-emerald-300 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                  </div>
+                </div>
+                <p className="text-neutral-100 leading-relaxed text-base sm:text-lg italic tracking-wide">
+                  {userModel.invitationText}
+                </p>
+              </div>
+            ) : (
+              <div 
+                className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-2xl mx-auto" 
+                style={{ borderColor: `${colors.primary}20` }}
+              >
+                <p className="text-neutral-200 leading-relaxed text-base sm:text-lg">
+                  {userModel.invitationText}
+                </p>
+              </div>
+            )}
+
+            {/* Event Details - style différent selon le template */}
+            <div className="space-y-6 max-w-lg mx-auto">
+              {isBohoStyle ? (
+                // Style bohème avec cartes séparées
+                <>
                   <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
+                    className="backdrop-blur-sm rounded-xl p-4 sm:p-6 border shadow-xl" 
                     style={{ 
                       background: `linear-gradient(to right, ${colors.primary}40, ${colors.secondary}40)`,
                       borderColor: `${colors.primary}30`
                     }}
                   >
-                    <p className="text-base sm:text-lg mb-3" style={{ color: `${colors.primary}cc` }}>Cher(e)</p>
-                    <p className="text-2xl sm:text-3xl font-semibold text-white">{invite.nom}</p>
-                    <p className="text-base sm:text-lg mt-3" style={{ color: `${colors.primary}dd` }}>
-                      {userModel.category === 'graduation' ? 'Place' : 'Table'} n° {invite.table || 'Non assigné'}
-                    </p>
-                  </div>
-
-                  {/* Invitation Text */}
-                  <div 
-                    className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-2xl mx-auto" 
-                    style={{ borderColor: `${colors.primary}20` }}
-                  >
-                    <p className="text-neutral-200 leading-relaxed text-base sm:text-lg">
-                      {userModel.invitationText}
-                    </p>
-                  </div>
-
-                  {/* Event Details */}
-                  <div className="space-y-6 max-w-lg mx-auto">
-                    <div className="flex items-center justify-center text-neutral-200 text-lg sm:text-xl">
+                    <div className="flex items-center justify-center text-neutral-200">
                       <Calendar 
                         className="h-6 w-6 sm:h-7 sm:w-7 mr-4" 
                         style={{ color: colors.primary }} 
                       />
-                      <div className="text-left">
-                        <p className="font-semibold text-lg sm:text-xl">{userModel.eventDate}</p>
-                        <p className="text-base sm:text-lg" style={{ color: `${colors.primary}dd` }}>
+                      <div className="text-center">
+                        <p className="font-bold text-lg sm:text-xl tracking-wide">{userModel.eventDate}</p>
+                        <p className="text-base sm:text-lg tracking-wide" style={{ color: `${colors.primary}dd` }}>
                           {userModel.eventTime}
                         </p>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center justify-center text-neutral-200 text-lg sm:text-xl">
+                  </div>
+                  
+                  <div 
+                    className="backdrop-blur-sm rounded-xl p-4 sm:p-6 border shadow-xl" 
+                    style={{ 
+                      background: `linear-gradient(to right, ${colors.secondary}40, ${colors.primary}40)`,
+                      borderColor: `${colors.secondary}30`
+                    }}
+                  >
+                    <div className="flex items-center justify-center text-neutral-200">
                       <MapPin 
                         className="h-6 w-6 sm:h-7 sm:w-7 mr-4" 
-                        style={{ color: colors.primary }} 
+                        style={{ color: colors.secondary }} 
                       />
-                      <p className="text-base sm:text-lg text-center">{userModel.eventLocation}</p>
+                      <p className="text-base sm:text-lg text-center tracking-wide">{userModel.eventLocation}</p>
                     </div>
                   </div>
-
-                  {/* RSVP Section */}
-                  <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
-                    style={{ 
-                      background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                      borderColor: `${colors.primary}30`
-                    }}
-                  >
-                    <h3 
-                      className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
-                      style={{ color: `${colors.primary}cc` }}
-                    >
-                      <Users className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
-                      Confirmation de présence
-                    </h3>
-                    <button
-                      onClick={handleConfirmation}
-                      className="w-full py-4 sm:py-5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 text-lg sm:text-xl"
-                      style={{
-                        background: isConfirmed 
-                          ? 'linear-gradient(to right, #10b981, #059669)' 
-                          : `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
-                        color: isConfirmed ? 'white' : '#1e293b'
-                      }}
-                    >
-                      {isConfirmed ? (
-                        <span className="flex items-center justify-center">
-                          <Check className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
-                          Présence confirmée
-                        </span>
-                      ) : (
-                        'Confirmer ma présence'
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Drink Selection */}
-                  <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
-                    style={{ 
-                      background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                      borderColor: `${colors.primary}30`
-                    }}
-                  >
-                    <h3 
-                      className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
-                      style={{ color: `${colors.primary}cc` }}
-                    >
-                      <Wine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
-                      Choix de boisson
-                    </h3>
-                    <select
-                      value={selectedDrink}
-                      onChange={(e) => handleDrinkSelection(e.target.value)}
-                      className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-4 focus:ring-2 transition-all duration-200 text-base sm:text-lg"
-                      style={{ 
-                        borderColor: `${colors.primary}30`,
-                        focusRingColor: colors.primary
-                      }}
-                    >
-                      <option value="">Sélectionnez votre boisson</option>
-                      {userModel.drinkOptions.map((drink) => (
-                        <option key={drink} value={drink}>{drink}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Guest Book */}
-                  <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-lg mx-auto" 
-                    style={{ 
-                      background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                      borderColor: `${colors.primary}30`
-                    }}
-                  >
-                    <h3 
-                      className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
-                      style={{ color: `${colors.primary}cc` }}
-                    >
-                      <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
-                      Livre d'or
-                    </h3>
-                    <textarea
-                      value={guestMessage}
-                      onChange={(e) => setGuestMessage(e.target.value)}
-                      placeholder="Laissez un message..."
-                      className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-4 focus:ring-2 transition-all duration-200 resize-none text-base sm:text-lg"
-                      rows={4}
-                      style={{ 
-                        borderColor: `${colors.primary}30`,
-                        focusRingColor: colors.primary
-                      }}
+                </>
+              ) : (
+                // Style classique
+                <>
+                  <div className="flex items-center justify-center text-neutral-200 text-lg sm:text-xl">
+                    <Calendar 
+                      className="h-6 w-6 sm:h-7 sm:w-7 mr-4" 
+                      style={{ color: colors.primary }} 
                     />
-                    <div className="mt-6 space-y-4">
-                      <button 
-                        onClick={handleSendMessage}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold text-base sm:text-lg shadow-lg transform hover:scale-105"
-                      >
-                        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 inline mr-3" />
-                        Envoyer le message
-                      </button>
+                    <div className="text-left">
+                      <p className="font-semibold text-lg sm:text-xl">{userModel.eventDate}</p>
+                      <p className="text-base sm:text-lg" style={{ color: `${colors.primary}dd` }}>
+                        {userModel.eventTime}
+                      </p>
                     </div>
                   </div>
+                  
+                  <div className="flex items-center justify-center text-neutral-200 text-lg sm:text-xl">
+                    <MapPin 
+                      className="h-6 w-6 sm:h-7 sm:w-7 mr-4" 
+                      style={{ color: colors.primary }} 
+                    />
+                    <p className="text-base sm:text-lg text-center">{userModel.eventLocation}</p>
+                  </div>
+                </>
+              )}
+            </div>
 
-                  {/* QR Code Section */}
-                  {qrCodeDataUrl && (
-                    <div 
-                      className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-sm mx-auto shadow-2xl" 
-                      style={{ 
-                        background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                        borderColor: `${colors.primary}30`
-                      }}
-                    >
-                      <h3 
-                        className="font-bold mb-6 flex items-center justify-center text-lg sm:text-xl tracking-wide" 
-                        style={{ color: `${colors.primary}cc` }}
-                      >
-                        <div className="relative mr-3">
-                          <QrCode className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-lg" />
-                          <div className="absolute inset-0 animate-pulse opacity-30">
-                            <QrCode className="h-6 w-6 sm:h-7 sm:w-7" />
-                          </div>
+            {/* RSVP Section - style différent selon le template */}
+            <div 
+              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto ${isBohoStyle ? 'shadow-2xl' : ''}`} 
+              style={{ 
+                background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
+                borderColor: `${colors.primary}${isBohoStyle ? '40' : '30'}`
+              }}
+            >
+              <h3 
+                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl ${isBohoStyle ? 'tracking-wide' : ''}`} 
+                style={{ color: `${colors.primary}cc` }}
+              >
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                {isBohoStyle ? 'Confirmation Naturelle' : 'Confirmation de présence'}
+              </h3>
+              <button
+                onClick={handleConfirmation}
+                className={`w-full py-4 sm:py-5 font-semibold transition-all duration-300 transform hover:scale-105 text-lg sm:text-xl ${
+                  isBohoStyle ? 'rounded-2xl tracking-wide' : 'rounded-xl'
+                }`}
+                style={{
+                  background: isConfirmed 
+                    ? 'linear-gradient(to right, #10b981, #059669)' 
+                    : `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
+                  color: isConfirmed ? 'white' : '#1e293b',
+                  boxShadow: isBohoStyle ? '0 20px 40px rgba(0,0,0,0.3)' : undefined
+                }}
+              >
+                {isConfirmed ? (
+                  <span className="flex items-center justify-center">
+                    <Check className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                    {isBohoStyle ? 'Je serai présent(e)' : 'Présence confirmée'}
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center">
+                    {isBohoStyle && <Heart className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />}
+                    {isBohoStyle ? 'Confirmer ma Présence' : 'Confirmer ma présence'}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Drink Selection - style différent selon le template */}
+            <div 
+              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto ${isBohoStyle ? 'shadow-2xl' : ''}`} 
+              style={{ 
+                background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
+                borderColor: `${colors.primary}${isBohoStyle ? '40' : '30'}`
+              }}
+            >
+              <h3 
+                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl ${isBohoStyle ? 'tracking-wide' : ''}`} 
+                style={{ color: `${colors.primary}cc` }}
+              >
+                <Wine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                {isBohoStyle ? 'Sélection Bio' : 'Choix de boisson'}
+              </h3>
+              <select
+                value={selectedDrink}
+                onChange={(e) => handleDrinkSelection(e.target.value)}
+                className={`w-full bg-slate-800/90 text-white border px-4 py-4 focus:ring-2 transition-all duration-200 text-base sm:text-lg font-medium ${
+                  isBohoStyle ? 'rounded-2xl' : 'rounded-xl'
+                }`}
+                style={{ 
+                  borderColor: `${colors.primary}${isBohoStyle ? '40' : '30'}`,
+                  focusRingColor: colors.primary
+                }}
+              >
+                <option value="">{isBohoStyle ? 'Choisissez votre nectar' : 'Sélectionnez votre boisson'}</option>
+                {userModel.drinkOptions.map((drink) => (
+                  <option key={drink} value={drink}>{drink}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Guest Book - style différent selon le template */}
+            <div 
+              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-lg mx-auto ${isBohoStyle ? 'shadow-2xl' : ''}`} 
+              style={{ 
+                background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
+                borderColor: `${colors.primary}${isBohoStyle ? '40' : '30'}`
+              }}
+            >
+              <h3 
+                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl ${isBohoStyle ? 'tracking-wide' : ''}`} 
+                style={{ color: `${colors.primary}cc` }}
+              >
+                <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                {isBohoStyle ? 'Livre de Nature' : 'Livre d\'or'}
+              </h3>
+              <textarea
+                value={guestMessage}
+                onChange={(e) => setGuestMessage(e.target.value)}
+                placeholder={isBohoStyle ? 'Partagez vos vœux authentiques...' : 'Laissez un message...'}
+                className={`w-full bg-slate-800/90 text-white border px-4 py-4 focus:ring-2 transition-all duration-200 resize-none text-base sm:text-lg font-medium ${
+                  isBohoStyle ? 'rounded-2xl' : 'rounded-xl'
+                }`}
+                rows={4}
+                style={{ 
+                  borderColor: `${colors.primary}${isBohoStyle ? '40' : '30'}`,
+                  focusRingColor: colors.primary
+                }}
+              />
+              <div className="mt-6 space-y-4">
+                <button 
+                  onClick={handleSendMessage}
+                  className={`w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4 hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold text-base sm:text-lg shadow-lg transform hover:scale-105 ${
+                    isBohoStyle ? 'rounded-2xl font-bold shadow-2xl' : 'rounded-xl'
+                  }`}
+                >
+                  {isBohoStyle ? (
+                    <span className="flex items-center justify-center">
+                      <Heart className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                      Partager mes Vœux
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center">
+                      <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                      Envoyer le message
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* QR Code Section - style différent selon le template */}
+            {qrCodeDataUrl && (
+              <div 
+                className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-sm mx-auto shadow-2xl" 
+                style={{ 
+                  background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
+                  borderColor: `${colors.primary}${isBohoStyle ? '40' : '30'}`
+                }}
+              >
+                <h3 
+                  className={`font-bold mb-6 flex items-center justify-center text-lg sm:text-xl tracking-wide ${isBohoStyle ? 'font-bold' : ''}`} 
+                  style={{ color: `${colors.primary}cc` }}
+                >
+                  <div className="relative mr-3">
+                    <QrCode className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-lg" />
+                    <div className="absolute inset-0 animate-pulse opacity-30">
+                      <QrCode className="h-6 w-6 sm:h-7 sm:w-7" />
+                    </div>
+                  </div>
+                  {isBohoStyle ? 'Code Naturel' : 'Code d\'Invitation'}
+                </h3>
+                
+                <div className={`bg-white p-6 mb-6 shadow-inner border-4 border-white/20 backdrop-blur-sm ${
+                  isBohoStyle ? 'rounded-3xl' : 'rounded-2xl'
+                }`}>
+                  <img 
+                    src={qrCodeDataUrl} 
+                    alt="QR Code" 
+                    className="w-full max-w-[180px] sm:max-w-[200px] mx-auto drop-shadow-lg"
+                  />
+                </div>
+                
+                <button
+                  onClick={() => setShowQRInfo(!showQRInfo)}
+                  className={`w-full py-4 sm:py-5 text-base sm:text-lg font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
+                    isBohoStyle ? 'rounded-3xl shadow-2xl' : 'rounded-2xl'
+                  }`}
+                  style={{ 
+                    background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
+                    color: '#1e293b',
+                    boxShadow: `0 10px 25px ${colors.primary}30`
+                  }}
+                >
+                  <div className="flex items-center justify-center">
+                    <div className="relative mr-2">
+                      {showQRInfo ? (
+                        <X className="h-5 w-5 sm:h-6 sm:w-6" />
+                      ) : (
+                        <Eye className="h-5 w-5 sm:h-6 sm:w-6" />
+                      )}
+                    </div>
+                    {showQRInfo ? 'Masquer les détails' : (isBohoStyle ? 'Découvrir les détails' : 'Voir les détails')}
+                  </div>
+                </button>
+                
+                {showQRInfo && (
+                  <div className={`mt-6 bg-white/95 backdrop-blur-sm p-4 sm:p-6 animate-slide-up shadow-xl border border-white/30 ${
+                    isBohoStyle ? 'rounded-3xl' : 'rounded-2xl'
+                  }`}>
+                    <div className="text-center mb-4">
+                      <h4 className="font-bold text-slate-900 text-base sm:text-lg mb-2">
+                        {isBohoStyle ? 'Informations Naturelles' : 'Informations QR Code'}
+                      </h4>
+                      <div 
+                        className="w-16 h-px mx-auto" 
+                        style={{ background: `linear-gradient(to right, transparent, ${colors.primary}, transparent)` }}
+                      ></div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className={`flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200/50 shadow-sm ${
+                        isBohoStyle ? 'rounded-2xl' : 'rounded-xl'
+                      }`}>
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
+                          <span className="font-semibold text-slate-700 text-sm sm:text-base">Nom</span>
                         </div>
-                        Code d'Invitation
-                      </h3>
-                      
-                      <div className="bg-white rounded-2xl p-6 mb-6 shadow-inner border-4 border-white/20 backdrop-blur-sm">
-                        <img 
-                          src={qrCodeDataUrl} 
-                          alt="QR Code" 
-                          className="w-full max-w-[180px] sm:max-w-[200px] mx-auto drop-shadow-lg"
-                        />
+                        <span className="font-bold text-slate-900 text-sm sm:text-base">{invite.nom}</span>
                       </div>
                       
-                      <button
-                        onClick={() => setShowQRInfo(!showQRInfo)}
-                        className="w-full py-4 sm:py-5 rounded-2xl text-base sm:text-lg font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                        style={{ 
-                          background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
-                          color: '#1e293b',
-                          boxShadow: `0 10px 25px ${colors.primary}30`
-                        }}
-                      >
-                        <div className="flex items-center justify-center">
-                          <div className="relative mr-2">
-                            {showQRInfo ? (
-                              <X className="h-5 w-5 sm:h-6 sm:w-6" />
-                            ) : (
-                              <Eye className="h-5 w-5 sm:h-6 sm:w-6" />
-                            )}
-                          </div>
-                          {showQRInfo ? 'Masquer les détails' : 'Voir les détails'}
+                      <div className={`flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200/50 shadow-sm ${
+                        isBohoStyle ? 'rounded-2xl' : 'rounded-xl'
+                      }`}>
+                        <div className="flex items-center">
+                          <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
+                          <span className="font-semibold text-slate-700 text-sm sm:text-base">
+                            {userModel.category === 'graduation' ? 'Place' : (isBohoStyle ? 'Espace' : 'Table')}
+                          </span>
                         </div>
-                      </button>
+                        <span className="font-bold text-slate-900 text-sm sm:text-base">
+                          {invite.table || 'Non assigné'}
+                        </span>
+                      </div>
                       
-                      {showQRInfo && (
-                        <div className="mt-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 sm:p-6 animate-slide-up shadow-xl border border-white/30">
-                          <div className="text-center mb-4">
-                            <h4 className="font-bold text-slate-900 text-base sm:text-lg mb-2">Informations QR Code</h4>
-                            <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-auto"></div>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm">
-                              <div className="flex items-center">
-                                <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
-                                <span className="font-semibold text-slate-700 text-sm sm:text-base">Nom</span>
-                              </div>
-                              <span className="font-bold text-slate-900 text-sm sm:text-base">{invite.nom}</span>
-                            </div>
-                            
-                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm">
-                              <div className="flex items-center">
-                                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
-                                <span className="font-semibold text-slate-700 text-sm sm:text-base">
-                                  {userModel.category === 'graduation' ? 'Place' : 'Table'}
-                                </span>
-                              </div>
-                              <span className="font-bold text-slate-900 text-sm sm:text-base">
-                                {invite.table || 'Non assigné'}
-                              </span>
-                            </div>
-                            
-                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm">
-                              <div className="flex items-center">
-                                <Wine className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
-                                <span className="font-semibold text-slate-700 text-sm sm:text-base">Boisson</span>
-                              </div>
-                              <span className="font-bold text-slate-900 text-sm sm:text-base">
-                                {selectedDrink || 'Non sélectionnée'}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-4 pt-4 border-t border-slate-200/50">
-                            <p className="text-xs sm:text-sm text-slate-600 text-center leading-relaxed">
-                              <span className="inline-flex items-center">
-                                <Sparkles className="h-3 w-3 mr-1" style={{ color: colors.primary }} />
-                                Scannez ce code pour accéder rapidement à vos informations
-                              </span>
-                            </p>
-                          </div>
+                      <div className={`flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200/50 shadow-sm ${
+                        isBohoStyle ? 'rounded-2xl' : 'rounded-xl'
+                      }`}>
+                        <div className="flex items-center">
+                          <Wine className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
+                          <span className="font-semibold text-slate-700 text-sm sm:text-base">
+                            {isBohoStyle ? 'Nectar' : 'Boisson'}
+                          </span>
                         </div>
-                      )}
+                        <span className="font-bold text-slate-900 text-sm sm:text-base">
+                          {selectedDrink || 'Non sélectionnée'}
+                        </span>
+                      </div>
                     </div>
-                  )}
+                    
+                    <div className="mt-4 pt-4 border-t border-slate-200/50">
+                      <p className="text-xs sm:text-sm text-slate-600 text-center leading-relaxed">
+                        <span className="inline-flex items-center">
+                          <Sparkles className="h-3 w-3 mr-1" style={{ color: colors.primary }} />
+                          {isBohoStyle 
+                            ? 'Scannez ce code pour une connexion authentique' 
+                            : 'Scannez ce code pour accéder rapidement à vos informations'
+                          }
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
