@@ -1,47 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, Calendar, BarChart3, Plus, Edit, Trash2, Eye, Settings, ChevronDown, Crown,
+  Users, 
+  Calendar, 
+  BarChart3, 
+  Settings, 
+  Plus, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  Crown, 
   Sparkles,
-  Heart,
-  Gift,
-  GraduationCap,
+  MessageCircle,
+  Wine,
+  Download,
   User,
+  Table,
   LogOut,
-  Bell,
-  Search,
-  Filter,
-  MoreVertical,
-  Copy,
-  Share2,
-  ExternalLink,
-  CheckCircle,
-  Clock,
-  Camera,
-  XCircle,
-  AlertCircle,
-  TrendingUp,
-  Mail,
-  X
+  ArrowLeft
 } from 'lucide-react';
-import { useAuth } from './AuthContext';
-import { useSubscription } from '../hooks/useSubscription';
-import { useTemplates } from '../hooks/useTemplates';
 import UserProfile from './UserProfile';
 import TableManagement from './TableManagement';
 import TemplateCustomization from './TemplateCustomization';
-import DashboardSettings from './DashboardSettings';
 import UpgradeModal from './UpgradeModal';
-import { UserModel, Invite } from '../services/templateService';
+import DashboardSettings from './DashboardSettings';
+import GuestMessagesViewer from './GuestMessagesViewer';
+import { useTemplates } from '../hooks/useTemplates';
+import { useSubscription } from '../hooks/useSubscription';
+import { UserData } from '../hooks/useAuth';
 
-interface UserData {
-  firstName: string;
-  lastName: string;
+interface TemplateData {
+  id: string;
+  name: string;
+  category: string;
+  backgroundImage: string;
+  title: string;
+  invitationText: string;
+  eventDate: string;
+  eventTime: string;
+  eventLocation: string;
+  drinkOptions: string[];
+  features: string[];
+  isPersonalized?: boolean;
+  createdAt?: string;
+  guestData?: {
+    name: string;
+    tableNumber: string;
+  };
 }
 
-interface DashboardProps {
-  selectedTemplate?: any;
-  userData: UserData | null;
-  onLogout: () => void;
+interface Guest {
+  id: string;
+  nom: string;
+  table: string;
+  etat: 'simple' | 'couple';
+  confirmed: boolean;
 }
 
 interface Table {
@@ -51,193 +63,113 @@ interface Table {
   assignedGuests: any[];
 }
 
+interface DashboardProps {
+  selectedTemplate?: TemplateData | null;
+  userData: UserData | null;
+  onLogout: () => void;
+}
+
 const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => {
   const { 
     userModels, 
     userInvites, 
     userTables,
-    isLoading, 
-    error, 
-    updateUserModel, 
-    deleteUserModel, 
     createInvite, 
     updateInvite, 
     deleteInvite,
     createTable,
     updateTable,
     deleteTable,
-    refreshUserData 
+    updateUserModel,
+    deleteUserModel,
+    isLoading,
+    error,
+    refreshUserData
   } = useTemplates();
-  const { user } = useAuth();
+  
   const { subscription, canCreateInvite, getRemainingInvites } = useSubscription();
-
+  
   const [activeTab, setActiveTab] = useState('overview');
   const [showProfile, setShowProfile] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<UserModel | null>(null);
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [inviteFormData, setInviteFormData] = useState({
-    guestName: '',
-    tableNumber: '',
-    guestType: 'simple' as 'simple' | 'couple'
-  });
+  const [showSettings, setShowSettings] = useState(false);
+  const [showGuestMessages, setShowGuestMessages] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<TemplateData | null>(null);
+  const [guests, setGuests] = useState<Guest[]>([]);
   const [tables, setTables] = useState<Table[]>([]);
+  const [newGuest, setNewGuest] = useState({ nom: '', table: '', etat: 'simple' as 'simple' | 'couple' });
+  const [isAddingGuest, setIsAddingGuest] = useState(false);
 
-  // Calculer les statistiques
-  const totalInvites = userInvites.length;
-  const totalGuests = userInvites.reduce((total, invite) => {
-    return total + (invite.etat === 'couple' ? 2 : 1);
-  }, 0);
-  const confirmedGuests = userInvites.filter(invite => invite.confirmed).length;
-  const pendingGuests = userInvites.filter(invite => !invite.confirmed).length;
-
-  // Charger les données au montage et quand selectedTemplate change
+  // Synchroniser les données avec les hooks
   useEffect(() => {
-    if (selectedTemplate && user) {
-      console.log('Template sélectionné reçu:', selectedTemplate);
-      refreshUserData();
+    if (userInvites) {
+      const formattedGuests = userInvites.map(invite => ({
+        id: invite.id,
+        nom: invite.nom,
+        table: invite.table,
+        etat: invite.etat,
+        confirmed: invite.confirmed
+      }));
+      setGuests(formattedGuests);
     }
-  }, [selectedTemplate, user, refreshUserData]);
+  }, [userInvites]);
 
-  // Charger les données utilisateur au montage
   useEffect(() => {
-    if (user) {
-      console.log('Utilisateur connecté, chargement des données...');
-      // Les tables sont automatiquement chargées par le hook useTemplates
-      setTables(userTables);
+    if (userTables) {
+      const formattedTables = userTables.map(table => ({
+        id: table.id,
+        name: table.name,
+        seats: table.seats,
+        assignedGuests: table.assignedGuests || []
+      }));
+      setTables(formattedTables);
     }
-  }, [user, userTables]);
+  }, [userTables]);
 
-  // Fonction pour sauvegarder les modifications du template
-  const handleSaveTemplate = async (customizedTemplate: any) => {
-    if (!user || !customizedTemplate.id) {
-      console.error('Utilisateur ou ID de template manquant');
+  // Rafraîchir les données au montage
+  useEffect(() => {
+    refreshUserData();
+  }, [refreshUserData]);
+
+  const handleAddGuest = async () => {
+    if (!newGuest.nom.trim()) {
+      alert('Veuillez saisir le nom de l\'invité');
       return;
     }
 
-    try {
-      console.log('Sauvegarde du template personnalisé:', customizedTemplate);
-      
-      // Préparer les données de mise à jour
-      const updateData = {
-        name: customizedTemplate.name,
-        title: customizedTemplate.title,
-        invitationText: customizedTemplate.invitationText,
-        eventDate: customizedTemplate.eventDate,
-        eventTime: customizedTemplate.eventTime,
-        eventLocation: customizedTemplate.eventLocation,
-        backgroundImage: customizedTemplate.backgroundImage,
-        drinkOptions: customizedTemplate.drinkOptions,
-        colors: customizedTemplate.colors,
-        customizations: {
-          colors: customizedTemplate.colors,
-          fonts: customizedTemplate.customizations?.fonts || {
-            title: 'Playfair Display',
-            body: 'Inter'
-          },
-          layout: customizedTemplate.customizations?.layout || 'default'
-        },
-        updatedAt: new Date().toISOString()
-      };
-
-      console.log('Données de mise à jour:', updateData);
-
-      // Mettre à jour le modèle dans Firestore
-      const success = await updateUserModel(customizedTemplate.id, updateData);
-      
-      if (success) {
-        console.log('Template mis à jour avec succès');
-        // Forcer le rechargement des données
-        await refreshUserData();
-        // Fermer l'éditeur
-        setEditingTemplate(null);
-        // Changer d'onglet pour voir les modifications
-        setActiveTab('templates');
-      } else {
-        console.error('Échec de la mise à jour du template');
-        alert('Erreur lors de la sauvegarde des modifications');
-      }
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      alert('Erreur lors de la sauvegarde des modifications');
-    }
-  };
-
-  const handleEditTemplate = (template: UserModel) => {
-    console.log('Édition du template:', template);
-    setEditingTemplate(template);
-  };
-
-  const handleDeleteTemplate = async (templateId: string) => {
-    if (!user) return;
-    
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce modèle ?')) {
-      try {
-        const success = await deleteUserModel(templateId);
-        if (success) {
-          console.log('Template supprimé avec succès');
-          await refreshUserData();
-        } else {
-          alert('Erreur lors de la suppression du modèle');
-        }
-      } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
-        alert('Erreur lors de la suppression du modèle');
-      }
-    }
-  };
-
-  const handleCreateInvite = async () => {
     if (!canCreateInvite()) {
       setShowUpgradeModal(true);
       return;
     }
 
-    setShowInviteModal(true);
-  };
-
-  const handleSubmitInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!inviteFormData.guestName.trim() || !inviteFormData.tableNumber.trim()) {
-      alert('Veuillez remplir tous les champs obligatoires');
-      return;
-    }
-
+    setIsAddingGuest(true);
     try {
       const inviteId = await createInvite({
-        nom: inviteFormData.guestName.trim(),
-        table: inviteFormData.tableNumber.trim(),
-        etat: inviteFormData.guestType,
+        nom: newGuest.nom,
+        table: newGuest.table || 'Non assigné',
+        etat: newGuest.etat,
         confirmed: false
       });
 
       if (inviteId) {
-        console.log('Invité créé avec succès:', inviteId);
+        setNewGuest({ nom: '', table: '', etat: 'simple' });
         await refreshUserData();
-        setShowInviteModal(false);
-        setInviteFormData({ guestName: '', tableNumber: '', guestType: 'simple' });
       } else {
-        alert('Erreur lors de la création de l\'invité');
+        alert('Erreur lors de l\'ajout de l\'invité');
       }
-    } catch (error: any) {
-      console.error('Erreur lors de la création de l\'invité:', error);
-      if (error.message?.includes('limite')) {
-        setShowUpgradeModal(true);
-        setShowInviteModal(false);
-      } else {
-        alert('Erreur lors de la création de l\'invité');
-      }
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de l\'invité:', error);
+      alert('Erreur lors de l\'ajout de l\'invité');
+    } finally {
+      setIsAddingGuest(false);
     }
   };
 
-  const handleDeleteInvite = async (inviteId: string) => {
+  const handleDeleteGuest = async (guestId: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cet invité ?')) {
       try {
-        const success = await deleteInvite(inviteId);
+        const success = await deleteInvite(guestId);
         if (success) {
-          console.log('Invité supprimé avec succès');
           await refreshUserData();
         } else {
           alert('Erreur lors de la suppression de l\'invité');
@@ -249,786 +181,699 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
     }
   };
 
-  const getIconForCategory = (category: string) => {
-    switch (category) {
-      case 'wedding':
-        return Heart;
-      case 'birthday':
-        return Gift;
-      case 'graduation':
-        return GraduationCap;
-      default:
-        return Heart;
-    }
-  };
-
-  const getColorForCategory = (category: string) => {
-    switch (category) {
-      case 'wedding':
-        return 'from-rose-500 to-pink-500';
-      case 'birthday':
-        return 'from-purple-500 to-indigo-500';
-      case 'graduation':
-        return 'from-emerald-500 to-teal-500';
-      default:
-        return 'from-amber-500 to-orange-500';
-    }
-  };
-
-  const generateInviteLink = (inviteId: string) => {
-    return `${window.location.origin}/invitation/${inviteId}`;
-  };
-
-  const copyInviteLink = (inviteId: string) => {
-    const link = generateInviteLink(inviteId);
-    navigator.clipboard.writeText(link).then(() => {
-      alert('Lien copié dans le presse-papiers !');
-    });
-  };
-
-  const shareInvite = async (inviteId: string, guestName: string) => {
-    const link = generateInviteLink(inviteId);
-    const message = `Bonjour ${guestName}, voici votre invitation : ${link}`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Invitation',
-          text: message,
-          url: link
+  const handleSaveTable = async (table: Table) => {
+    try {
+      if (tables.find(t => t.id === table.id)) {
+        // Mettre à jour
+        const success = await updateTable(table.id.toString(), {
+          name: table.name,
+          seats: table.seats,
+          assignedGuests: table.assignedGuests
         });
-      } catch (error) {
-        // Fallback en cas d'erreur (permission refusée, annulation utilisateur, etc.)
-        const mailtoLink = `mailto:?subject=Votre invitation&body=${encodeURIComponent(message)}`;
-        window.open(mailtoLink);
+        if (!success) {
+          throw new Error('Échec de la mise à jour');
+        }
+      } else {
+        // Créer
+        const tableId = await createTable({
+          name: table.name,
+          seats: table.seats,
+          assignedGuests: table.assignedGuests
+        });
+        if (!tableId) {
+          throw new Error('Échec de la création');
+        }
       }
-    } else {
-      // Fallback pour les navigateurs qui ne supportent pas l'API Web Share
-      const mailtoLink = `mailto:?subject=Votre invitation&body=${encodeURIComponent(message)}`;
-      window.open(mailtoLink);
+      await refreshUserData();
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde de la table:', error);
+      throw error;
     }
   };
 
-  // Si on édite un template, afficher l'éditeur
-  if (editingTemplate) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto">
-          <TemplateCustomization
-            template={editingTemplate}
-            onBack={() => setEditingTemplate(null)}
-            onSave={handleSaveTemplate}
-          />
-        </div>
-      </div>
-    );
+  const handleDeleteTable = async (tableId: number) => {
+    try {
+      const success = await deleteTable(tableId.toString());
+      if (!success) {
+        throw new Error('Échec de la suppression');
+      }
+      await refreshUserData();
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la table:', error);
+      throw error;
+    }
+  };
+
+  const handleEditTemplate = (template: TemplateData) => {
+    setEditingTemplate(template);
+  };
+
+  const handleSaveTemplate = async (customizedTemplate: TemplateData) => {
+    if (!editingTemplate) return;
+    
+    try {
+      const success = await updateUserModel(editingTemplate.id, {
+        title: customizedTemplate.title,
+        invitationText: customizedTemplate.invitationText,
+        eventDate: customizedTemplate.eventDate,
+        eventTime: customizedTemplate.eventTime,
+        eventLocation: customizedTemplate.eventLocation,
+        backgroundImage: customizedTemplate.backgroundImage,
+        drinkOptions: customizedTemplate.drinkOptions,
+        name: customizedTemplate.name
+      });
+
+      if (success) {
+        setEditingTemplate(null);
+        await refreshUserData();
+      } else {
+        alert('Erreur lors de la sauvegarde du template');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      alert('Erreur lors de la sauvegarde du template');
+    }
+  };
+
+  const handleDeleteTemplate = async (templateId: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce template ?')) {
+      try {
+        const success = await deleteUserModel(templateId);
+        if (success) {
+          await refreshUserData();
+        } else {
+          alert('Erreur lors de la suppression du template');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        alert('Erreur lors de la suppression du template');
+      }
+    }
+  };
+
+  const generateInvitationLink = (templateId: string, guestId: string) => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/invitation/${guestId}`;
+  };
+
+  if (showProfile && userData) {
+    return <UserProfile userData={userData} onLogout={onLogout} />;
   }
 
-  // Si on affiche le profil
-  if (showProfile && userData) {
+  if (editingTemplate) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-4xl mx-auto">
-          <UserProfile 
-            userData={userData} 
-            onLogout={onLogout}
-          />
-        </div>
-      </div>
+      <TemplateCustomization
+        template={editingTemplate}
+        onBack={() => setEditingTemplate(null)}
+        onSave={handleSaveTemplate}
+      />
     );
   }
 
   const tabs = [
     { id: 'overview', label: 'Vue d\'ensemble', icon: BarChart3 },
-    { id: 'templates', label: 'Mes Modèles', icon: Sparkles },
+    { id: 'templates', label: 'Mes Templates', icon: Sparkles },
     { id: 'guests', label: 'Invités', icon: Users },
-    { id: 'tables', label: 'Tables', icon: Calendar },
-    { id: 'analytics', label: 'Statistiques', icon: TrendingUp }
+    { id: 'tables', label: 'Tables', icon: Table },
+    { id: 'messages', label: 'Messages & Boissons', icon: MessageCircle }
   ];
 
-  const getOccupiedSeats = (tableName: string) => {
-    return userInvites.filter(invite => invite.table === tableName).length;
-  };
+  const renderOverview = () => {
+    const totalGuests = guests.length;
+    const confirmedGuests = guests.filter(g => g.confirmed).length;
+    const pendingGuests = totalGuests - confirmedGuests;
+    const totalTables = tables.length;
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'overview':
-        return (
-          <div className="space-y-8">
-            {/* Statistiques principales */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-amber-500 rounded-xl shadow-glow-amber">
-                    <Sparkles className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-amber-700 text-sm font-medium">Mes Modèles</p>
-                    <p className="text-2xl font-bold text-amber-900">{userModels.length}</p>
-                  </div>
-                </div>
+    return (
+      <div className="space-y-8 animate-fade-in">
+        {/* Statistiques principales */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg hover:shadow-glow-amber transition-all duration-300">
+            <div className="flex items-center">
+              <div className="p-3 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl shadow-glow-amber">
+                <Users className="h-6 w-6 text-white" />
               </div>
-              
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-purple-500 rounded-xl shadow-glow-purple">
-                    <Users className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-purple-700 text-sm font-medium">Total Invités</p>
-                    <p className="text-2xl font-bold text-purple-900">{userInvites.length}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-emerald-500 rounded-xl">
-                    <CheckCircle className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-emerald-700 text-sm font-medium">Confirmés</p>
-                    <p className="text-2xl font-bold text-emerald-900">
-                      {userInvites.filter(invite => invite.confirmed).length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-rose-500 rounded-xl">
-                    <Crown className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-rose-700 text-sm font-medium">Plan Actuel</p>
-                    <p className="text-lg font-bold text-rose-900 capitalize">
-                      {subscription?.plan || 'Gratuit'}
-                    </p>
-                    {subscription?.plan === 'free' && (
-                      <p className="text-xs text-rose-600">
-                        {getRemainingInvites()}/5 restantes
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions rapides */}
-            <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
-              <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-6">
-                Actions rapides
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button
-                  onClick={handleCreateInvite}
-                  className="bg-gradient-to-r from-amber-500 to-amber-600 text-white p-4 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-glow-amber transform hover:scale-105"
-                >
-                  <Plus className="h-5 w-5 mr-2" />
-                  Ajouter un invité
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab('templates')}
-                  className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg transform hover:scale-105"
-                >
-                  <Sparkles className="h-5 w-5 mr-2" />
-                  Gérer mes modèles
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab('analytics')}
-                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-4 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg transform hover:scale-105"
-                >
-                  <BarChart3 className="h-5 w-5 mr-2" />
-                  Voir les statistiques
-                </button>
-              </div>
-            </div>
-
-            {/* Activité récente */}
-            <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
-              <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-6">
-                Activité récente
-              </h3>
-              <div className="space-y-4">
-                {userInvites.slice(0, 5).map((invite, index) => (
-                  <div key={invite.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-neutral-50 to-amber-50/30 rounded-xl border border-neutral-200/50">
-                    <div className="flex items-center">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${
-                        invite.confirmed ? 'bg-emerald-500' : 'bg-amber-500'
-                      }`}>
-                        {invite.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                      </div>
-                      <div className="ml-3">
-                        <p className="font-medium text-slate-900">{invite.nom}</p>
-                        <p className="text-sm text-slate-600">Table {invite.table}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        invite.confirmed 
-                          ? 'bg-emerald-100 text-emerald-800' 
-                          : 'bg-amber-100 text-amber-800'
-                      }`}>
-                        {invite.confirmed ? 'Confirmé' : 'En attente'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                
-                {userInvites.length === 0 && (
-                  <div className="text-center py-8">
-                    <Users className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
-                    <h4 className="text-lg font-medium text-neutral-500 mb-2">Aucun invité pour le moment</h4>
-                    <p className="text-neutral-400 mb-6">Commencez par ajouter vos premiers invités</p>
-                    <button
-                      onClick={handleCreateInvite}
-                      className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
-                    >
-                      Ajouter un invité
-                    </button>
-                  </div>
-                )}
+              <div className="ml-4">
+                <p className="text-amber-700 text-sm font-medium">Total Invités</p>
+                <p className="text-3xl font-bold text-amber-900">{totalGuests}</p>
               </div>
             </div>
           </div>
-        );
-
-      case 'templates':
-        return (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                  Mes Modèles d'Invitation
-                </h3>
-                <p className="text-slate-600 mt-1">Gérez et personnalisez vos modèles</p>
+          
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg hover:shadow-lg transition-all duration-300">
+            <div className="flex items-center">
+              <div className="p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl">
+                <User className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <p className="text-emerald-700 text-sm font-medium">Confirmés</p>
+                <p className="text-3xl font-bold text-emerald-900">{confirmedGuests}</p>
               </div>
             </div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg hover:shadow-lg transition-all duration-300">
+            <div className="flex items-center">
+              <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl">
+                <Calendar className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <p className="text-purple-700 text-sm font-medium">En attente</p>
+                <p className="text-3xl font-bold text-purple-900">{pendingGuests}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200/50 shadow-lg hover:shadow-lg transition-all duration-300">
+            <div className="flex items-center">
+              <div className="p-3 bg-gradient-to-r from-rose-500 to-rose-600 rounded-xl">
+                <Table className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <p className="text-rose-700 text-sm font-medium">Tables</p>
+                <p className="text-3xl font-bold text-rose-900">{totalTables}</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-            {isLoading ? (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-amber-500 rounded-full animate-bounce"></div>
-                  <div className="w-4 h-4 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-4 h-4 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                </div>
-                <p className="text-slate-600 mt-2">Chargement de vos modèles...</p>
-              </div>
-            ) : userModels.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userModels.map((template, index) => {
-                  const IconComponent = getIconForCategory(template.category);
-                  const colorClass = getColorForCategory(template.category);
-                  
-                  return (
-                    <div
-                      key={template.id}
-                      className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 overflow-hidden hover:shadow-glow-amber transition-all duration-500 animate-slide-up"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={template.backgroundImage}
-                          alt={template.name}
-                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                        <div className="absolute top-4 right-4">
-                          <div className={`p-2 bg-gradient-to-r ${colorClass} rounded-full shadow-lg`}>
-                            <IconComponent className="h-5 w-5 text-white" />
-                          </div>
-                        </div>
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <h4 className="text-white font-bold text-lg mb-1">{template.title}</h4>
-                          <p className="text-white/80 text-sm">{template.name}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <p className="text-sm text-slate-600">Catégorie</p>
-                            <p className="font-semibold text-slate-900 capitalize">{template.category}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-slate-600">Créé le</p>
-                            <p className="font-semibold text-slate-900">
-                              {new Date(template.createdAt || '').toLocaleDateString('fr-FR')}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-2">
-                          <button
-                            onClick={() => handleEditTemplate(template)}
-                            className="bg-amber-100 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Modifier
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              const link = `${window.location.origin}/invitation/preview/${template.id}`;
-                              window.open(link, '_blank');
-                            }}
-                            className="bg-purple-100 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Voir
-                          </button>
-                          
-                          <button
-                            onClick={() => handleDeleteTemplate(template.id)}
-                            className="bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Suppr.
-                          </button>
-                        </div>
-                      </div>
+        {/* Actions rapides */}
+        <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
+          <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-6">
+            Actions rapides
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button
+              onClick={() => setActiveTab('guests')}
+              className="bg-gradient-to-r from-amber-500 to-amber-600 text-white p-4 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-glow-amber transform hover:scale-105"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Ajouter un invité
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('tables')}
+              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg transform hover:scale-105"
+            >
+              <Table className="h-5 w-5 mr-2" />
+              Gérer les tables
+            </button>
+            
+            <button
+              onClick={() => setShowGuestMessages(true)}
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-4 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg transform hover:scale-105"
+            >
+              <MessageCircle className="h-5 w-5 mr-2" />
+              Messages & Boissons
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('templates')}
+              className="bg-gradient-to-r from-rose-500 to-rose-600 text-white p-4 rounded-xl hover:from-rose-600 hover:to-rose-700 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg transform hover:scale-105"
+            >
+              <Eye className="h-5 w-5 mr-2" />
+              Voir mes templates
+            </button>
+          </div>
+        </div>
+
+        {/* Template sélectionné */}
+        {selectedTemplate && (
+          <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-6">
+              Template sélectionné
+            </h3>
+            <div className="bg-gradient-to-r from-amber-50 to-rose-50/30 rounded-xl p-6 border border-amber-200/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-lg font-semibold text-slate-900 mb-2">{selectedTemplate.name}</h4>
+                  <p className="text-slate-600 mb-4">{selectedTemplate.title}</p>
+                  <div className="flex items-center space-x-4 text-sm text-slate-600">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      <span>{selectedTemplate.eventDate}</span>
                     </div>
-                  );
-                })}
+                    <div className="flex items-center">
+                      <Users className="h-4 w-4 mr-1" />
+                      <span>{selectedTemplate.eventTime}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => handleEditTemplate(selectedTemplate)}
+                    className="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-all duration-300 font-semibold flex items-center"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Personnaliser
+                  </button>
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <Sparkles className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
-                <h4 className="text-lg font-medium text-neutral-500 mb-2">Aucun modèle personnalisé</h4>
-                <p className="text-neutral-400 mb-6">Créez votre premier modèle d'invitation personnalisé</p>
+            </div>
+          </div>
+        )}
+
+        {/* Activité récente */}
+        <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
+          <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-6">
+            Activité récente
+          </h3>
+          <div className="space-y-4">
+            {guests.slice(0, 5).map((guest, index) => (
+              <div
+                key={guest.id}
+                className="flex items-center justify-between p-4 bg-gradient-to-r from-neutral-50 to-amber-50/30 rounded-xl border border-neutral-200/50 animate-slide-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg ${
+                    guest.etat === 'couple' 
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
+                      : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                  }`}>
+                    {guest.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                  </div>
+                  <div className="ml-3">
+                    <p className="font-medium text-slate-900">{guest.nom}</p>
+                    <p className="text-sm text-slate-600">Table: {guest.table}</p>
+                  </div>
+                </div>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  guest.confirmed 
+                    ? 'bg-emerald-100 text-emerald-800' 
+                    : 'bg-amber-100 text-amber-800'
+                }`}>
+                  {guest.confirmed ? 'Confirmé' : 'En attente'}
+                </span>
+              </div>
+            ))}
+            
+            {guests.length === 0 && (
+              <div className="text-center py-8">
+                <Users className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+                <h4 className="text-lg font-medium text-neutral-500 mb-2">Aucun invité ajouté</h4>
+                <p className="text-neutral-400 mb-6">Commencez par ajouter vos premiers invités</p>
                 <button
-                  onClick={() => window.location.reload()}
+                  onClick={() => setActiveTab('guests')}
                   className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
                 >
-                  Retour à l'accueil
+                  Ajouter un invité
                 </button>
               </div>
             )}
           </div>
-        );
+        </div>
+      </div>
+    );
+  };
 
-      case 'guests':
-        return (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                  Gestion des Invités
-                </h3>
-                <p className="text-slate-600 mt-1">
-                  {subscription?.plan === 'free' 
-                    ? `${userInvites.length}/5 invitations utilisées`
-                    : `${userInvites.length} invités`
-                  }
-                </p>
+  const renderTemplates = () => (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+            Mes Templates
+          </h3>
+          <p className="text-slate-600 mt-1">Gérez vos modèles d'invitation personnalisés</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {userModels.map((template, index) => (
+          <div
+            key={template.id}
+            className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 overflow-hidden hover:shadow-glow-amber transition-all duration-500 animate-slide-up"
+            style={{ animationDelay: `${index * 0.1}s` }}
+          >
+            <div className="relative h-48 overflow-hidden">
+              <img
+                src={template.backgroundImage}
+                alt={template.name}
+                className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+              <div className="absolute bottom-4 left-4 right-4">
+                <h4 className="text-white font-bold text-lg drop-shadow-lg">{template.title}</h4>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h5 className="font-semibold text-slate-900">{template.name}</h5>
+                  <p className="text-sm text-slate-600 capitalize">{template.category}</p>
+                </div>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                  <Crown className="h-3 w-3 mr-1" />
+                  Premium
+                </span>
               </div>
               
-              <button
-                onClick={handleCreateInvite}
-                className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center shadow-glow-amber transform hover:scale-105"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Ajouter un invité
-              </button>
-            </div>
-
-            {/* Tableau des invités */}
-            <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 overflow-hidden">
-              {/* En-tête du tableau - Desktop */}
-              <div className="hidden md:grid md:grid-cols-6 gap-4 p-6 bg-gradient-to-r from-neutral-50 to-amber-50/30 border-b border-neutral-200/50">
-                <div className="font-semibold text-slate-700">Nom</div>
-                <div className="font-semibold text-slate-700">Table</div>
-                <div className="font-semibold text-slate-700">Type</div>
-                <div className="font-semibold text-slate-700">Statut</div>
-                <div className="font-semibold text-slate-700">Lien</div>
-                <div className="font-semibold text-slate-700 text-right">Actions</div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    const link = generateInvitationLink(template.id, guests[0]?.id || 'demo');
+                    navigator.clipboard.writeText(link);
+                    alert('Lien copié dans le presse-papiers !');
+                  }}
+                  className="flex-1 bg-purple-100 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  Aperçu
+                </button>
+                <button
+                  onClick={() => handleEditTemplate(template)}
+                  className="flex-1 bg-amber-100 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  Modifier
+                </button>
+                <button
+                  onClick={() => handleDeleteTemplate(template.id)}
+                  className="flex-1 bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Supprimer
+                </button>
               </div>
-
-              {/* Corps du tableau */}
-              <div className="divide-y divide-neutral-200/50">
-                {userInvites.map((invite, index) => (
-                  <div
-                    key={invite.id}
-                    className="animate-slide-up hover:bg-gradient-to-r hover:from-neutral-50/50 hover:to-amber-50/30 transition-all duration-300"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    {/* Version Desktop */}
-                    <div className="hidden md:grid md:grid-cols-6 gap-4 p-6 items-center">
-                      <div className="flex items-center">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg ${
-                          invite.etat === 'couple' 
-                            ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
-                            : 'bg-gradient-to-r from-amber-500 to-orange-500'
-                        }`}>
-                          {invite.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                        </div>
-                        <div className="ml-3">
-                          <p className="font-medium text-slate-900">{invite.nom}</p>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
-                          Table {invite.table}
-                        </span>
-                      </div>
-                      
-                      <div>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          invite.etat === 'couple' 
-                            ? 'bg-pink-100 text-pink-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {invite.etat === 'couple' ? 'Couple' : 'Simple'}
-                        </span>
-                      </div>
-                      
-                      <div>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          invite.confirmed 
-                            ? 'bg-emerald-100 text-emerald-800' 
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {invite.confirmed ? 'Confirmé' : 'En attente'}
-                        </span>
-                      </div>
-                      
-                      <div>
-                        <button
-                          onClick={() => copyInviteLink(invite.id)}
-                          className="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all duration-200 text-sm font-medium"
-                        >
-                          <Copy className="h-3 w-3 mr-1" />
-                          Copier
-                        </button>
-                      </div>
-                      
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => shareInvite(invite.id, invite.nom)}
-                          className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                          title="Partager"
-                        >
-                          <Share2 className="h-4 w-4" />
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            const link = generateInviteLink(invite.id);
-                            window.open(link, '_blank');
-                          }}
-                          className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                          title="Voir l'invitation"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleDeleteInvite(invite.id)}
-                          className="p-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                          title="Supprimer"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Version Mobile */}
-                    <div className="md:hidden p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg ${
-                            invite.etat === 'couple' 
-                              ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
-                              : 'bg-gradient-to-r from-amber-500 to-orange-500'
-                          }`}>
-                            {invite.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                          </div>
-                          <div className="ml-3">
-                            <p className="font-medium text-slate-900">{invite.nom}</p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className="text-xs text-purple-600 font-medium">Table {invite.table}</span>
-                              <span className={`text-xs font-medium ${
-                                invite.etat === 'couple' ? 'text-pink-600' : 'text-blue-600'
-                              }`}>
-                                {invite.etat === 'couple' ? 'Couple' : 'Simple'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          invite.confirmed 
-                            ? 'bg-emerald-100 text-emerald-800' 
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {invite.confirmed ? 'Confirmé' : 'En attente'}
-                        </span>
-                      </div>
-                      
-                      <div className="grid grid-cols-4 gap-2">
-                        <button
-                          onClick={() => copyInviteLink(invite.id)}
-                          className="bg-slate-100 text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-200 transition-all duration-200 font-medium flex items-center justify-center text-xs"
-                        >
-                          <Copy className="h-3 w-3 mr-1" />
-                          Copier
-                        </button>
-                        
-                        <button
-                          onClick={() => shareInvite(invite.id, invite.nom)}
-                          className="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all duration-200 font-medium flex items-center justify-center text-xs"
-                        >
-                          <Share2 className="h-3 w-3 mr-1" />
-                          Partager
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            const link = generateInviteLink(invite.id);
-                            window.open(link, '_blank');
-                          }}
-                          className="bg-purple-100 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-200 transition-all duration-200 font-medium flex items-center justify-center text-xs"
-                        >
-                          <ExternalLink className="h-3 w-3 mr-1" />
-                          Voir
-                        </button>
-                        
-                        <button
-                          onClick={() => handleDeleteInvite(invite.id)}
-                          className="bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-xs"
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Suppr.
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {userInvites.length === 0 && (
-                <div className="p-12 text-center">
-                  <Users className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
-                  <h4 className="text-lg font-medium text-neutral-500 mb-2">Aucun invité pour le moment</h4>
-                  <p className="text-neutral-400 mb-6">Commencez par ajouter vos premiers invités</p>
-                  <button
-                    onClick={handleCreateInvite}
-                    className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
-                  >
-                    Ajouter un invité
-                  </button>
-                </div>
-              )}
             </div>
           </div>
-        );
+        ))}
+      </div>
 
-      case 'tables':
-        return (
-          <TableManagement 
-            tables={tables} 
-            setTables={setTables}
-            guests={userInvites}
-            onSaveTable={async (table) => {
-              if (table.id && tables.find(t => t.id === table.id)) {
-                await updateTable(table.id.toString(), table);
-              } else {
-                await createTable(table);
-              }
-            }}
-            onDeleteTable={async (tableId) => {
-              await deleteTable(tableId.toString());
-            }}
-            isLoading={isLoading}
-          />
-        );
+      {userModels.length === 0 && (
+        <div className="text-center py-12">
+          <Sparkles className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-neutral-500 mb-2">Aucun template personnalisé</h3>
+          <p className="text-neutral-400 mb-6">Créez votre premier template en sélectionnant un modèle</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
+          >
+            Retour à l'accueil
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
-      case 'analytics':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                Statistiques et Analyses
-              </h3>
-              <p className="text-slate-600 mt-1">Analysez les performances de vos invitations</p>
-            </div>
-
-            {/* Statistiques détaillées */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-blue-500 rounded-xl">
-                    <Mail className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-blue-700 text-sm font-medium">Invitations Envoyées</p>
-                    <p className="text-2xl font-bold text-blue-900">{userInvites.length}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-emerald-500 rounded-xl">
-                    <CheckCircle className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-emerald-700 text-sm font-medium">Taux de Confirmation</p>
-                    <p className="text-2xl font-bold text-emerald-900">
-                      {userInvites.length > 0 
-                        ? Math.round((userInvites.filter(i => i.confirmed).length / userInvites.length) * 100)
-                        : 0
-                      }%
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-amber-500 rounded-xl">
-                    <Clock className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-amber-700 text-sm font-medium">En Attente</p>
-                    <p className="text-2xl font-bold text-amber-900">
-                      {userInvites.filter(i => !i.confirmed).length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg">
-                <div className="flex items-center">
-                  <div className="p-3 bg-purple-500 rounded-xl">
-                    <Users className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-purple-700 text-sm font-medium">Couples</p>
-                    <p className="text-2xl font-bold text-purple-900">
-                      {userInvites.filter(i => i.etat === 'couple').length}
-                    </p>
-                  </div>
-                </div>
+  const renderGuests = () => (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+            Gestion des Invités
+          </h3>
+          <p className="text-slate-600 mt-1">Ajoutez et gérez vos invités</p>
+        </div>
+        
+        {subscription && subscription.plan === 'free' && (
+          <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200/50">
+            <div className="flex items-center">
+              <Crown className="h-5 w-5 text-amber-600 mr-2" />
+              <div>
+                <p className="text-amber-800 font-semibold text-sm">Plan Gratuit</p>
+                <p className="text-amber-700 text-xs">{getRemainingInvites()} invitations restantes</p>
               </div>
             </div>
+          </div>
+        )}
+      </div>
 
-            {/* Graphique simple */}
-            <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
-              <h4 className="text-lg font-semibold text-slate-900 mb-6">Répartition des confirmations</h4>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-700">Confirmés</span>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-32 bg-neutral-200 rounded-full h-2">
-                      <div 
-                        className="bg-emerald-500 h-2 rounded-full transition-all duration-1000"
-                        style={{ 
-                          width: userInvites.length > 0 
-                            ? `${(userInvites.filter(i => i.confirmed).length / userInvites.length) * 100}%`
-                            : '0%'
-                        }}
-                      ></div>
+      {/* Formulaire d'ajout d'invité */}
+      <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
+        <h4 className="text-lg font-semibold text-slate-900 mb-4">Ajouter un nouvel invité</h4>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Nom complet
+            </label>
+            <input
+              type="text"
+              value={newGuest.nom}
+              onChange={(e) => setNewGuest({ ...newGuest, nom: e.target.value })}
+              className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+              placeholder="Ex: Sophie Martin"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Table
+            </label>
+            <select
+              value={newGuest.table}
+              onChange={(e) => setNewGuest({ ...newGuest, table: e.target.value })}
+              className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+            >
+              <option value="">Sélectionner une table</option>
+              {tables.map((table) => (
+                <option key={table.id} value={table.name}>{table.name}</option>
+              ))}
+              <option value="Non assigné">Non assigné</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Type d'invité
+            </label>
+            <select
+              value={newGuest.etat}
+              onChange={(e) => setNewGuest({ ...newGuest, etat: e.target.value as 'simple' | 'couple' })}
+              className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+            >
+              <option value="simple">Simple (1 place)</option>
+              <option value="couple">Couple (2 places)</option>
+            </select>
+          </div>
+          
+          <div className="flex items-end">
+            <button
+              onClick={handleAddGuest}
+              disabled={isAddingGuest || !newGuest.nom.trim()}
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {isAddingGuest ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                  Ajout...
+                </div>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Liste des invités */}
+      <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 overflow-hidden">
+        <div className="p-6 border-b border-neutral-200/50 bg-gradient-to-r from-neutral-50 to-amber-50/30">
+          <h4 className="text-lg font-semibold text-slate-900">Liste des invités ({guests.length})</h4>
+        </div>
+        
+        <div className="divide-y divide-neutral-200/50">
+          {guests.map((guest, index) => (
+            <div
+              key={guest.id}
+              className="p-6 hover:bg-gradient-to-r hover:from-neutral-50/50 hover:to-amber-50/30 transition-all duration-300 animate-slide-up"
+              style={{ animationDelay: `${index * 0.05}s` }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold shadow-lg ${
+                    guest.etat === 'couple' 
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
+                      : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                  }`}>
+                    {guest.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                  </div>
+                  <div className="ml-4">
+                    <h5 className="font-semibold text-slate-900 text-lg">{guest.nom}</h5>
+                    <div className="flex items-center space-x-4 text-sm text-slate-600">
+                      <span>Table: {guest.table}</span>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        guest.etat === 'couple' 
+                          ? 'bg-pink-100 text-pink-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {guest.etat === 'couple' ? 'Couple (2 places)' : 'Simple (1 place)'}
+                      </span>
                     </div>
-                    <span className="text-sm font-medium text-slate-900 w-12 text-right">
-                      {userInvites.filter(i => i.confirmed).length}
-                    </span>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-700">En attente</span>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-32 bg-neutral-200 rounded-full h-2">
-                      <div 
-                        className="bg-amber-500 h-2 rounded-full transition-all duration-1000"
-                        style={{ 
-                          width: userInvites.length > 0 
-                            ? `${(userInvites.filter(i => !i.confirmed).length / userInvites.length) * 100}%`
-                            : '0%'
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-slate-900 w-12 text-right">
-                      {userInvites.filter(i => !i.confirmed).length}
-                    </span>
-                  </div>
+                <div className="flex items-center space-x-3">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                    guest.confirmed 
+                      ? 'bg-emerald-100 text-emerald-800' 
+                      : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {guest.confirmed ? 'Confirmé' : 'En attente'}
+                  </span>
+                  
+                  <button
+                    onClick={() => {
+                      const link = generateInvitationLink(userModels[0]?.id || 'demo', guest.id);
+                      navigator.clipboard.writeText(link);
+                      alert('Lien d\'invitation copié !');
+                    }}
+                    className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Copier le lien d'invitation"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  
+                  <button
+                    onClick={() => handleDeleteGuest(guest.id)}
+                    className="p-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Supprimer l'invité"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             </div>
+          ))}
+        </div>
 
-            {/* Conseils */}
-            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50">
-              <div className="flex items-center mb-4">
-                <TrendingUp className="h-5 w-5 text-purple-600 mr-2" />
-                <h4 className="text-lg font-semibold text-purple-800">Conseils pour améliorer vos confirmations</h4>
-              </div>
-              <ul className="text-purple-700 space-y-2">
-                <li>• Envoyez des rappels personnalisés aux invités qui n'ont pas encore confirmé</li>
-                <li>• Utilisez les liens de partage pour faciliter la diffusion</li>
-                <li>• Personnalisez vos modèles pour qu'ils reflètent votre événement</li>
-                <li>• Suivez régulièrement les statistiques pour identifier les tendances</li>
-              </ul>
+        {guests.length === 0 && (
+          <div className="p-12 text-center">
+            <Users className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-neutral-500 mb-2">Aucun invité ajouté</h3>
+            <p className="text-neutral-400">Commencez par ajouter vos premiers invités</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderTables = () => (
+    <div className="animate-fade-in">
+      <TableManagement
+        tables={tables}
+        setTables={setTables}
+        guests={guests}
+        onSaveTable={handleSaveTable}
+        onDeleteTable={handleDeleteTable}
+        isLoading={isLoading}
+      />
+    </div>
+  );
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return renderOverview();
+      case 'templates':
+        return renderTemplates();
+      case 'guests':
+        return renderGuests();
+      case 'tables':
+        return renderTables();
+      case 'messages':
+        return (
+          <div className="animate-fade-in">
+            <div className="text-center py-12">
+              <MessageCircle className="h-16 w-16 text-amber-500 mx-auto mb-4 animate-glow" />
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Messages & Boissons des Invités</h3>
+              <p className="text-slate-600 mb-6">Consultez tous les messages de vœux et choix de boissons de vos invités</p>
+              <button
+                onClick={() => setShowGuestMessages(true)}
+                className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-8 py-4 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105 flex items-center mx-auto"
+              >
+                <MessageCircle className="h-5 w-5 mr-2" />
+                Voir tous les messages
+              </button>
             </div>
           </div>
         );
-
       default:
-        return null;
+        return renderOverview();
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-amber-50/30 to-purple-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900">
       {/* Header */}
-      <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl shadow-luxury border-b border-neutral-200/50 dark:border-slate-600/50 sticky top-0 z-40">
+      <header className="bg-gradient-to-r from-neutral-50/95 via-amber-50/90 to-neutral-50/95 dark:from-slate-800/95 dark:via-slate-700/90 dark:to-slate-800/95 backdrop-blur-xl shadow-luxury border-b border-amber-200/30 dark:border-slate-600/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Crown className="h-8 w-8 text-amber-500 animate-glow drop-shadow-lg" />
-                <div className="absolute inset-0 animate-pulse">
-                  <Crown className="h-8 w-8 text-amber-300 opacity-30" />
+              <button
+                onClick={() => window.location.reload()}
+                className="flex items-center text-amber-600 hover:text-amber-700 transition-all duration-300 group"
+              >
+                <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
+                Retour à l'accueil
+              </button>
+              
+              <div className="flex items-center space-x-2">
+                <div className="relative">
+                  <Crown className="h-8 w-8 text-amber-500 animate-glow drop-shadow-lg" />
+                  <div className="absolute inset-0 animate-pulse">
+                    <Crown className="h-8 w-8 text-amber-300 opacity-30" />
+                  </div>
                 </div>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-                  Dashboard Furaha-Event
-                </h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Bienvenue, {userData?.firstName} {userData?.lastName}
-                </p>
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 via-amber-700 to-slate-900 dark:from-slate-100 dark:via-amber-300 dark:to-slate-100 bg-clip-text text-transparent">
+                    Dashboard Furaha-Event
+                  </h1>
+                  {userData && (
+                    <p className="text-slate-600 dark:text-slate-400 text-sm">
+                      Bienvenue, {userData.firstName} {userData.lastName}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
             <div className="flex items-center space-x-4">
               <button
+                onClick={() => setShowGuestMessages(true)}
+                className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-2 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold flex items-center shadow-lg transform hover:scale-105"
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Messages
+              </button>
+              
+              <button
                 onClick={() => setShowSettings(true)}
-                className="p-2 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-slate-700 rounded-lg transition-all duration-200 transform hover:scale-110"
-                title="Paramètres"
+                className="p-2 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-slate-700 rounded-lg transition-all duration-200"
               >
                 <Settings className="h-5 w-5" />
               </button>
               
               <button
                 onClick={() => setShowProfile(true)}
-                className="flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-2 rounded-full hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-medium shadow-glow-amber transform hover:scale-105"
+                className="flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-2 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105"
               >
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-amber-900 font-bold text-xs">
-                  {userData?.firstName?.[0]}{userData?.lastName?.[0]}
-                </div>
-                <span className="hidden sm:block">Mon Profil</span>
+                {userData && (
+                  <div className="w-6 h-6 bg-slate-900 rounded-full flex items-center justify-center text-amber-400 font-bold text-xs">
+                    {userData.firstName[0]}{userData.lastName[0]}
+                  </div>
+                )}
+                <span className="hidden sm:block">Profil</span>
+              </button>
+              
+              <button
+                onClick={onLogout}
+                className="p-2 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-slate-700 rounded-lg transition-all duration-200"
+                title="Se déconnecter"
+              >
+                <LogOut className="h-5 w-5" />
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Navigation Tabs */}
-      <nav className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-b border-neutral-200/50 dark:border-slate-600/50 sticky top-16 z-30">
+      {/* Navigation */}
+      <nav className="bg-white dark:bg-slate-800 shadow-lg border-b border-neutral-200/50 dark:border-slate-600/50 sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8 overflow-x-auto">
             {tabs.map((tab) => {
@@ -1040,7 +885,7 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
                   className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-all duration-300 whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-amber-500 text-amber-600 dark:text-amber-400'
-                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500'
+                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'
                   }`}
                 >
                   <IconComponent className="h-4 w-4" />
@@ -1054,24 +899,10 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {error && (
-          <div className="mb-6 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/50 rounded-xl p-4">
-            <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-rose-600 dark:text-rose-400 mr-2" />
-              <p className="text-rose-700 dark:text-rose-300">{error}</p>
-            </div>
-          </div>
-        )}
-        
         {renderTabContent()}
       </main>
 
       {/* Modals */}
-      <DashboardSettings
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-      />
-
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
@@ -1079,148 +910,15 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
         remainingInvites={getRemainingInvites()}
       />
 
-      {/* Modal d'ajout d'invité */}
-      {showInviteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-luxury max-w-md w-full animate-slide-up">
-            <div className="p-6 border-b border-neutral-200/50 dark:border-slate-600/50 bg-gradient-to-r from-neutral-50 to-amber-50/30 dark:from-slate-700 dark:to-slate-600">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <div className="relative mr-3">
-                    <Users className="h-6 w-6 text-amber-500 animate-glow drop-shadow-lg" />
-                    <div className="absolute inset-0 animate-pulse">
-                      <Users className="h-6 w-6 text-amber-300 opacity-30" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-                      Ajouter un invité
-                    </h3>
-                    <p className="text-slate-600 dark:text-slate-400 text-sm">
-                      Créez une nouvelle invitation
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowInviteModal(false);
-                    setInviteFormData({ guestName: '', tableNumber: '', guestType: 'simple' });
-                  }}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200"
-                >
-                  <X className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
-                </button>
-              </div>
-            </div>
+      <DashboardSettings
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
 
-            <form onSubmit={handleSubmitInvite} className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Nom de l'invité *
-                  </label>
-                  <input
-                    type="text"
-                    value={inviteFormData.guestName}
-                    onChange={(e) => setInviteFormData(prev => ({ ...prev, guestName: e.target.value }))}
-                    className="w-full px-4 py-3 border border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                    placeholder="Ex: Sophie Martin"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
-                    Table *
-                    <ChevronDown className="h-4 w-4 ml-1 text-slate-500" />
-                  </label>
-                  <select
-                    value={inviteFormData.tableNumber}
-                    onChange={(e) => setInviteFormData(prev => ({ ...prev, tableNumber: e.target.value }))}
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white appearance-none cursor-pointer"
-                  >
-                    <option value="">Sélectionnez une table</option>
-                    {tables.map((table) => (
-                      <option key={table.id} value={table.name}>
-                        {table.name} ({table.seats - getOccupiedSeats(table.name)} places libres)
-                      </option>
-                    ))}
-                    <option value="custom">Autre (saisir manuellement)</option>
-                  </select>
-                  {inviteFormData.tableNumber === 'custom' && (
-                    <input
-                      type="text"
-                      onChange={(e) => setInviteFormData(prev => ({ ...prev, tableNumber: e.target.value }))}
-                      className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 mt-2"
-                      placeholder="Ex: 1, 2, VIP..."
-                      required
-                    />
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Type d'invité
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setInviteFormData(prev => ({ ...prev, guestType: 'simple' }))}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                        inviteFormData.guestType === 'simple'
-                          ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                          : 'border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-amber-300 dark:hover:border-amber-400'
-                      }`}
-                    >
-                      <div className="text-center">
-                        <User className="h-6 w-6 mx-auto mb-2" />
-                        <p className="font-medium">Simple</p>
-                        <p className="text-xs opacity-75">1 personne</p>
-                      </div>
-                    </button>
-                    
-                    <button
-                      type="button"
-                      onClick={() => setInviteFormData(prev => ({ ...prev, guestType: 'couple' }))}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                        inviteFormData.guestType === 'couple'
-                          ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                          : 'border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-amber-300 dark:hover:border-amber-400'
-                      }`}
-                    >
-                      <div className="text-center">
-                        <Users className="h-6 w-6 mx-auto mb-2" />
-                        <p className="font-medium">Couple</p>
-                        <p className="text-xs opacity-75">2 personnes</p>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowInviteModal(false);
-                    setInviteFormData({ guestName: '', tableNumber: '', guestType: 'simple' });
-                  }}
-                  className="flex-1 px-4 py-3 border border-neutral-300 dark:border-slate-600 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-slate-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-slate-600 transition-all duration-200 font-medium"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold shadow-glow-amber transform hover:scale-105"
-                >
-                  <Plus className="h-4 w-4 mr-2 inline" />
-                  Créer l'invité
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <GuestMessagesViewer
+        isOpen={showGuestMessages}
+        onClose={() => setShowGuestMessages(false)}
+      />
     </div>
   );
 };
