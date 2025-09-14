@@ -34,34 +34,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const firebaseAuth = useFirebaseAuth();
 
   // Écouter les changements d'état d'authentification pour maintenir la session
-  React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log('Session utilisateur maintenue:', user.email);
-      } else {
-        console.log('Aucune session utilisateur active');
-      }
-    });
+React.useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log('Session utilisateur maintenue:', user.email);
 
-    return () => unsubscribe();
-  }, []);
+      // 🔹 Met à jour le state global avec les infos utilisateur
+      firebaseAuth.setUser({
+        uid: user.uid,
+        email: user.email,
+        firstName: user.displayName?.split(' ')[0] || '',
+        lastName: user.displayName?.split(' ')[1] || '',
+      });
+    } else {
+      console.log('Aucune session utilisateur active');
+      firebaseAuth.setUser(null); // Déconnecte l'utilisateur
+    }
+  });
 
-  const value: AuthContextType = {
-    user: firebaseAuth.user,
-    isAuthenticated: firebaseAuth.isAuthenticated,
-    login: firebaseAuth.login,
-    register: firebaseAuth.register,
-    logout: firebaseAuth.logout,
-    resetPassword: firebaseAuth.resetPassword,
-    updateUserProfile: firebaseAuth.updateUserProfile,
-    isLoading: firebaseAuth.isLoading,
-    error: firebaseAuth.error,
-    clearError: firebaseAuth.clearError
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  return () => unsubscribe();
+}, [firebaseAuth]);
