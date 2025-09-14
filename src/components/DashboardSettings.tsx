@@ -12,6 +12,24 @@ interface DashboardSettingsProps {
   onClose: () => void;
 }
 
+const handlePasswordReset = async () => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (user?.email) {
+    try {
+      await sendPasswordResetEmail(auth, user.email);
+      alert("📩 Un email de réinitialisation a été envoyé à " + user.email);
+    } catch (error: any) {
+      console.error("Erreur reset password:", error);
+      alert("⚠️ Impossible d’envoyer l’email : " + error.message);
+    }
+  } else {
+    alert("⚠️ Aucun email associé à ce compte.");
+  }
+};
+
+
 const DashboardSettings = ({ isOpen, onClose }: DashboardSettingsProps) => {
   const { isDarkMode } = useTheme();
   const { t } = useLanguage();
