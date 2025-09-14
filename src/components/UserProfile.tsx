@@ -164,7 +164,7 @@ const UserProfile = ({ userData, onLogout, onBack }: UserProfileProps) => {
                 ) : (
                   <div className="bg-gradient-to-r from-neutral-50 to-amber-50/30 dark:from-slate-700 dark:to-slate-600 px-4 py-4 rounded-xl border border-neutral-200 dark:border-slate-600 shadow-lg">
                     <span className="text-slate-900 dark:text-slate-100 font-medium">
-                    {userData.firstName}
+                    {isEditing ? editData.firstName : userData.firstName}
                     </span>
                   </div>
                 )}
@@ -184,7 +184,7 @@ const UserProfile = ({ userData, onLogout, onBack }: UserProfileProps) => {
                 ) : (
                   <div className="bg-gradient-to-r from-neutral-50 to-amber-50/30 dark:from-slate-700 dark:to-slate-600 px-4 py-4 rounded-xl border border-neutral-200 dark:border-slate-600 shadow-lg">
                     <span className="text-slate-900 dark:text-slate-100 font-medium">
-                    {userData.lastName}
+                    {isEditing ? editData.lastName : userData.lastName}
                     </span>
                   </div>
                 )}
