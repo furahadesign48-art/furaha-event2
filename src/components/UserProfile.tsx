@@ -176,28 +176,7 @@ const UserProfile = ({ userData, onLogout }: UserProfileProps) => {
 
       
 
-          {/* Statistiques */}
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-              <Settings className="h-5 w-5 mr-2 text-amber-600" />
-              Statistiques
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200/50">
-                <div className="text-2xl font-bold text-amber-900">0</div>
-                <div className="text-amber-700 text-sm">Événements créés</div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200/50">
-                <div className="text-2xl font-bold text-purple-900">0</div>
-                <div className="text-purple-700 text-sm">Invitations envoyées</div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 border border-emerald-200/50">
-                <div className="text-2xl font-bold text-emerald-900">0</div>
-                <div className="text-emerald-700 text-sm">Templates utilisés</div>
-              </div>
+        
             </div>
           </div>
         </div>
