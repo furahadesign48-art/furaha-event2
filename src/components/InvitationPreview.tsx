@@ -204,20 +204,11 @@ const InvitationPreview = () => {
   const getColorScheme = (category: string) => {
     switch (category) {
       case 'wedding':
-        // Déterminer le style basé sur le nom du modèle
-        if (userModel?.name?.includes('Bohème') || userModel?.name?.includes('Nature')) {
-          return {
-            primary: '#10b981',
-            secondary: '#059669',
-            accent: '#14b8a6'
-          };
-        } else {
-          return {
-            primary: '#f59e0b',
-            secondary: '#d97706',
-            accent: '#f43f5e'
-          };
-        }
+        return {
+          primary: '#f59e0b',
+          secondary: '#d97706',
+          accent: '#f43f5e'
+        };
       case 'birthday':
         return {
           primary: '#8b5cf6',
@@ -237,6 +228,25 @@ const InvitationPreview = () => {
           accent: '#f43f5e'
         };
     }
+  };
+
+  // Fonction pour obtenir les couleurs spécifiques au template bohème
+  const getBohemeColors = () => {
+    return {
+      primary: '#10b981',
+      secondary: '#059669',
+      accent: '#14b8a6',
+      light: '#6ee7b7',
+      teal: '#14b8a6'
+    };
+  };
+
+  // Fonction pour obtenir les couleurs finales selon le style
+  const getFinalColors = () => {
+    if (isBohoStyle) {
+      return getBohemeColors();
+    }
+    return userModel?.colors || userModel?.customizations?.colors || getColorScheme(userModel.category);
   };
 
   if (isLoading) {
@@ -293,14 +303,37 @@ const InvitationPreview = () => {
   }
 
   const IconComponent = getIconForCategory(userModel.category);
-  // Utiliser les couleurs personnalisées si elles existent, sinon les couleurs par défaut
-  const colors = userModel.colors || userModel.customizations?.colors || getColorScheme(userModel.category);
+  const colors = getFinalColors();
   
   // Déterminer le style du template (classique ou bohème)
   const isBohoStyle = userModel.name?.includes('Bohème') || userModel.name?.includes('Nature');
 
   return (
-<div className="min-h-screen relative overflow-hidden">
+<div className={`min-h-screen relative overflow-hidden ${
+  isBohoStyle 
+    ? 'bg-gradient-to-br from-slate-900 via-emerald-900/30 to-slate-800'
+    : 'bg-gradient-to-br from-slate-900 via-amber-900/20 to-slate-800'
+}`}>
+  {/* Background decorative elements - différents selon le style */}
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    {isBohoStyle ? (
+      // Éléments décoratifs bohèmes
+      <>
+        <div className="absolute top-10 right-10 w-60 h-60 bg-gradient-to-r from-emerald-300/8 to-teal-300/8 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-10 left-10 w-48 h-48 bg-gradient-to-r from-emerald-400/8 to-emerald-200/8 rounded-full blur-3xl animate-bounce-slow"></div>
+        <div className="absolute top-1/3 left-1/4 w-32 h-32 bg-gradient-to-r from-teal-300/8 to-emerald-300/8 rounded-full blur-2xl animate-float" style={{ animationDelay: '3s' }}></div>
+        <div className="absolute bottom-1/3 right-1/4 w-28 h-28 bg-gradient-to-r from-emerald-200/8 to-teal-200/8 rounded-full blur-2xl animate-float" style={{ animationDelay: '1s' }}></div>
+      </>
+    ) : (
+      // Éléments décoratifs classiques
+      <>
+        <div className="absolute top-20 left-20 w-40 h-40 bg-gradient-to-r from-amber-400/10 to-rose-400/10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-20 w-32 h-32 bg-gradient-to-r from-amber-500/10 to-amber-300/10 rounded-full blur-3xl animate-bounce-slow"></div>
+        <div className="absolute top-1/2 left-10 w-24 h-24 bg-gradient-to-r from-rose-400/10 to-amber-400/10 rounded-full blur-2xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </>
+    )}
+  </div>
+
   {/* Haut avec l'image nette (agrandie + overlay sombre) */}
   <div className="absolute top-0 left-0 w-full">
     <img
@@ -335,18 +368,27 @@ const InvitationPreview = () => {
             {/* Decorative Header - différent selon le style */}
             <div>
               {isBohoStyle ? (
-                // Header bohème avec éléments naturels
+                // Header bohème avec éléments naturels et animations spécifiques
                 <div className="flex justify-center items-center mb-8">
                   <div className="relative">
                     <div className="flex items-center space-x-4">
-                      <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
-                      <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+                      <div className="w-4 h-4 rounded-full animate-float" style={{ backgroundColor: colors.light }}></div>
+                      <div className="w-3 h-3 rounded-full animate-float" style={{ backgroundColor: colors.teal, animationDelay: '0.5s' }}></div>
+                      <div className="w-2 h-2 rounded-full animate-float" style={{ backgroundColor: colors.primary, animationDelay: '1s' }}></div>
                       <IconComponent 
-                        className="h-16 w-16 sm:h-20 sm:w-20 animate-float drop-shadow-2xl" 
+                        className="h-16 w-16 sm:h-20 sm:w-20 animate-glow drop-shadow-2xl" 
                         style={{ color: colors.primary }} 
                       />
-                      <div className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
-                      <div className="w-3 h-3 bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: '0.9s' }}></div>
+                      <div className="w-2 h-2 rounded-full animate-float" style={{ backgroundColor: colors.primary, animationDelay: '1.5s' }}></div>
+                      <div className="w-3 h-3 rounded-full animate-float" style={{ backgroundColor: colors.teal, animationDelay: '2s' }}></div>
+                      <div className="w-4 h-4 rounded-full animate-float" style={{ backgroundColor: colors.light, animationDelay: '2.5s' }}></div>
+                    </div>
+                    {/* Particules flottantes supplémentaires */}
+                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                      <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: colors.accent }}></div>
+                    </div>
+                    <div className="absolute -bottom-8 left-1/3">
+                      <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: colors.secondary, animationDelay: '1s' }}></div>
                     </div>
                   </div>
                 </div>
@@ -396,25 +438,36 @@ const InvitationPreview = () => {
             {isBohoStyle ? (
               <div className="mb-8">
                 <div 
-                  className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-lg mx-auto shadow-2xl" 
+                  className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-lg mx-auto shadow-2xl relative overflow-hidden" 
                   style={{ 
-                    background: `linear-gradient(to right, ${colors.primary}30, ${colors.secondary}30)`,
-                    borderColor: `${colors.primary}20`
+                    background: `linear-gradient(135deg, ${colors.primary}40, ${colors.secondary}30, ${colors.teal}40)`,
+                    borderColor: `${colors.primary}40`,
+                    boxShadow: `0 25px 50px ${colors.primary}20`
                   }}
                 >
+                  {/* Effet de brillance bohème */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-shimmer"></div>
+                  
                   <h1 
-                    className="text-2xl sm:text-3xl lg:text-4xl font-bold font-luxury drop-shadow-lg tracking-wide" 
-                    style={{ color: colors.primary }}
+                    className="text-2xl sm:text-3xl lg:text-4xl font-bold font-luxury drop-shadow-lg tracking-wide relative z-10" 
+                    style={{ 
+                      background: `linear-gradient(135deg, ${colors.light}, ${colors.primary}, ${colors.teal})`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    }}
                   >
                     {userModel.title}
                   </h1>
-                  <div className="flex justify-center space-x-2 mt-4">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <div className="flex justify-center space-x-3 mt-6 relative z-10">
+                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: colors.light }}></div>
+                    <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: colors.teal, animationDelay: '0.2s' }}></div>
                     <div 
-                      className="w-16 h-px mt-1" 
-                      style={{ background: `linear-gradient(to right, transparent, ${colors.primary}, transparent)` }}
+                      className="w-20 h-px mt-1" 
+                      style={{ background: `linear-gradient(to right, transparent, ${colors.primary}, ${colors.teal}, transparent)` }}
                     ></div>
-                    <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                    <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: colors.teal, animationDelay: '0.4s' }}></div>
+                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: colors.light, animationDelay: '0.6s' }}></div>
                   </div>
                 </div>
               </div>
@@ -430,28 +483,32 @@ const InvitationPreview = () => {
             {/* Guest Info - style différent selon le template */}
             {isBohoStyle ? (
               <div 
-                className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto shadow-xl" 
+                className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto shadow-xl relative overflow-hidden" 
                 style={{ 
-                  background: `linear-gradient(to right, ${colors.secondary}40, ${colors.primary}40)`,
-                  borderColor: `${colors.primary}40`
+                  background: `linear-gradient(135deg, ${colors.secondary}50, ${colors.primary}40, ${colors.teal}50)`,
+                  borderColor: `${colors.primary}50`,
+                  boxShadow: `0 20px 40px ${colors.primary}15`
                 }}
               >
-                <div className="flex justify-center mb-4">
+                {/* Effet de brillance naturelle */}
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent animate-pulse"></div>
+                
+                <div className="flex justify-center mb-4 relative z-10">
                   <div className="flex space-x-2">
-                    <div className="w-2 h-2 bg-emerald-300 rounded-full animate-float"></div>
-                    <div className="w-2 h-2 bg-teal-300 rounded-full animate-float" style={{ animationDelay: '0.5s' }}></div>
-                    <div className="w-2 h-2 bg-emerald-300 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
+                    <div className="w-2 h-2 rounded-full animate-float" style={{ backgroundColor: colors.light }}></div>
+                    <div className="w-2 h-2 rounded-full animate-float" style={{ backgroundColor: colors.teal, animationDelay: '0.5s' }}></div>
+                    <div className="w-2 h-2 rounded-full animate-float" style={{ backgroundColor: colors.light, animationDelay: '1s' }}></div>
                   </div>
                 </div>
-                <p className="text-base sm:text-lg mb-3 tracking-wide" style={{ color: `${colors.primary}cc` }}>
+                <p className="text-base sm:text-lg mb-3 tracking-wide relative z-10" style={{ color: colors.light }}>
                   Invité d'honneur
                 </p>
-                <p className="text-2xl sm:text-3xl font-semibold text-white tracking-wide">{invite.nom}</p>
+                <p className="text-2xl sm:text-3xl font-semibold text-white tracking-wide relative z-10 drop-shadow-lg">{invite.nom}</p>
                 <div 
-                  className="w-16 h-px mx-auto my-4" 
-                  style={{ background: `linear-gradient(to right, transparent, ${colors.primary}, transparent)` }}
+                  className="w-20 h-px mx-auto my-4 relative z-10" 
+                  style={{ background: `linear-gradient(to right, transparent, ${colors.light}, ${colors.teal}, transparent)` }}
                 ></div>
-                <p className="text-base sm:text-lg tracking-wide" style={{ color: `${colors.primary}dd` }}>
+                <p className="text-base sm:text-lg tracking-wide relative z-10" style={{ color: colors.teal }}>
                   {userModel.category === 'graduation' ? 'Place' : 'Table'} n° {invite.table || 'Non assigné'}
                 </p>
               </div>
@@ -474,17 +531,28 @@ const InvitationPreview = () => {
             {/* Invitation Text - style différent selon le template */}
             {isBohoStyle ? (
               <div 
-                className="bg-black/20 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-2xl mx-auto shadow-xl" 
-                style={{ borderColor: `${colors.primary}20` }}
+                className="bg-black/20 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-2xl mx-auto shadow-xl relative overflow-hidden" 
+                style={{ 
+                  borderColor: `${colors.primary}30`,
+                  boxShadow: `0 20px 40px ${colors.primary}10`
+                }}
               >
-                <div className="flex justify-center mb-4">
+                {/* Particules flottantes dans le texte */}
+                <div className="absolute top-2 right-4">
+                  <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: colors.light }}></div>
+                </div>
+                <div className="absolute bottom-2 left-4">
+                  <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: colors.teal, animationDelay: '1s' }}></div>
+                </div>
+                
+                <div className="flex justify-center mb-4 relative z-10">
                   <div className="flex space-x-2">
-                    <div className="w-1 h-1 bg-emerald-300 rounded-full animate-pulse"></div>
-                    <div className="w-1 h-1 bg-teal-300 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-                    <div className="w-1 h-1 bg-emerald-300 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                    <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: colors.light }}></div>
+                    <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: colors.teal, animationDelay: '0.3s' }}></div>
+                    <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: colors.light, animationDelay: '0.6s' }}></div>
                   </div>
                 </div>
-                <p className="text-neutral-100 leading-relaxed text-base sm:text-lg italic tracking-wide">
+                <p className="text-neutral-100 leading-relaxed text-base sm:text-lg italic tracking-wide relative z-10 drop-shadow-lg">
                   {userModel.invitationText}
                 </p>
               </div>
@@ -502,23 +570,27 @@ const InvitationPreview = () => {
             {/* Event Details - style différent selon le template */}
             <div className="space-y-6 max-w-lg mx-auto">
               {isBohoStyle ? (
-                // Style bohème avec cartes séparées
+                // Style bohème avec cartes séparées et animations naturelles
                 <>
                   <div 
-                    className="backdrop-blur-sm rounded-xl p-4 sm:p-6 border shadow-xl" 
+                    className="backdrop-blur-sm rounded-xl p-4 sm:p-6 border shadow-xl relative overflow-hidden group" 
                     style={{ 
-                      background: `linear-gradient(to right, ${colors.primary}40, ${colors.secondary}40)`,
-                      borderColor: `${colors.primary}30`
+                      background: `linear-gradient(135deg, ${colors.primary}50, ${colors.secondary}40, ${colors.teal}50)`,
+                      borderColor: `${colors.primary}40`,
+                      boxShadow: `0 15px 30px ${colors.primary}20`
                     }}
                   >
+                    {/* Effet de mouvement naturel */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent group-hover:via-white/10 transition-all duration-500"></div>
+                    
                     <div className="flex items-center justify-center text-neutral-200">
                       <Calendar 
-                        className="h-6 w-6 sm:h-7 sm:w-7 mr-4" 
+                        className="h-6 w-6 sm:h-7 sm:w-7 mr-4 animate-glow drop-shadow-lg" 
                         style={{ color: colors.primary }} 
                       />
-                      <div className="text-center">
+                      <div className="text-center relative z-10">
                         <p className="font-bold text-lg sm:text-xl tracking-wide">{userModel.eventDate}</p>
-                        <p className="text-base sm:text-lg tracking-wide" style={{ color: `${colors.primary}dd` }}>
+                        <p className="text-base sm:text-lg tracking-wide" style={{ color: colors.light }}>
                           {userModel.eventTime}
                         </p>
                       </div>
@@ -526,18 +598,22 @@ const InvitationPreview = () => {
                   </div>
                   
                   <div 
-                    className="backdrop-blur-sm rounded-xl p-4 sm:p-6 border shadow-xl" 
+                    className="backdrop-blur-sm rounded-xl p-4 sm:p-6 border shadow-xl relative overflow-hidden group" 
                     style={{ 
-                      background: `linear-gradient(to right, ${colors.secondary}40, ${colors.primary}40)`,
-                      borderColor: `${colors.secondary}30`
+                      background: `linear-gradient(135deg, ${colors.teal}50, ${colors.primary}40, ${colors.secondary}50)`,
+                      borderColor: `${colors.teal}40`,
+                      boxShadow: `0 15px 30px ${colors.teal}20`
                     }}
                   >
+                    {/* Effet de mouvement naturel */}
+                    <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/5 to-transparent group-hover:via-white/10 transition-all duration-500"></div>
+                    
                     <div className="flex items-center justify-center text-neutral-200">
                       <MapPin 
-                        className="h-6 w-6 sm:h-7 sm:w-7 mr-4" 
-                        style={{ color: colors.secondary }} 
+                        className="h-6 w-6 sm:h-7 sm:w-7 mr-4 animate-glow drop-shadow-lg" 
+                        style={{ color: colors.teal }} 
                       />
-                      <p className="text-base sm:text-lg text-center tracking-wide">{userModel.eventLocation}</p>
+                      <p className="text-base sm:text-lg text-center tracking-wide relative z-10 drop-shadow-lg">{userModel.eventLocation}</p>
                     </div>
                   </div>
                 </>
@@ -570,39 +646,64 @@ const InvitationPreview = () => {
 
             {/* RSVP Section - style différent selon le template */}
             <div 
-              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto ${isBohoStyle ? 'shadow-2xl' : ''}`} 
+              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto relative overflow-hidden ${isBohoStyle ? 'shadow-2xl' : ''}`} 
               style={{ 
-                background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                borderColor: `${colors.primary}${isBohoStyle ? '40' : '30'}`
+                background: isBohoStyle 
+                  ? `linear-gradient(135deg, ${colors.primary}60, ${colors.secondary}50, ${colors.teal}60)`
+                  : `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
+                borderColor: `${colors.primary}${isBohoStyle ? '50' : '30'}`,
+                boxShadow: isBohoStyle ? `0 25px 50px ${colors.primary}25` : undefined
               }}
             >
+              {isBohoStyle && (
+                <>
+                  {/* Effet de brillance naturelle */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/8 to-transparent animate-pulse"></div>
+                  {/* Particules flottantes */}
+                  <div className="absolute top-3 right-3">
+                    <div className="w-1 h-1 rounded-full animate-float" style={{ backgroundColor: colors.light }}></div>
+                  </div>
+                  <div className="absolute bottom-3 left-3">
+                    <div className="w-1 h-1 rounded-full animate-float" style={{ backgroundColor: colors.teal, animationDelay: '1s' }}></div>
+                  </div>
+                </>
+              )}
+              
               <h3 
-                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl ${isBohoStyle ? 'tracking-wide' : ''}`} 
-                style={{ color: `${colors.primary}cc` }}
+                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl relative z-10 ${isBohoStyle ? 'tracking-wide font-bold drop-shadow-lg' : ''}`} 
+                style={{ color: isBohoStyle ? colors.light : `${colors.primary}cc` }}
               >
-                <Users className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 mr-3 animate-glow drop-shadow-lg" />
                 {isBohoStyle ? 'Confirmation Naturelle' : 'Confirmation de présence'}
               </h3>
               <button
                 onClick={handleConfirmation}
-                className={`w-full py-4 sm:py-5 font-semibold transition-all duration-300 transform hover:scale-105 text-lg sm:text-xl ${
-                  isBohoStyle ? 'rounded-2xl tracking-wide' : 'rounded-xl'
+                className={`w-full py-4 sm:py-5 font-semibold transition-all duration-300 transform hover:scale-105 text-lg sm:text-xl relative overflow-hidden group ${
+                  isBohoStyle ? 'rounded-2xl tracking-wide font-bold shadow-2xl' : 'rounded-xl'
                 }`}
                 style={{
                   background: isConfirmed 
-                    ? 'linear-gradient(to right, #10b981, #059669)' 
-                    : `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
+                    ? isBohoStyle 
+                      ? `linear-gradient(135deg, ${colors.teal}, ${colors.primary}, ${colors.secondary})`
+                      : 'linear-gradient(to right, #10b981, #059669)'
+                    : isBohoStyle
+                      ? `linear-gradient(135deg, ${colors.primary}, ${colors.teal}, ${colors.secondary})`
+                      : `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
                   color: isConfirmed ? 'white' : '#1e293b',
-                  boxShadow: isBohoStyle ? '0 20px 40px rgba(0,0,0,0.3)' : undefined
+                  boxShadow: isBohoStyle ? `0 20px 40px ${colors.primary}30` : undefined
                 }}
               >
+                {isBohoStyle && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 group-hover:translate-x-full transition-transform duration-1000"></div>
+                )}
+                
                 {isConfirmed ? (
-                  <span className="flex items-center justify-center">
+                  <span className="flex items-center justify-center relative z-10">
                     <Check className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
                     {isBohoStyle ? 'Je serai présent(e)' : 'Présence confirmée'}
                   </span>
                 ) : (
-                  <span className="flex items-center justify-center">
+                  <span className="flex items-center justify-center relative z-10">
                     {isBohoStyle && <Heart className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />}
                     {isBohoStyle ? 'Confirmer ma Présence' : 'Confirmer ma présence'}
                   </span>
@@ -612,28 +713,46 @@ const InvitationPreview = () => {
 
             {/* Drink Selection - style différent selon le template */}
             <div 
-              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto ${isBohoStyle ? 'shadow-2xl' : ''}`} 
+              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto relative overflow-hidden ${isBohoStyle ? 'shadow-2xl' : ''}`} 
               style={{ 
-                background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                borderColor: `${colors.primary}${isBohoStyle ? '40' : '30'}`
+                background: isBohoStyle 
+                  ? `linear-gradient(135deg, ${colors.teal}60, ${colors.primary}50, ${colors.secondary}60)`
+                  : `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
+                borderColor: `${colors.primary}${isBohoStyle ? '50' : '30'}`,
+                boxShadow: isBohoStyle ? `0 25px 50px ${colors.teal}25` : undefined
               }}
             >
+              {isBohoStyle && (
+                <>
+                  {/* Effet de brillance naturelle */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/8 to-transparent animate-pulse"></div>
+                  {/* Particules */}
+                  <div className="absolute top-2 left-2">
+                    <div className="w-1 h-1 rounded-full animate-float" style={{ backgroundColor: colors.light }}></div>
+                  </div>
+                  <div className="absolute bottom-2 right-2">
+                    <div className="w-1 h-1 rounded-full animate-float" style={{ backgroundColor: colors.teal, animationDelay: '1.5s' }}></div>
+                  </div>
+                </>
+              )}
+              
               <h3 
-                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl ${isBohoStyle ? 'tracking-wide' : ''}`} 
-                style={{ color: `${colors.primary}cc` }}
+                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl relative z-10 ${isBohoStyle ? 'tracking-wide font-bold drop-shadow-lg' : ''}`} 
+                style={{ color: isBohoStyle ? colors.light : `${colors.primary}cc` }}
               >
-                <Wine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                <Wine className="h-5 w-5 sm:h-6 sm:w-6 mr-3 animate-glow drop-shadow-lg" />
                 {isBohoStyle ? 'Sélection Bio' : 'Choix de boisson'}
               </h3>
               <select
                 value={selectedDrink}
                 onChange={(e) => handleDrinkSelection(e.target.value)}
-                className={`w-full bg-slate-800/90 text-white border px-4 py-4 focus:ring-2 transition-all duration-200 text-base sm:text-lg font-medium ${
-                  isBohoStyle ? 'rounded-2xl' : 'rounded-xl'
+                className={`w-full bg-slate-800/90 text-white border px-4 py-4 focus:ring-2 transition-all duration-200 text-base sm:text-lg font-medium relative z-10 ${
+                  isBohoStyle ? 'rounded-2xl shadow-xl' : 'rounded-xl'
                 }`}
                 style={{ 
-                  borderColor: `${colors.primary}${isBohoStyle ? '40' : '30'}`,
-                  focusRingColor: colors.primary
+                  borderColor: isBohoStyle ? `${colors.primary}50` : `${colors.primary}30`,
+                  focusRingColor: colors.primary,
+                  boxShadow: isBohoStyle ? `0 10px 20px ${colors.primary}20` : undefined
                 }}
               >
                 <option value="">{isBohoStyle ? 'Choisissez votre nectar' : 'Sélectionnez votre boisson'}</option>
@@ -645,46 +764,77 @@ const InvitationPreview = () => {
 
             {/* Guest Book - style différent selon le template */}
             <div 
-              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-lg mx-auto ${isBohoStyle ? 'shadow-2xl' : ''}`} 
+              className={`backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-lg mx-auto relative overflow-hidden ${isBohoStyle ? 'shadow-2xl' : ''}`} 
               style={{ 
-                background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                borderColor: `${colors.primary}${isBohoStyle ? '40' : '30'}`
+                background: isBohoStyle 
+                  ? `linear-gradient(135deg, ${colors.primary}60, ${colors.teal}50, ${colors.secondary}60)`
+                  : `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
+                borderColor: `${colors.primary}${isBohoStyle ? '50' : '30'}`,
+                boxShadow: isBohoStyle ? `0 25px 50px ${colors.primary}25` : undefined
               }}
             >
+              {isBohoStyle && (
+                <>
+                  {/* Effet de brillance naturelle */}
+                  <div className="absolute inset-0 bg-gradient-to-bl from-transparent via-white/8 to-transparent animate-pulse"></div>
+                  {/* Particules organiques */}
+                  <div className="absolute top-4 right-4">
+                    <div className="w-1 h-1 rounded-full animate-float" style={{ backgroundColor: colors.light }}></div>
+                  </div>
+                  <div className="absolute bottom-4 left-4">
+                    <div className="w-1 h-1 rounded-full animate-float" style={{ backgroundColor: colors.teal, animationDelay: '2s' }}></div>
+                  </div>
+                  <div className="absolute top-1/2 left-2">
+                    <div className="w-0.5 h-0.5 rounded-full animate-pulse" style={{ backgroundColor: colors.accent, animationDelay: '1s' }}></div>
+                  </div>
+                </>
+              )}
+              
               <h3 
-                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl ${isBohoStyle ? 'tracking-wide' : ''}`} 
-                style={{ color: `${colors.primary}cc` }}
+                className={`font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl relative z-10 ${isBohoStyle ? 'tracking-wide font-bold drop-shadow-lg' : ''}`} 
+                style={{ color: isBohoStyle ? colors.light : `${colors.primary}cc` }}
               >
-                <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 mr-3 animate-glow drop-shadow-lg" />
                 {isBohoStyle ? 'Livre de Nature' : 'Livre d\'or'}
               </h3>
               <textarea
                 value={guestMessage}
                 onChange={(e) => setGuestMessage(e.target.value)}
                 placeholder={isBohoStyle ? 'Partagez vos vœux authentiques...' : 'Laissez un message...'}
-                className={`w-full bg-slate-800/90 text-white border px-4 py-4 focus:ring-2 transition-all duration-200 resize-none text-base sm:text-lg font-medium ${
-                  isBohoStyle ? 'rounded-2xl' : 'rounded-xl'
+                className={`w-full bg-slate-800/90 text-white border px-4 py-4 focus:ring-2 transition-all duration-200 resize-none text-base sm:text-lg font-medium relative z-10 ${
+                  isBohoStyle ? 'rounded-2xl shadow-xl' : 'rounded-xl'
                 }`}
                 rows={4}
                 style={{ 
-                  borderColor: `${colors.primary}${isBohoStyle ? '40' : '30'}`,
-                  focusRingColor: colors.primary
+                  borderColor: isBohoStyle ? `${colors.primary}50` : `${colors.primary}30`,
+                  focusRingColor: colors.primary,
+                  boxShadow: isBohoStyle ? `0 10px 20px ${colors.primary}20` : undefined
                 }}
               />
               <div className="mt-6 space-y-4">
                 <button 
                   onClick={handleSendMessage}
-                  className={`w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4 hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold text-base sm:text-lg shadow-lg transform hover:scale-105 ${
+                  className={`w-full text-white py-4 transition-all duration-300 font-semibold text-base sm:text-lg shadow-lg transform hover:scale-105 relative overflow-hidden group ${
                     isBohoStyle ? 'rounded-2xl font-bold shadow-2xl' : 'rounded-xl'
                   }`}
+                  style={{
+                    background: isBohoStyle 
+                      ? `linear-gradient(135deg, ${colors.teal}, ${colors.primary}, ${colors.secondary})`
+                      : 'linear-gradient(to right, #10b981, #059669)',
+                    boxShadow: isBohoStyle ? `0 20px 40px ${colors.teal}30` : undefined
+                  }}
                 >
+                  {isBohoStyle && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 group-hover:translate-x-full transition-transform duration-1000"></div>
+                  )}
+                  
                   {isBohoStyle ? (
-                    <span className="flex items-center justify-center">
+                    <span className="flex items-center justify-center relative z-10">
                       <Heart className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
                       Partager mes Vœux
                     </span>
                   ) : (
-                    <span className="flex items-center justify-center">
+                    <span className="flex items-center justify-center relative z-10">
                       <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
                       Envoyer le message
                     </span>
@@ -696,18 +846,38 @@ const InvitationPreview = () => {
             {/* QR Code Section - style différent selon le template */}
             {qrCodeDataUrl && (
               <div 
-                className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-sm mx-auto shadow-2xl" 
+                className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-sm mx-auto shadow-2xl relative overflow-hidden" 
                 style={{ 
-                  background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                  borderColor: `${colors.primary}${isBohoStyle ? '40' : '30'}`
+                  background: isBohoStyle 
+                    ? `linear-gradient(135deg, ${colors.primary}60, ${colors.teal}50, ${colors.secondary}60)`
+                    : `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
+                  borderColor: `${colors.primary}${isBohoStyle ? '50' : '30'}`,
+                  boxShadow: isBohoStyle ? `0 30px 60px ${colors.primary}30` : undefined
                 }}
               >
+                {isBohoStyle && (
+                  <>
+                    {/* Effet de brillance organique */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-pulse"></div>
+                    {/* Particules QR */}
+                    <div className="absolute top-3 left-3">
+                      <div className="w-1 h-1 rounded-full animate-float" style={{ backgroundColor: colors.light }}></div>
+                    </div>
+                    <div className="absolute top-3 right-3">
+                      <div className="w-1 h-1 rounded-full animate-float" style={{ backgroundColor: colors.teal, animationDelay: '0.8s' }}></div>
+                    </div>
+                    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
+                      <div className="w-0.5 h-0.5 rounded-full animate-pulse" style={{ backgroundColor: colors.accent, animationDelay: '1.2s' }}></div>
+                    </div>
+                  </>
+                )}
+                
                 <h3 
-                  className={`font-bold mb-6 flex items-center justify-center text-lg sm:text-xl tracking-wide ${isBohoStyle ? 'font-bold' : ''}`} 
-                  style={{ color: `${colors.primary}cc` }}
+                  className={`font-bold mb-6 flex items-center justify-center text-lg sm:text-xl tracking-wide relative z-10 ${isBohoStyle ? 'font-bold drop-shadow-lg' : ''}`} 
+                  style={{ color: isBohoStyle ? colors.light : `${colors.primary}cc` }}
                 >
                   <div className="relative mr-3">
-                    <QrCode className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-lg" />
+                    <QrCode className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-lg animate-glow" />
                     <div className="absolute inset-0 animate-pulse opacity-30">
                       <QrCode className="h-6 w-6 sm:h-7 sm:w-7" />
                     </div>
@@ -715,28 +885,39 @@ const InvitationPreview = () => {
                   {isBohoStyle ? 'Code Naturel' : 'Code d\'Invitation'}
                 </h3>
                 
-                <div className={`bg-white p-6 mb-6 shadow-inner border-4 border-white/20 backdrop-blur-sm ${
-                  isBohoStyle ? 'rounded-3xl' : 'rounded-2xl'
+                <div className={`bg-white p-6 mb-6 shadow-inner border-4 backdrop-blur-sm relative overflow-hidden ${
+                  isBohoStyle ? 'rounded-3xl border-white/30' : 'rounded-2xl border-white/20'
                 }`}>
+                  {isBohoStyle && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 via-transparent to-teal-50/50 animate-pulse"></div>
+                  )}
                   <img 
                     src={qrCodeDataUrl} 
                     alt="QR Code" 
-                    className="w-full max-w-[180px] sm:max-w-[200px] mx-auto drop-shadow-lg"
+                    className={`w-full max-w-[180px] sm:max-w-[200px] mx-auto drop-shadow-lg relative z-10 ${
+                      isBohoStyle ? 'filter drop-shadow-2xl' : ''
+                    }`}
                   />
                 </div>
                 
                 <button
                   onClick={() => setShowQRInfo(!showQRInfo)}
-                  className={`w-full py-4 sm:py-5 text-base sm:text-lg font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
+                  className={`w-full py-4 sm:py-5 text-base sm:text-lg font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl relative overflow-hidden group ${
                     isBohoStyle ? 'rounded-3xl shadow-2xl' : 'rounded-2xl'
                   }`}
                   style={{ 
-                    background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
+                    background: isBohoStyle 
+                      ? `linear-gradient(135deg, ${colors.primary}, ${colors.teal}, ${colors.secondary})`
+                      : `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
                     color: '#1e293b',
-                    boxShadow: `0 10px 25px ${colors.primary}30`
+                    boxShadow: isBohoStyle ? `0 15px 30px ${colors.primary}40` : `0 10px 25px ${colors.primary}30`
                   }}
                 >
-                  <div className="flex items-center justify-center">
+                  {isBohoStyle && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 group-hover:translate-x-full transition-transform duration-1000"></div>
+                  )}
+                  
+                  <div className="flex items-center justify-center relative z-10">
                     <div className="relative mr-2">
                       {showQRInfo ? (
                         <X className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -750,62 +931,88 @@ const InvitationPreview = () => {
                 
                 {showQRInfo && (
                   <div className={`mt-6 bg-white/95 backdrop-blur-sm p-4 sm:p-6 animate-slide-up shadow-xl border border-white/30 ${
-                    isBohoStyle ? 'rounded-3xl' : 'rounded-2xl'
+                    isBohoStyle ? 'rounded-3xl relative overflow-hidden' : 'rounded-2xl'
                   }`}>
+                    {isBohoStyle && (
+                      <>
+                        {/* Effet de brillance dans la modal QR */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/30 via-transparent to-teal-50/30 animate-pulse"></div>
+                        {/* Micro-particules */}
+                        <div className="absolute top-2 right-2">
+                          <div className="w-0.5 h-0.5 rounded-full animate-pulse" style={{ backgroundColor: colors.primary }}></div>
+                        </div>
+                        <div className="absolute bottom-2 left-2">
+                          <div className="w-0.5 h-0.5 rounded-full animate-pulse" style={{ backgroundColor: colors.teal, animationDelay: '1s' }}></div>
+                        </div>
+                      </>
+                    )}
+                    
                     <div className="text-center mb-4">
-                      <h4 className="font-bold text-slate-900 text-base sm:text-lg mb-2">
+                      <h4 className={`font-bold text-slate-900 text-base sm:text-lg mb-2 relative z-10 ${isBohoStyle ? 'tracking-wide' : ''}`}>
                         {isBohoStyle ? 'Informations Naturelles' : 'Informations QR Code'}
                       </h4>
                       <div 
-                        className="w-16 h-px mx-auto" 
-                        style={{ background: `linear-gradient(to right, transparent, ${colors.primary}, transparent)` }}
+                        className="w-20 h-px mx-auto relative z-10" 
+                        style={{ background: isBohoStyle 
+                          ? `linear-gradient(to right, transparent, ${colors.primary}, ${colors.teal}, transparent)`
+                          : `linear-gradient(to right, transparent, ${colors.primary}, transparent)` 
+                        }}
                       ></div>
                     </div>
                     
-                    <div className="space-y-3">
+                    <div className="space-y-3 relative z-10">
                       <div className={`flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200/50 shadow-sm ${
-                        isBohoStyle ? 'rounded-2xl' : 'rounded-xl'
+                        isBohoStyle ? 'rounded-2xl relative overflow-hidden' : 'rounded-xl'
                       }`}>
+                        {isBohoStyle && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-emerald-50/20 via-transparent to-teal-50/20"></div>
+                        )}
                         <div className="flex items-center">
-                          <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
-                          <span className="font-semibold text-slate-700 text-sm sm:text-base">Nom</span>
+                          <User className={`h-4 w-4 sm:h-5 sm:w-5 mr-3 relative z-10 ${isBohoStyle ? 'animate-glow' : ''}`} style={{ color: isBohoStyle ? colors.primary : '#475569' }} />
+                          <span className="font-semibold text-slate-700 text-sm sm:text-base relative z-10">Nom</span>
                         </div>
-                        <span className="font-bold text-slate-900 text-sm sm:text-base">{invite.nom}</span>
+                        <span className="font-bold text-slate-900 text-sm sm:text-base relative z-10">{invite.nom}</span>
                       </div>
                       
                       <div className={`flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200/50 shadow-sm ${
-                        isBohoStyle ? 'rounded-2xl' : 'rounded-xl'
+                        isBohoStyle ? 'rounded-2xl relative overflow-hidden' : 'rounded-xl'
                       }`}>
+                        {isBohoStyle && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-teal-50/20 via-transparent to-emerald-50/20"></div>
+                        )}
                         <div className="flex items-center">
-                          <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
-                          <span className="font-semibold text-slate-700 text-sm sm:text-base">
+                          <MapPin className={`h-4 w-4 sm:h-5 sm:w-5 mr-3 relative z-10 ${isBohoStyle ? 'animate-glow' : ''}`} style={{ color: isBohoStyle ? colors.teal : '#475569' }} />
+                          <span className="font-semibold text-slate-700 text-sm sm:text-base relative z-10">
                             {userModel.category === 'graduation' ? 'Place' : (isBohoStyle ? 'Espace' : 'Table')}
                           </span>
                         </div>
-                        <span className="font-bold text-slate-900 text-sm sm:text-base">
+                        <span className="font-bold text-slate-900 text-sm sm:text-base relative z-10">
                           {invite.table || 'Non assigné'}
                         </span>
                       </div>
                       
                       <div className={`flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200/50 shadow-sm ${
-                        isBohoStyle ? 'rounded-2xl' : 'rounded-xl'
+                        isBohoStyle ? 'rounded-2xl relative overflow-hidden' : 'rounded-xl'
                       }`}>
+                        {isBohoStyle && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-emerald-50/20 via-transparent to-teal-50/20"></div>
+                        )}
                         <div className="flex items-center">
-                          <Wine className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
-                          <span className="font-semibold text-slate-700 text-sm sm:text-base">
+                          <Wine className={`h-4 w-4 sm:h-5 sm:w-5 mr-3 relative z-10 ${isBohoStyle ? 'animate-glow' : ''}`} style={{ color: isBohoStyle ? colors.accent : '#475569' }} />
+                          <span className="font-semibold text-slate-700 text-sm sm:text-base relative z-10">
                             {isBohoStyle ? 'Nectar' : 'Boisson'}
                           </span>
                         </div>
-                        <span className="font-bold text-slate-900 text-sm sm:text-base">
+                        <span className="font-bold text-slate-900 text-sm sm:text-base relative z-10">
                           {selectedDrink || 'Non sélectionnée'}
                         </span>
                       </div>
                     </div>
                     
                     <div className="mt-4 pt-4 border-t border-slate-200/50">
-                      <p className="text-xs sm:text-sm text-slate-600 text-center leading-relaxed">
+                      <p className="text-xs sm:text-sm text-slate-600 text-center leading-relaxed relative z-10">
                         <span className="inline-flex items-center">
-                          <Sparkles className="h-3 w-3 mr-1" style={{ color: colors.primary }} />
+                          <Sparkles className={`h-3 w-3 mr-1 ${isBohoStyle ? 'animate-pulse' : ''}`} style={{ color: colors.primary }} />
                           {isBohoStyle 
                             ? 'Scannez ce code pour une connexion authentique' 
                             : 'Scannez ce code pour accéder rapidement à vos informations'
@@ -815,6 +1022,22 @@ const InvitationPreview = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+            
+            {/* Éléments décoratifs de fin - spécifiques au style bohème */}
+            {isBohoStyle && (
+              <div className="flex justify-center mt-12">
+                <div className="flex items-center space-x-6">
+                  <div className="w-2 h-2 rounded-full animate-float" style={{ backgroundColor: colors.light }}></div>
+                  <div className="w-1 h-1 rounded-full animate-float" style={{ backgroundColor: colors.teal, animationDelay: '0.5s' }}></div>
+                  <div 
+                    className="w-24 h-px" 
+                    style={{ background: `linear-gradient(to right, transparent, ${colors.primary}, ${colors.teal}, transparent)` }}
+                  ></div>
+                  <div className="w-1 h-1 rounded-full animate-float" style={{ backgroundColor: colors.teal, animationDelay: '1s' }}></div>
+                  <div className="w-2 h-2 rounded-full animate-float" style={{ backgroundColor: colors.light, animationDelay: '1.5s' }}></div>
+                </div>
               </div>
             )}
           </div>
