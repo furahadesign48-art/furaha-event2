@@ -7,6 +7,7 @@ import {
   onAuthStateChanged,
   updateProfile,
   sendPasswordResetEmail,
+  sendEmailVerification,
   setPersistence,
   browserLocalPersistence
 } from 'firebase/auth';
@@ -27,6 +28,7 @@ export const useAuth = () => {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -35,6 +37,15 @@ export const useAuth = () => {
       console.log('Changement d\'état d\'authentification:', firebaseUser?.email || 'Déconnecté');
 
       if (firebaseUser) {
+        // Vérifier si l'email est vérifié
+        if (!firebaseUser.emailVerified) {
+          console.log('Email non vérifié pour:', firebaseUser.email);
+          setFirebaseUser(firebaseUser);
+          setUser(null); // Ne pas définir l'utilisateur tant que l'email n'est pas vérifié
+          setIsLoading(false);
+          return;
+        }
+
         try {
           // Récupérer les données utilisateur depuis Firestore
           const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -121,43 +132,101 @@ export const useAuth = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
 
+      // Envoyer l'email de vérification
+      await sendEmailVerification(firebaseUser);
+      setEmailVerificationSent(true);
+
       // Mettre à jour le profil Firebase
       await updateProfile(firebaseUser, {
         displayName: `${firstName} ${lastName}`
       });
 
-      // Créer le document utilisateur dans Firestore
-      const userData = {
-        email,
-        firstName,
-        lastName,
-        createdAt: new Date().toISOString()
-      };
-
-      // Ajouter photoURL seulement s'il existe
-      if (firebaseUser.photoURL) {
-        userData.photoURL = firebaseUser.photoURL;
-      }
-
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      await setDoc(userDocRef, userData);
-
-      const newUser: UserData = {
-        id: firebaseUser.uid,
-        ...userData,
-        photoURL: firebaseUser.photoURL || undefined
-      };
-
-      setUser(newUser);
-      setFirebaseUser(firebaseUser);
+      // Ne pas créer le document utilisateur tant que l'email n'est pas vérifié
+      // Le document sera créé lors de la première connexion après vérification
       
-      return { success: true, user: newUser };
+      return { 
+        success: true, 
+        user: null, 
+        emailVerificationSent: true,
+        message: 'Un email de vérification a été envoyé à votre adresse. Veuillez vérifier votre boîte mail et cliquer sur le lien de confirmation avant de vous connecter.'
+      };
     } catch (error: any) {
       const errorMessage = getFirebaseErrorMessage(error.code);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const resendEmailVerification = async () => {
+    if (!firebaseUser) {
+      return { success: false, error: 'Aucun utilisateur connecté' };
+    }
+
+    try {
+      await sendEmailVerification(firebaseUser);
+      setEmailVerificationSent(true);
+      return { 
+        success: true, 
+        message: 'Email de vérification renvoyé avec succès' 
+      };
+    } catch (error: any) {
+      const errorMessage = getFirebaseErrorMessage(error.code);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const checkEmailVerification = async () => {
+    if (!firebaseUser) {
+      return { success: false, error: 'Aucun utilisateur connecté' };
+    }
+
+    try {
+      // Recharger les données utilisateur pour vérifier le statut de vérification
+      await firebaseUser.reload();
+      
+      if (firebaseUser.emailVerified) {
+        // L'email est maintenant vérifié, créer le document utilisateur
+        const userData = {
+          email: firebaseUser.email || '',
+          firstName: firebaseUser.displayName?.split(' ')[0] || 'Utilisateur',
+          lastName: firebaseUser.displayName?.split(' ')[1] || '',
+          createdAt: new Date().toISOString()
+        };
+
+        if (firebaseUser.photoURL) {
+          userData.photoURL = firebaseUser.photoURL;
+        }
+
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        await setDoc(userDocRef, userData);
+
+        const newUser: UserData = {
+          id: firebaseUser.uid,
+          ...userData,
+          photoURL: firebaseUser.photoURL || undefined
+        };
+
+        setUser(newUser);
+        setFirebaseUser(firebaseUser);
+        setEmailVerificationSent(false);
+        
+        return { 
+          success: true, 
+          message: 'Email vérifié avec succès ! Vous pouvez maintenant utiliser votre compte.' 
+        };
+      } else {
+        return { 
+          success: false, 
+          error: 'Email non encore vérifié. Veuillez vérifier votre boîte mail.' 
+        };
+      }
+    } catch (error: any) {
+      const errorMessage = getFirebaseErrorMessage(error.code);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     }
   };
 
@@ -170,8 +239,19 @@ export const useAuth = () => {
       await setPersistence(auth, browserLocalPersistence);
       
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      // L'utilisateur sera automatiquement défini via onAuthStateChanged
+      const firebaseUser = userCredential.user;
       
+      // Vérifier si l'email est vérifié
+      if (!firebaseUser.emailVerified) {
+        await signOut(auth); // Déconnecter l'utilisateur
+        return { 
+          success: false, 
+          error: 'Veuillez vérifier votre email avant de vous connecter. Vérifiez votre boîte mail et cliquez sur le lien de confirmation.',
+          emailNotVerified: true
+        };
+      }
+      
+      // L'utilisateur sera automatiquement défini via onAuthStateChanged
       return { success: true };
     } catch (error: any) {
       const errorMessage = getFirebaseErrorMessage(error.code);
@@ -187,6 +267,7 @@ export const useAuth = () => {
       await signOut(auth);
       setUser(null);
       setFirebaseUser(null);
+      setEmailVerificationSent(false);
       return { success: true };
     } catch (error: any) {
       const errorMessage = 'Erreur lors de la déconnexion';
@@ -240,10 +321,13 @@ export const useAuth = () => {
     isAuthenticated: !!user,
     isLoading,
     error,
+    emailVerificationSent,
     register,
     login,
     logout,
     resetPassword,
+    resendEmailVerification,
+    checkEmailVerification,
     updateUserProfile,
     clearError: () => setError(null)
   };

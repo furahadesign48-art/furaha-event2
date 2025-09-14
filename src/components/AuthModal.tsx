@@ -10,11 +10,13 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
-  const { login, register, resetPassword, error, clearError } = useAuth();
+  const { login, register, resetPassword, resendEmailVerification, checkEmailVerification, error, clearError, emailVerificationSent } = useAuth();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -25,7 +27,152 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showResetPassword, setShowResetPassword] = useState(false);
 
+  const handleResendVerification = async () => {
+    setIsLoading(true);
+    try {
+      const result = await resendEmailVerification();
+      if (result.success) {
+        alert('Email de vérification renvoyé avec succès !');
+      } else {
+        alert('Erreur : ' + result.error);
+      }
+    } catch (error) {
+      alert('Erreur lors du renvoi de l\'email');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCheckVerification = async () => {
+    setIsLoading(true);
+    try {
+      const result = await checkEmailVerification();
+      if (result.success) {
+        alert(result.message || 'Email vérifié avec succès !');
+        setShowEmailVerification(false);
+        onSuccess();
+        onClose();
+      } else {
+        alert(result.error || 'Email non encore vérifié');
+      }
+    } catch (error) {
+      alert('Erreur lors de la vérification');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
+
+  // Modal de vérification d'email
+  if (showEmailVerification) {
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div className="bg-white rounded-3xl shadow-luxury max-w-md w-full animate-slide-up relative overflow-hidden">
+          <div className="relative p-6 border-b border-neutral-200/50 bg-gradient-to-r from-neutral-50 to-amber-50/30">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center">
+                <div className="relative mr-3">
+                  <Crown className="h-8 w-8 text-amber-500 animate-glow drop-shadow-lg" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                    Vérification d'email
+                  </h2>
+                  <p className="text-slate-600 text-sm">
+                    Confirmez votre adresse email
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowEmailVerification(false);
+                  setIsLoginMode(true);
+                }}
+                className="p-2 hover:bg-neutral-100 rounded-lg transition-colors duration-200"
+              >
+                <X className="h-5 w-5 text-neutral-500" />
+              </button>
+            </div>
+          </div>
+
+          <div className="relative p-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow-amber">
+                <Mail className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">
+                Vérifiez votre email
+              </h3>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Un email de vérification a été envoyé à <strong>{verificationEmail}</strong>
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 mb-6">
+              <h4 className="text-amber-800 font-semibold mb-3">Instructions :</h4>
+              <ol className="text-amber-700 text-sm space-y-2">
+                <li>1. Vérifiez votre boîte mail (et le dossier spam)</li>
+                <li>2. Cliquez sur le lien de vérification</li>
+                <li>3. Revenez ici et cliquez sur "Vérifier"</li>
+              </ol>
+            </div>
+
+            <div className="space-y-4">
+              <button
+                onClick={handleCheckVerification}
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-500 text-white py-3 rounded-xl hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-600 transition-all duration-500 font-semibold shadow-lg hover:shadow-luxury transform hover:scale-105 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                    Vérification...
+                  </div>
+                ) : (
+                  <span className="flex items-center justify-center">
+                    <Check className="h-5 w-5 mr-2" />
+                    J'ai vérifié mon email
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={handleResendVerification}
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-slate-900 py-3 rounded-xl hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 transition-all duration-500 font-semibold shadow-glow-amber hover:shadow-luxury transform hover:scale-105 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin mr-2"></div>
+                    Renvoi...
+                  </div>
+                ) : (
+                  <span className="flex items-center justify-center">
+                    <Mail className="h-5 w-5 mr-2" />
+                    Renvoyer l'email
+                  </span>
+                )}
+              </button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEmailVerification(false);
+                    setIsLoginMode(true);
+                  }}
+                  className="text-amber-600 hover:text-amber-700 transition-colors duration-300 font-medium text-sm"
+                >
+                  Retour à la connexion
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -87,12 +234,23 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         const result = await register(formData.email, formData.password, formData.firstName, formData.lastName);
         console.log('Résultat de l\'inscription:', result);
         if (result.success) {
-          console.log('Inscription réussie, fermeture du modal');
-          onSuccess();
-          onClose();
+          if (result.emailVerificationSent) {
+            console.log('Inscription réussie, email de vérification envoyé');
+            setVerificationEmail(formData.email);
+            setShowEmailVerification(true);
+          } else {
+            console.log('Inscription réussie, fermeture du modal');
+            onSuccess();
+            onClose();
+          }
         } else {
           console.error('Erreur d\'inscription:', result.error);
-          setErrors({ general: result.error || 'Erreur d\'inscription' });
+          if (result.error?.includes('vérifier votre email')) {
+            setVerificationEmail(formData.email);
+            setShowEmailVerification(true);
+          } else {
+            setErrors({ general: result.error || 'Erreur d\'inscription' });
+          }
         }
       }
     } catch (error) {
@@ -128,6 +286,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
   const switchMode = () => {
     setIsLoginMode(!isLoginMode);
     setShowResetPassword(false);
+    setShowEmailVerification(false);
     setFormData({
       firstName: '',
       lastName: '',

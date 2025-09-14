@@ -6,10 +6,13 @@ import { auth } from '../config/firebase';
 interface AuthContextType {
   user: UserData | null;
   isAuthenticated: boolean;
+  emailVerificationSent: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (email: string, password: string, firstName: string, lastName: string) => Promise<{ success: boolean; error?: string; user?: UserData }>;
+  register: (email: string, password: string, firstName: string, lastName: string) => Promise<{ success: boolean; error?: string; user?: UserData; emailVerificationSent?: boolean; message?: string }>;
   logout: () => Promise<{ success: boolean; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  resendEmailVerification: () => Promise<{ success: boolean; error?: string; message?: string }>;
+  checkEmailVerification: () => Promise<{ success: boolean; error?: string; message?: string }>;
   updateUserProfile: (updates: Partial<Pick<UserData, 'firstName' | 'lastName'>>) => Promise<{ success: boolean; error?: string }>;
   isLoading: boolean;
   error: string | null;
