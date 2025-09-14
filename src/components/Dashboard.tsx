@@ -369,7 +369,7 @@ L'équipe organisatrice
   };
 
   if (showProfile && userData) {
-    return <UserProfile userData={userData} onLogout={onLogout} />;
+    return <UserProfile userData={userData} onLogout={onLogout} onBack={() => setShowProfile(false)} />;
   }
 
   if (editingTemplate) {

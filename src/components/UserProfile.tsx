@@ -6,9 +6,10 @@ import { useAuth, UserData } from '../hooks/useAuth';
 interface UserProfileProps {
   userData: UserData;
   onLogout: () => void;
+  onBack: () => void;
 }
 
-const UserProfile = ({ userData, onLogout }: UserProfileProps) => {
+const UserProfile = ({ userData, onLogout, onBack }: UserProfileProps) => {
   const { updateUserProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -16,10 +17,6 @@ const UserProfile = ({ userData, onLogout }: UserProfileProps) => {
     lastName: userData.lastName
   });
   const [isUpdating, setIsUpdating] = useState(false);
-
-  const handleBack = () => {
-    window.location.reload();
-  };
 
   const handleSave = async () => {
     setIsUpdating(true);
@@ -64,7 +61,7 @@ const UserProfile = ({ userData, onLogout }: UserProfileProps) => {
         {/* Bouton retour */}
         <div className="mb-6">
           <button
-            onClick={handleBack}
+            onClick={onBack}
             className="flex items-center text-amber-600 hover:text-amber-700 transition-all duration-300 group"
           >
             <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
