@@ -16,7 +16,9 @@ import {
   User,
   Table,
   LogOut,
-  ArrowLeft
+  ArrowLeft,
+  X,
+  Heart
 } from 'lucide-react';
 import UserProfile from './UserProfile';
 import TableManagement from './TableManagement';
