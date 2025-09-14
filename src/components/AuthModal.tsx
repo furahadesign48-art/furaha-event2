@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, Eye, EyeOff, Crown, Sparkles } from 'lucide-react';
 import { useAuth } from './AuthContext';
-import { getAuth, fetchSignInMethodsForEmail } from "firebase/auth";
 
 
 interface AuthModalProps {
@@ -26,18 +25,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showResetPassword, setShowResetPassword] = useState(false);
 
-  if (!isOpen) return null;const auth = getAuth();
-
-const checkEmailExists = async (email: string) => {
-  try {
-    const methods = await fetchSignInMethodsForEmail(auth, email);
-    return methods.length > 0; // true = déjà utilisé
-  } catch (err) {
-    console.error("Erreur de vérification email:", err);
-    return false;
-  }
-};
-
+  if (!isOpen) return null;
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
