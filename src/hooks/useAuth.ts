@@ -70,7 +70,7 @@ export const useAuth = () => {
             
             // Ajouter photoURL seulement s'il existe
             if (firebaseUser.photoURL) {
-              basicUserData.photoURL = firebaseUser.photoURL;
+              (basicUserData as any).photoURL = firebaseUser.photoURL;
             }
             
             try {
@@ -104,7 +104,7 @@ export const useAuth = () => {
           
           // Ajouter photoURL seulement s'il existe pour l'état local
           if (firebaseUser.photoURL) {
-            tempUserData.photoURL = firebaseUser.photoURL;
+            (tempUserData as any).photoURL = firebaseUser.photoURL;
           }
           
           setUser(tempUserData);
@@ -197,7 +197,7 @@ export const useAuth = () => {
         };
 
         if (firebaseUser.photoURL) {
-          userData.photoURL = firebaseUser.photoURL;
+          (userData as any).photoURL = firebaseUser.photoURL;
         }
 
         const userDocRef = doc(db, 'users', firebaseUser.uid);
