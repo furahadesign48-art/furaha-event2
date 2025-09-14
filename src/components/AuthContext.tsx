@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useAuth as useFirebaseAuth, UserData } from '../hooks/useAuth';
+import { useAuthAPI as useFirebaseAuth, UserData } from '../hooks/useAuthAPI';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 

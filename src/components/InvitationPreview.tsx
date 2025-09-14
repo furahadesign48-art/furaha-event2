@@ -19,8 +19,8 @@ import {
   X,
   Eye
 } from 'lucide-react';
-import { UserModelService, InviteService } from '../services/templateService';
-import { UserModel, Invite } from '../services/templateService';
+import { TemplatesAPI, UserModel } from '../api/templates';
+import { InvitesAPI, Invite } from '../api/invites';
 
 const InvitationPreview = () => {
   const { inviteId } = useParams<{ inviteId: string }>();
@@ -48,30 +48,31 @@ const InvitationPreview = () => {
         console.log('Chargement de l\'invitation:', inviteId);
         
         // Utiliser la méthode globale pour récupérer l'invitation
-        const inviteData = await InviteService.getInviteGlobal(inviteId);
+        const inviteResult = await InvitesAPI.getInviteGlobal(inviteId);
         console.log('Données d\'invitation récupérées:', inviteData);
         
-        if (!inviteData) {
+        if (!inviteResult.success || !inviteResult.data) {
           setError('Invitation non trouvée');
           setIsLoading(false);
           return;
         }
         
+        const inviteData = inviteResult.data;
         setInvite(inviteData);
         setIsConfirmed(inviteData.confirmed);
         console.log('Invitation définie:', inviteData);
         
         // Récupérer le modèle utilisateur associé
         console.log('Récupération des modèles pour l\'utilisateur:', inviteData.userId);
-        const userModels = await UserModelService.getUserModels(inviteData.userId);
-        console.log('Modèles utilisateur récupérés:', userModels);
+        const userModelsResult = await TemplatesAPI.getUserModels(inviteData.userId);
+        console.log('Modèles utilisateur récupérés:', userModelsResult);
         
-        if (userModels.length > 0) {
-          setUserModel(userModels[0]); // Prendre le premier modèle
-          console.log('Modèle utilisateur défini:', userModels[0]);
+        if (userModelsResult.success && userModelsResult.data && userModelsResult.data.length > 0) {
+          setUserModel(userModelsResult.data[0]); // Prendre le premier modèle
+          console.log('Modèle utilisateur défini:', userModelsResult.data[0]);
           
           // Générer le QR code avec les informations de l'invité
-          await generateQRCode(inviteData, userModels[0]);
+          await generateQRCode(inviteData, userModelsResult.data[0]);
         } else {
           setError('Modèle d\'invitation non trouvé');
         }
@@ -147,10 +148,16 @@ const InvitationPreview = () => {
     
     try {
       const newStatus = !isConfirmed;
-      await InviteService.updateInvite(userModel.userId, invite.id, {
+      const result = await InvitesAPI.updateInvite(userModel.userId, invite.id, {
         confirmed: newStatus
       });
-      setIsConfirmed(newStatus);
+      
+      if (result.success) {
+        setIsConfirmed(newStatus);
+      } else {
+        console.error('Erreur lors de la confirmation:', result.error);
+        alert('Erreur lors de la confirmation');
+      }
     } catch (error) {
       console.error('Erreur lors de la confirmation:', error);
       alert('Erreur lors de la confirmation');
@@ -164,11 +171,17 @@ const InvitationPreview = () => {
     }
     
     try {
-      await InviteService.updateInviteResponse(userModel.userId, invite.id, {
+      const result = await InvitesAPI.updateInviteResponse(userModel.userId, invite.id, {
         message: guestMessage
       });
-      alert('Message envoyé avec succès !');
-      setGuestMessage('');
+      
+      if (result.success) {
+        alert('Message envoyé avec succès !');
+        setGuestMessage('');
+      } else {
+        console.error('Erreur lors de l\'envoi du message:', result.error);
+        alert('Erreur lors de l\'envoi du message');
+      }
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
       alert('Erreur lors de l\'envoi du message');
@@ -179,10 +192,15 @@ const InvitationPreview = () => {
     if (!invite || !userModel) return;
     
     try {
-      await InviteService.updateInviteResponse(userModel.userId, invite.id, {
+      const result = await InvitesAPI.updateInviteResponse(userModel.userId, invite.id, {
         selectedDrink: drink
       });
-      setSelectedDrink(drink);
+      
+      if (result.success) {
+        setSelectedDrink(drink);
+      } else {
+        console.error('Erreur lors de la sélection de boisson:', result.error);
+      }
     } catch (error) {
       console.error('Erreur lors de la sélection de boisson:', error);
     }
