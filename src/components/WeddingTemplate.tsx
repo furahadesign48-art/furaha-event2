@@ -89,11 +89,11 @@ const WeddingTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: WeddingT
     }
     
     try {
-      const userTemplateId = await createUserTemplate(templateData, {
+      const userTemplateId = await createUserTemplate(templates[currentTemplate], {
         guestData: {
           name: '[Nom de l\'invité]',
           tableNumber: '[Numéro de table]',
-          qrCode: `WED-${Date.now()}`,
+          qrCode: `WED-${currentTemplate}-${Date.now()}`,
           confirmation: 'pending',
           selectedDrink: '',
           message: ''
@@ -102,7 +102,7 @@ const WeddingTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: WeddingT
 
       if (userTemplateId) {
         const personalizedTemplate = {
-          ...templateData,
+          ...templates[currentTemplate],
           id: userTemplateId,
           isPersonalized: true,
           createdAt: new Date().toISOString(),
