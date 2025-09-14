@@ -724,7 +724,7 @@ const InvitationPreview = () => {
 
                   {/* QR Code Section */}
                   {qrCodeDataUrl && (
-                    {templateStyle === 'classic' ? (
+                    templateStyle === 'classic' ? (
                       <div 
                         className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-sm mx-auto shadow-2xl" 
                         style={{ 
