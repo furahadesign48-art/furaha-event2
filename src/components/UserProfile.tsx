@@ -52,7 +52,7 @@ const UserProfile = ({ userData, onLogout }: UserProfileProps) => {
     <div className="bg-white rounded-2xl shadow-xl border border-neutral-200/50 overflow-hidden max-w-3xl mx-auto relative">
       {/* Bouton fermer */}
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => navigate("/dashboard")}
         className="absolute top-4 right-4 p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition"
         title="Fermer"
       >
