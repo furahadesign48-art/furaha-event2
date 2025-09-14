@@ -54,3 +54,10 @@ React.useEffect(() => {
 
   return () => unsubscribe();
 }, [firebaseAuth]);
+
+  return (
+    <AuthContext.Provider value={firebaseAuth}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
