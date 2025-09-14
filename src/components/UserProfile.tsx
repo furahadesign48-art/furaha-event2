@@ -18,7 +18,7 @@ const UserProfile = ({ userData, onLogout }: UserProfileProps) => {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleBack = () => {
-    window.history.back();
+    window.location.reload();
   };
 
   const handleSave = async () => {
