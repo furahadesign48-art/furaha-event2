@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Users, X, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, X, Eye, Download } from 'lucide-react';
 import { useTemplates } from '../hooks/useTemplates';
 import { useAuth } from './AuthContext';
+import GuestExportModal from './GuestExportModal';
 
 interface Guest {
   id: number;
@@ -43,6 +44,7 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [editingTable, setEditingTable] = useState<Table | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [formData, setFormData] = useState<TableFormData>({ name: '', seats: 8 });
@@ -314,6 +316,14 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
         >
           <Plus className="h-5 w-5 mr-2" />
           Ajouter une table
+        </button>
+        
+        <button
+          onClick={() => setIsExportModalOpen(true)}
+          className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold flex items-center shadow-lg hover:shadow-luxury transform hover:scale-105"
+        >
+          <Download className="h-5 w-5 mr-2" />
+          Exporter les invités
         </button>
       </div>
 
@@ -691,6 +701,14 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
           </div>
         </div>
       )}
+      
+      {/* Modal d'export des invités */}
+      <GuestExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        guests={realGuests}
+        tables={tables}
+      />
     </div>
   );
 };
