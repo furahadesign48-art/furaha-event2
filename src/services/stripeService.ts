@@ -9,10 +9,17 @@ export interface CheckoutSessionResponse {
 export class StripeService {
   static async createCheckoutSession(plan: 'standard' | 'premium', userId: string): Promise<CheckoutSessionResponse> {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      throw new Error('Configuration Supabase manquante. Vérifiez vos variables d\'environnement.');
+      console.error('Variables d\'environnement Supabase:', {
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY: SUPABASE_ANON_KEY ? 'Définie' : 'Manquante'
+      });
+      throw new Error('Configuration Supabase manquante. Vérifiez vos variables d\'environnement VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY.');
     }
 
     try {
+      console.log('Création de session Stripe pour:', { plan, userId });
+      console.log('URL de la fonction Edge:', `${SUPABASE_URL}/functions/v1/create-checkout-session`);
+      
       const response = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout-session`, {
         method: 'POST',
         headers: {
@@ -25,12 +32,16 @@ export class StripeService {
         }),
       });
 
+      console.log('Réponse de la fonction Edge:', response.status, response.statusText);
+      
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Erreur de la fonction Edge:', errorData);
         throw new Error(errorData.error || 'Erreur lors de la création de la session de paiement');
       }
 
       const data = await response.json();
+      console.log('Session créée avec succès:', data);
       return data;
     } catch (error) {
       console.error('Erreur StripeService:', error);
