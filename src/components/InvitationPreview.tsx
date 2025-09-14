@@ -35,6 +35,12 @@ const InvitationPreview = () => {
   const [showQRInfo, setShowQRInfo] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
 
+  // Déterminer le style bohème dès le début du composant
+  const isBohoStyle = inviteData?.originalTemplateId?.includes('boheme') || 
+                     inviteData?.name?.toLowerCase().includes('bohème') || 
+                     inviteData?.name?.toLowerCase().includes('nature') ||
+                     false;
+
   useEffect(() => {
     const loadInvitationData = async () => {
       if (!inviteId) {
@@ -237,12 +243,6 @@ const InvitationPreview = () => {
       secondary: '#059669',
       accent: '#14b8a6',
       light: '#6ee7b7',
-      teal: '#14b8a6'
-    };
-  };
-
-  // Fonction pour obtenir les couleurs finales selon le style
-  const getFinalColors = () => {
     if (isBohoStyle) {
       return getBohemeColors();
     }
