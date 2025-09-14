@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, Eye, EyeOff, Crown, Sparkles } from 'lucide-react';
 import { useAuth } from './AuthContext';
+import { getAuth, fetchSignInMethodsForEmail } from "firebase/auth";
+
 
 interface AuthModalProps {
   isOpen: boolean;
