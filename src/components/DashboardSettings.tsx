@@ -4,6 +4,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
+
 
 interface DashboardSettingsProps {
   isOpen: boolean;
