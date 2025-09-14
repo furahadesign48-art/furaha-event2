@@ -180,7 +180,7 @@ const UserProfile = ({ userData, onLogout }: UserProfileProps) => {
             </div>
           </div>
         </div>
-      </div>
+      
 
       {/* Footer */}
       <div className="bg-gradient-to-r from-neutral-50 to-amber-50/30 p-6 border-t border-neutral-200/50">
