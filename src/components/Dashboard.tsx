@@ -623,17 +623,6 @@ L'équipe organisatrice
               
               <div className="flex space-x-2">
                 <button
-                  onClick={() => {
-                    const link = generateInvitationLink(template.id, guests[0]?.id || 'demo');
-                    navigator.clipboard.writeText(link);
-                    alert('Lien copié dans le presse-papiers !');
-                  }}
-                  className="flex-1 bg-purple-100 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  Aperçu
-                </button>
-                <button
                   onClick={() => handleEditTemplate(template)}
                   className="flex-1 bg-amber-100 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
                 >
