@@ -1,4 +1,7 @@
 import React, { useState, useRef } from 'react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../config/firebase';
+import { useAuth } from './AuthContext';
 import { 
   ArrowLeft, 
   Save, 
@@ -41,6 +44,7 @@ interface TemplateCustomizationProps {
 }
 
 const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizationProps) => {
+  const { user } = useAuth();
   const [customTemplate, setCustomTemplate] = useState<TemplateData>(template);
   const [activeTab, setActiveTab] = useState('general');
   const [selectedDrink, setSelectedDrink] = useState('');
@@ -52,6 +56,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   const [accentColor, setAccentColor] = useState('#f43f5e'); // rose-500
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showQRInfo, setShowQRInfo] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const tabs = [
     { id: 'general', label: 'Général', icon: Type },
@@ -68,15 +73,52 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
     }));
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        handleInputChange('backgroundImage', result);
-      };
-      reader.readAsDataURL(file);
+    if (!file || !user) {
+      if (!user) {
+        alert('Vous devez être connecté pour télécharger une image');
+      }
+      return;
+    }
+
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+      alert('Veuillez sélectionner un fichier image valide');
+      return;
+    }
+
+    // Vérifier la taille du fichier (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('L\'image ne doit pas dépasser 5MB');
+      return;
+    }
+
+    try {
+      setIsUploadingImage(true);
+      
+      // Créer une référence unique pour l'image
+      const timestamp = Date.now();
+      const fileName = `template-backgrounds/${user.id}/${timestamp}_${file.name}`;
+      const storageRef = ref(storage, fileName);
+      
+      // Télécharger l'image vers Firebase Storage
+      console.log('Téléchargement de l\'image vers Firebase Storage...');
+      const snapshot = await uploadBytes(storageRef, file);
+      
+      // Obtenir l'URL de téléchargement
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      console.log('Image téléchargée avec succès:', downloadURL);
+      
+      // Mettre à jour le template avec la nouvelle URL
+      handleInputChange('backgroundImage', downloadURL);
+      
+      alert('Image téléchargée avec succès !');
+    } catch (error) {
+      console.error('Erreur lors du téléchargement de l\'image:', error);
+      alert('Erreur lors du téléchargement de l\'image. Veuillez réessayer.');
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -175,15 +217,34 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                       </div>
                     </div>
                   )}
+                  
+                  {isUploadingImage && (
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-2"></div>
+                        <p className="text-sm">Téléchargement...</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex space-x-3">
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex-1 bg-amber-500 text-white px-4 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold flex items-center justify-center"
+                    disabled={isUploadingImage}
+                    className="flex-1 bg-amber-500 text-white px-4 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Télécharger une image
+                    {isUploadingImage ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                        Téléchargement...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Télécharger une image
+                      </>
+                    )}
                   </button>
                   
                   <button
@@ -197,24 +258,24 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
                   onChange={handleImageUpload}
                   className="hidden"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                URL d'image personnalisée
-              </label>
-              <input
-                type="url"
-                value={customTemplate.backgroundImage}
-                onChange={(e) => handleInputChange('backgroundImage', e.target.value)}
-                className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                placeholder="https://example.com/image.jpg"
-              />
+            <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50">
+              <div className="flex items-center mb-4">
+                <Camera className="h-5 w-5 text-amber-600 mr-2" />
+                <h3 className="text-lg font-semibold text-amber-800">Téléchargement d'image</h3>
+              </div>
+              <div className="space-y-2 text-amber-700 text-sm">
+                <p>• Formats acceptés : JPEG, PNG, WebP</p>
+                <p>• Taille maximale : 5MB</p>
+                <p>• L'image sera stockée de manière sécurisée</p>
+                <p>• Résolution recommandée : 1200x800px minimum</p>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
