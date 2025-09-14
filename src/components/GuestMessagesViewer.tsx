@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Wine, User, Calendar, Filter, Search, Download, Eye, X, Heart, Gift, GraduationCap, Send, Mail, MessageSquare } from 'lucide-react';
+import { MessageCircle, Wine, User, Calendar, Filter, Search, FileText, Eye, X, Heart, Gift, GraduationCap, Send, Mail, MessageSquare } from 'lucide-react';
 import { useTemplates } from '../hooks/useTemplates';
 import { useAuth } from './AuthContext';
 import { InviteService } from '../services/templateService';
+import jsPDF from 'jspdf';
 
 interface GuestMessage {
   id: string;
@@ -29,6 +30,8 @@ const GuestMessagesViewer = ({ isOpen, onClose }: GuestMessagesViewerProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'confirmed' | 'pending'>('all');
   const [filterDrink, setFilterDrink] = useState<'all' | 'selected' | 'none'>('all');
+  const [sortByDrink, setSortByDrink] = useState<string>('all');
+  const [sortByTable, setSortByTable] = useState<string>('all');
   const [selectedMessage, setSelectedMessage] = useState<GuestMessage | null>(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
 
@@ -113,8 +116,37 @@ const GuestMessagesViewer = ({ isOpen, onClose }: GuestMessagesViewerProps) => {
       );
     }
 
+    // Tri par boisson spécifique
+    if (sortByDrink !== 'all') {
+      filtered = filtered.filter(msg => msg.selectedDrink === sortByDrink);
+    }
+
+    // Tri par table spécifique
+    if (sortByTable !== 'all') {
+      filtered = filtered.filter(msg => msg.table === sortByTable);
+    }
+
     setFilteredMessages(filtered);
-  }, [messages, searchTerm, filterStatus, filterDrink]);
+  }, [messages, searchTerm, filterStatus, filterDrink, sortByDrink, sortByTable]);
+
+  // Obtenir la liste unique des boissons sélectionnées
+  const getUniqueDrinks = () => {
+    const drinks = messages
+      .filter(msg => msg.selectedDrink && msg.selectedDrink.trim())
+      .map(msg => msg.selectedDrink!)
+      .filter((drink, index, array) => array.indexOf(drink) === index)
+      .sort();
+    return drinks;
+  };
+
+  // Obtenir la liste unique des tables
+  const getUniqueTables = () => {
+    const tables = messages
+      .map(msg => msg.table)
+      .filter((table, index, array) => array.indexOf(table) === index)
+      .sort();
+    return tables;
+  };
 
   const getEventIcon = () => {
     if (userModels.length > 0) {
@@ -254,25 +286,92 @@ L'équipe organisatrice
     window.open(mailtoUrl, '_blank');
   };
 
-  const exportMessages = () => {
-    const csvContent = [
-      ['Nom', 'Table', 'Type', 'Statut', 'Boisson', 'Message', 'Date'],
-      ...filteredMessages.map(msg => [
-        msg.guestName,
-        msg.table,
-        msg.guestType === 'couple' ? 'Couple' : 'Simple',
-        msg.confirmed ? 'Confirmé' : 'En attente',
-        msg.selectedDrink || 'Non sélectionnée',
-        msg.message || 'Aucun message',
-        new Date(msg.timestamp || '').toLocaleDateString('fr-FR')
-      ])
-    ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+  const exportMessagesToPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    let yPosition = 20;
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'messages-invites.csv';
-    link.click();
+    // Titre principal
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Messages & Boissons des Invités', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 20;
+
+    // Date de génération
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')}`, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 20;
+
+    // Statistiques
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Statistiques', 20, yPosition);
+    yPosition += 15;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total messages: ${totalMessages}`, 20, yPosition);
+    doc.text(`Boissons sélectionnées: ${totalDrinkSelections}`, 20, yPosition + 10);
+    doc.text(`Invités confirmés: ${confirmedGuests}`, 20, yPosition + 20);
+    doc.text(`En attente: ${pendingGuests}`, 20, yPosition + 30);
+    yPosition += 50;
+
+    // Liste des messages
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Messages des Invités', 20, yPosition);
+    yPosition += 20;
+
+    filteredMessages.forEach((message, index) => {
+      // Vérifier si on a assez de place
+      if (yPosition > pageHeight - 60) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      // Nom de l'invité
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${message.guestName}`, 20, yPosition);
+      
+      // Informations
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Table: ${message.table} | Type: ${message.guestType === 'couple' ? 'Couple' : 'Simple'} | Statut: ${message.confirmed ? 'Confirmé' : 'En attente'}`, 20, yPosition + 10);
+      
+      if (message.selectedDrink) {
+        doc.text(`Boisson: ${message.selectedDrink}`, 20, yPosition + 20);
+        yPosition += 10;
+      }
+      
+      yPosition += 25;
+
+      // Message
+      if (message.message && message.message.trim()) {
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        const messageLines = doc.splitTextToSize(`"${message.message}"`, pageWidth - 40);
+        doc.text(messageLines, 20, yPosition);
+        yPosition += messageLines.length * 5 + 5;
+      }
+
+      // Date
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`${new Date(message.timestamp || '').toLocaleDateString('fr-FR')}`, 20, yPosition);
+      yPosition += 20;
+
+      // Ligne de séparation
+      if (index < filteredMessages.length - 1) {
+        doc.line(20, yPosition, pageWidth - 20, yPosition);
+        yPosition += 10;
+      }
+    });
+
+    // Télécharger le PDF
+    doc.save('messages-invites.pdf');
   };
 
   if (!isOpen) return null;
@@ -400,21 +499,33 @@ L'équipe organisatrice
               </select>
 
               <select
-                value={filterDrink}
-                onChange={(e) => setFilterDrink(e.target.value as 'all' | 'selected' | 'none')}
+                value={sortByDrink}
+                onChange={(e) => setSortByDrink(e.target.value)}
                 className="px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
               >
                 <option value="all">Toutes les boissons</option>
-                <option value="selected">Boisson sélectionnée</option>
-                <option value="none">Aucune boisson</option>
+                {getUniqueDrinks().map((drink) => (
+                  <option key={drink} value={drink}>{drink}</option>
+                ))}
+              </select>
+
+              <select
+                value={sortByTable}
+                onChange={(e) => setSortByTable(e.target.value)}
+                className="px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+              >
+                <option value="all">Toutes les tables</option>
+                {getUniqueTables().map((table) => (
+                  <option key={table} value={table}>{table}</option>
+                ))}
               </select>
 
               <button
-                onClick={exportMessages}
+                onClick={exportMessagesToPDF}
                 className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-3 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold flex items-center shadow-lg transform hover:scale-105"
               >
-                <Download className="h-4 w-4 mr-2" />
-                Export
+                <FileText className="h-4 w-4 mr-2" />
+                PDF
               </button>
             </div>
           </div>
@@ -586,7 +697,8 @@ L'équipe organisatrice
                 onClick={() => {
                   setSearchTerm('');
                   setFilterStatus('all');
-                  setFilterDrink('all');
+                  setSortByDrink('all');
+                  setSortByTable('all');
                 }}
                 className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-all duration-200 font-medium"
               >
