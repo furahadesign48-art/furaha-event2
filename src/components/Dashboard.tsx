@@ -84,6 +84,14 @@ const Dashboard = ({ selectedTemplate, userData, onLogout }: DashboardProps) => 
   });
   const [tables, setTables] = useState<Table[]>([]);
 
+  // Calculer les statistiques
+  const totalInvites = userInvites.length;
+  const totalGuests = userInvites.reduce((total, invite) => {
+    return total + (invite.etat === 'couple' ? 2 : 1);
+  }, 0);
+  const confirmedGuests = userInvites.filter(invite => invite.confirmed).length;
+  const pendingGuests = userInvites.filter(invite => !invite.confirmed).length;
+
   // Charger les données au montage et quand selectedTemplate change
   useEffect(() => {
     if (selectedTemplate && user) {
