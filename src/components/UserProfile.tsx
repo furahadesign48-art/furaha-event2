@@ -174,33 +174,7 @@ const UserProfile = ({ userData, onLogout }: UserProfileProps) => {
             </div>
           </div>
 
-          {/* Informations du compte */}
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-amber-600" />
-              Informations du compte
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  ID Utilisateur
-                </label>
-                <div className="bg-neutral-50 px-4 py-3 rounded-xl border border-neutral-200 font-mono text-sm">
-                  {userData.id}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Membre depuis
-                </label>
-                <div className="bg-neutral-50 px-4 py-3 rounded-xl border border-neutral-200">
-                  {formatDate(userData.createdAt)}
-                </div>
-              </div>
-            </div>
-          </div>
+      
 
           {/* Statistiques */}
           <div>
