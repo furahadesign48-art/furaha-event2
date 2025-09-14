@@ -648,6 +648,7 @@ const WeddingTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: WeddingT
                             </div>
                           </>
                         )}
+                      </div>
                     </div>
                   </div>
                 </div>
