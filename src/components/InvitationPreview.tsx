@@ -230,19 +230,6 @@ const InvitationPreview = () => {
     }
   };
 
-  // Déterminer le style du template (classic ou boheme)
-  const getTemplateStyle = () => {
-    // Si le template a un nom contenant "boheme" ou "nature", c'est le style bohème
-    if (userModel.name.toLowerCase().includes('bohème') || 
-        userModel.name.toLowerCase().includes('nature') ||
-        userModel.originalTemplateId === 'wedding-boheme-nature') {
-      return 'boheme';
-    }
-    return 'classic';
-  };
-
-  const templateStyle = getTemplateStyle();
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-amber-900/20 to-slate-800 flex items-center justify-center">
@@ -295,6 +282,19 @@ const InvitationPreview = () => {
       </div>
     );
   }
+
+  // Déterminer le style du template (classic ou boheme)
+  const getTemplateStyle = () => {
+    // Si le template a un nom contenant "boheme" ou "nature", c'est le style bohème
+    if (userModel.name.toLowerCase().includes('bohème') || 
+        userModel.name.toLowerCase().includes('nature') ||
+        userModel.originalTemplateId === 'wedding-boheme-nature') {
+      return 'boheme';
+    }
+    return 'classic';
+  };
+
+  const templateStyle = getTemplateStyle();
 
   const IconComponent = getIconForCategory(userModel.category);
   // Utiliser les couleurs personnalisées si elles existent, sinon les couleurs par défaut
