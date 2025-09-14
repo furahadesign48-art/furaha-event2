@@ -58,6 +58,55 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   const [showQRInfo, setShowQRInfo] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
+  // Déterminer le style du template
+  const getTemplateStyle = () => {
+    if (template.name.toLowerCase().includes('bohème') || template.name.toLowerCase().includes('nature')) {
+      return 'boheme';
+    }
+    return 'classic';
+  };
+
+  const templateStyle = getTemplateStyle();
+
+  // Couleurs et icônes selon le style
+  const getStyleConfig = () => {
+    if (templateStyle === 'boheme') {
+      return {
+        primaryColor: '#10b981', // emerald-500
+        secondaryColor: '#059669', // emerald-600
+        accentColor: '#14b8a6', // teal-500
+        icon: 'Leaf',
+        gradients: {
+          primary: 'from-emerald-500 to-teal-500',
+          bg: 'from-emerald-50 to-teal-50',
+          text: 'text-emerald-600',
+          border: 'border-emerald-200'
+        }
+      };
+    }
+    return {
+      primaryColor: '#f59e0b', // amber-500
+      secondaryColor: '#d97706', // amber-600
+      accentColor: '#f43f5e', // rose-500
+      icon: 'Heart',
+      gradients: {
+        primary: 'from-amber-500 to-rose-500',
+        bg: 'from-amber-50 to-rose-50',
+        text: 'text-amber-600',
+        border: 'border-amber-200'
+      }
+    };
+  };
+
+  const styleConfig = getStyleConfig();
+
+  // Initialiser les couleurs selon le style du template
+  React.useEffect(() => {
+    setPrimaryColor(styleConfig.primaryColor);
+    setSecondaryColor(styleConfig.secondaryColor);
+    setAccentColor(styleConfig.accentColor);
+  }, [template.id]);
+
   const tabs = [
     { id: 'general', label: 'Général', icon: Type },
     { id: 'design', label: 'Design', icon: Palette },
@@ -459,6 +508,24 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                 </div>
                 <p className="text-sm font-medium text-slate-700 group-hover:text-emerald-700">Émeraude & Bleu</p>
               </button>
+
+              {templateStyle === 'boheme' && (
+                <button
+                  onClick={() => {
+                    setPrimaryColor('#059669');
+                    setSecondaryColor('#047857');
+                    setAccentColor('#0d9488');
+                  }}
+                  className="p-4 rounded-xl border-2 border-neutral-200 hover:border-teal-400 transition-all duration-300 group"
+                >
+                  <div className="flex space-x-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-emerald-600"></div>
+                    <div className="w-6 h-6 rounded-full bg-emerald-700"></div>
+                    <div className="w-6 h-6 rounded-full bg-teal-600"></div>
+                  </div>
+                  <p className="text-sm font-medium text-slate-700 group-hover:text-teal-700">Nature & Teal</p>
+                </button>
+              )}
             </div>
 
             <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50">
@@ -618,7 +685,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
               <div className="absolute inset-0">
                 <img
                   src={customTemplate.backgroundImage}
-                  alt="Wedding Background"
+                  alt="Event Background"
                   className="w-full h-full object-cover transition-all duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"></div>
@@ -627,172 +694,349 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
 
               {/* Content */}
               <div className="relative z-10 p-4 text-center text-white">
-                {/* Decorative Header */}
-                <div className="mb-4">
-                  <div className="flex justify-center items-center mb-3">
-                    <div className="relative">
-                      <Heart className="h-8 w-8 animate-glow drop-shadow-2xl" style={{ color: accentColor }} />
-                      <div className="absolute inset-0 animate-ping">
-                        <Heart className="h-8 w-8 opacity-30" style={{ color: accentColor }} />
+                {templateStyle === 'boheme' ? (
+                  // Style Bohème
+                  <>
+                    <div className="mb-4">
+                      <div className="flex justify-center items-center mb-4">
+                        <div className="relative">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                            <div className="w-3 h-3 bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+                            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="w-20 h-px mx-auto mb-4" style={{ background: `linear-gradient(to right, transparent, ${primaryColor}, transparent)` }}></div>
+                    </div>
+
+                    <div className="bg-emerald-900/40 backdrop-blur-sm rounded-3xl p-4 mb-4 border border-emerald-400/30 shadow-xl">
+                      <h1 className="text-lg font-bold mb-2 font-luxury drop-shadow-lg transition-all duration-300 tracking-wide" style={{ color: primaryColor }}>
+                        {customTemplate.title}
+                      </h1>
+                      <div className="flex justify-center space-x-2">
+                        <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
+                        <div className="w-12 h-px bg-gradient-to-r from-transparent via-teal-300 to-transparent mt-1"></div>
+                        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  // Style Classique
+                  <>
+                    <div className="mb-4">
+                      <div className="flex justify-center items-center mb-3">
+                        <div className="relative">
+                          <Heart className="h-8 w-8 animate-glow drop-shadow-2xl" style={{ color: accentColor }} />
+                          <div className="absolute inset-0 animate-ping">
+                            <Heart className="h-8 w-8 opacity-30" style={{ color: accentColor }} />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="w-16 h-px mx-auto mb-3" style={{ background: `linear-gradient(to right, transparent, ${primaryColor}, transparent)` }}></div>
+                      <div className="flex justify-center space-x-1 mb-3">
+                        <Sparkles className="h-3 w-3 animate-pulse" style={{ color: primaryColor }} />
+                        <Sparkles className="h-2 w-2 animate-pulse" style={{ color: secondaryColor, animationDelay: '0.5s' }} />
+                        <Sparkles className="h-3 w-3 animate-pulse" style={{ color: primaryColor, animationDelay: '1s' }} />
+                      </div>
+                    </div>
+
+                    <h1 className="text-lg font-bold mb-4 font-luxury drop-shadow-lg transition-all duration-300" style={{ color: primaryColor }}>
+                      {customTemplate.title}
+                    </h1>
+                  </>
+                )}
+
+                {/* Guest Info */}
+                {templateStyle === 'boheme' ? (
+                  <div className="bg-teal-900/40 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-teal-400/30 shadow-xl">
+                    <div className="flex justify-center mb-2">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-teal-300 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+                        <div className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                      </div>
+                    </div>
+                    <p className="text-emerald-200 text-xs mb-1 tracking-wide">Invité d'honneur</p>
+                    <p className="text-sm font-semibold text-emerald-100 tracking-wide">[Nom de l'invité]</p>
+                    <div className="w-12 h-px bg-gradient-to-r from-transparent via-teal-300 to-transparent mx-auto mt-2 mb-2"></div>
+                    <p className="text-xs mt-1 tracking-wide" style={{ color: `${primaryColor}dd` }}>Place n° [Numéro de table]</p>
+                  </div>
+                ) : (
+                  <div className="backdrop-blur-sm rounded-xl p-3 mb-4 border" style={{ 
+                    background: `linear-gradient(to right, ${primaryColor}40, ${secondaryColor}40)`,
+                    borderColor: `${primaryColor}30`
+                  }}>
+                    <p className="text-xs mb-1" style={{ color: `${primaryColor}cc` }}>Cher(e)</p>
+                    <p className="text-sm font-semibold text-white">[Nom de l'invité]</p>
+                    <p className="text-xs mt-1" style={{ color: `${primaryColor}dd` }}>Table n° [Numéro de table]</p>
+                  </div>
+                )}
+
+                {/* Invitation Text */}
+                {templateStyle === 'boheme' ? (
+                  <div className="bg-black/20 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-emerald-400/20 shadow-xl">
+                    <div className="flex justify-center mb-3">
+                      <div className="flex space-x-2">
+                        <div className="w-1 h-1 bg-emerald-300 rounded-full"></div>
+                        <div className="w-1 h-1 bg-teal-300 rounded-full"></div>
+                        <div className="w-1 h-1 bg-emerald-300 rounded-full"></div>
+                      </div>
+                    </div>
+                    <p className="text-neutral-100 leading-relaxed text-xs italic tracking-wide transition-all duration-300">
+                      {customTemplate.invitationText.length > 100 
+                        ? customTemplate.invitationText.substring(0, 100) + '...'
+                        : customTemplate.invitationText}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 mb-4 border" style={{ borderColor: `${primaryColor}20` }}>
+                    <p className="text-neutral-200 leading-relaxed text-xs transition-all duration-300">
+                      {customTemplate.invitationText.length > 120 
+                        ? customTemplate.invitationText.substring(0, 120) + '...'
+                        : customTemplate.invitationText}
+                    </p>
+                  </div>
+                )}
+
+                {/* Event Details */}
+                {templateStyle === 'boheme' ? (
+                  <div className="space-y-3 mb-6">
+                    <div className="bg-emerald-900/40 backdrop-blur-sm rounded-xl p-3 border border-emerald-400/30">
+                      <div className="flex items-center justify-center text-emerald-200">
+                        <Calendar className="h-4 w-4 mr-2 text-emerald-300" />
+                        <div className="text-center">
+                          <p className="text-sm font-bold tracking-wide transition-all duration-300">{customTemplate.eventDate}</p>
+                          <p className="text-xs text-emerald-300 tracking-wide transition-all duration-300">{customTemplate.eventTime}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-teal-900/40 backdrop-blur-sm rounded-xl p-3 border border-teal-400/30">
+                      <div className="flex items-center justify-center text-teal-200">
+                        <MapPin className="h-4 w-4 mr-2 text-teal-300" />
+                        <p className="text-xs text-center tracking-wide transition-all duration-300">
+                          {customTemplate.eventLocation.length > 25 
+                            ? customTemplate.eventLocation.substring(0, 25) + '...'
+                            : customTemplate.eventLocation}
+                        </p>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="w-16 h-px mx-auto mb-3" style={{ background: `linear-gradient(to right, transparent, ${primaryColor}, transparent)` }}></div>
-                  <div className="flex justify-center space-x-1 mb-3">
-                    <Sparkles className="h-3 w-3 animate-pulse" style={{ color: primaryColor }} />
-                    <Sparkles className="h-2 w-2 animate-pulse" style={{ color: secondaryColor, animationDelay: '0.5s' }} />
-                    <Sparkles className="h-3 w-3 animate-pulse" style={{ color: primaryColor, animationDelay: '1s' }} />
-                  </div>
-                </div>
-
-                {/* Title */}
-                <h1 className="text-lg font-bold mb-4 font-luxury drop-shadow-lg transition-all duration-300" style={{ color: primaryColor }}>
-                  {customTemplate.title}
-                </h1>
-
-                {/* Guest Info */}
-                <div className="backdrop-blur-sm rounded-xl p-3 mb-4 border" style={{ 
-                  background: `linear-gradient(to right, ${primaryColor}40, ${secondaryColor}40)`,
-                  borderColor: `${primaryColor}30`
-                }}>
-                  <p className="text-xs mb-1" style={{ color: `${primaryColor}cc` }}>Cher(e)</p>
-                  <p className="text-sm font-semibold text-white">[Nom de l'invité]</p>
-                  <p className="text-xs mt-1" style={{ color: `${primaryColor}dd` }}>Table n° [Numéro de table]</p>
-                </div>
-
-                {/* Invitation Text */}
-                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 mb-4 border" style={{ borderColor: `${primaryColor}20` }}>
-                  <p className="text-neutral-200 leading-relaxed text-xs transition-all duration-300">
-                    {customTemplate.invitationText.length > 120 
-                      ? customTemplate.invitationText.substring(0, 120) + '...'
-                      : customTemplate.invitationText}
-                  </p>
-                </div>
-
-                {/* Event Details */}
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center justify-center text-neutral-200">
-                    <Calendar className="h-3 w-3 mr-2" style={{ color: primaryColor }} />
-                    <div className="text-left">
-                      <p className="text-xs font-semibold transition-all duration-300">{customTemplate.eventDate}</p>
-                      <p className="text-xs transition-all duration-300" style={{ color: `${primaryColor}dd` }}>{customTemplate.eventTime}</p>
+                ) : (
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center justify-center text-neutral-200">
+                      <Calendar className="h-3 w-3 mr-2" style={{ color: primaryColor }} />
+                      <div className="text-left">
+                        <p className="text-xs font-semibold transition-all duration-300">{customTemplate.eventDate}</p>
+                        <p className="text-xs transition-all duration-300" style={{ color: `${primaryColor}dd` }}>{customTemplate.eventTime}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-center text-neutral-200">
+                      <MapPin className="h-3 w-3 mr-2" style={{ color: primaryColor }} />
+                      <p className="text-xs transition-all duration-300">
+                        {customTemplate.eventLocation.length > 30 
+                          ? customTemplate.eventLocation.substring(0, 30) + '...'
+                          : customTemplate.eventLocation}
+                      </p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center justify-center text-neutral-200">
-                    <MapPin className="h-3 w-3 mr-2" style={{ color: primaryColor }} />
-                    <p className="text-xs transition-all duration-300">
-                      {customTemplate.eventLocation.length > 30 
-                        ? customTemplate.eventLocation.substring(0, 30) + '...'
-                        : customTemplate.eventLocation}
-                    </p>
-                  </div>
-                </div>
+                )}
 
                 {/* RSVP Section */}
-                <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
-                  background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
-                  borderColor: `${primaryColor}30`
-                }}>
-                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
-                    <Users className="h-3 w-3 mr-1" />
-                    Confirmation
-                  </h3>
-                  <button
-                    onClick={() => setIsConfirmed(!isConfirmed)}
-                    className="w-full py-2 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105"
-                    style={{
-                      background: isConfirmed 
-                        ? 'linear-gradient(to right, #10b981, #059669)' 
-                        : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
-                      color: isConfirmed ? 'white' : '#1e293b'
-                    }}
-                  >
-                    {isConfirmed ? (
-                      <span className="flex items-center justify-center">
-                        <Check className="h-3 w-3 mr-1" />
-                        Présence confirmée
-                      </span>
-                    ) : (
-                      'Confirmer ma présence'
-                    )}
-                  </button>
-                </div>
-
-                {/* Drink Selection */}
-                <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
-                  background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
-                  borderColor: `${primaryColor}30`
-                }}>
-                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
-                    <Wine className="h-3 w-3 mr-1" />
-                    Choix de boisson
-                  </h3>
-                  <select
-                    value={selectedDrink}
-                    onChange={(e) => setSelectedDrink(e.target.value)}
-                    className="w-full bg-slate-800/80 text-white border rounded-lg px-2 py-1 text-xs focus:ring-1 transition-all duration-200"
-                    style={{ 
-                      borderColor: `${primaryColor}30`,
-                      focusRingColor: primaryColor
-                    }}
-                  >
-                    <option value="">Sélectionnez votre boisson</option>
-                    {customTemplate.drinkOptions.slice(0, 3).map((drink) => (
-                      <option key={drink} value={drink}>{drink}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Guest Book - Simplified */}
-                <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
-                  background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
-                  borderColor: `${primaryColor}30`
-                }}>
-                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
-                    <MessageCircle className="h-3 w-3 mr-1" />
-                    Livre d'or
-                  </h3>
-                  <textarea
-                    value={guestMessage}
-                    onChange={(e) => setGuestMessage(e.target.value)}
-                    placeholder="Laissez un message aux mariés..."
-                    className="w-full bg-slate-800/80 text-white border rounded-lg px-2 py-1 text-xs focus:ring-1 transition-all duration-200 resize-none"
-                    rows={2}
-                    style={{ 
-                      borderColor: `${primaryColor}30`,
-                      focusRingColor: primaryColor
-                    }}
-                  />
-                  <div className="mt-2 grid grid-cols-2 gap-1">
-                    <button 
-                      onClick={() => {
-                        if (guestMessage.trim()) {
-                          alert('Message envoyé avec succès !');
-                          setGuestMessage('');
-                        } else {
-                          alert('Veuillez écrire un message avant d\'envoyer.');
-                        }
-                      }}
-                      className="py-1 rounded-lg text-xs font-semibold shadow-lg transform hover:scale-105 relative overflow-hidden group transition-all duration-300"
-                      style={{ background: 'linear-gradient(to right, #10b981, #059669)', color: 'white' }}
-                    >
-                      <MessageCircle className="h-3 w-3 inline mr-1" />
-                      Envoyer
-                    </button>
-                    <button 
-                      className="py-1 rounded-lg text-xs font-semibold transition-all duration-300"
-                      style={{ 
-                        background: `linear-gradient(to right, ${secondaryColor}, ${primaryColor})`,
-                        color: '#1e293b'
+                {templateStyle === 'boheme' ? (
+                  <div className="bg-emerald-900/50 backdrop-blur-sm rounded-2xl p-4 mb-3 border border-emerald-400/40 shadow-xl">
+                    <h3 className="text-emerald-200 font-bold mb-3 flex items-center justify-center tracking-wide">
+                      <Heart className="h-4 w-4 mr-2" />
+                      Confirmation Naturelle
+                    </h3>
+                    <button
+                      onClick={() => setIsConfirmed(!isConfirmed)}
+                      className="w-full py-3 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 tracking-wide"
+                      style={{
+                        background: isConfirmed 
+                          ? 'linear-gradient(to right, #0d9488, #0f766e)' 
+                          : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
+                        color: isConfirmed ? 'white' : '#1e293b'
                       }}
                     >
-                      <Camera className="h-3 w-3 inline mr-1" />
-                      Photo
+                      {isConfirmed ? (
+                        <span className="flex items-center justify-center">
+                          <Check className="h-4 w-4 mr-2" />
+                          Je serai présent(e)
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center">
+                          <Heart className="h-4 w-4 mr-2" />
+                          Confirmer ma Présence
+                        </span>
+                      )}
                     </button>
                   </div>
-                </div>
+                ) : (
+                  <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
+                    background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
+                    borderColor: `${primaryColor}30`
+                  }}>
+                    <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
+                      <Users className="h-3 w-3 mr-1" />
+                      Confirmation
+                    </h3>
+                    <button
+                      onClick={() => setIsConfirmed(!isConfirmed)}
+                      className="w-full py-2 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105"
+                      style={{
+                        background: isConfirmed 
+                          ? 'linear-gradient(to right, #10b981, #059669)' 
+                          : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
+                        color: isConfirmed ? 'white' : '#1e293b'
+                      }}
+                    >
+                      {isConfirmed ? (
+                        <span className="flex items-center justify-center">
+                          <Check className="h-3 w-3 mr-1" />
+                          Présence confirmée
+                        </span>
+                      ) : (
+                        'Confirmer ma présence'
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {/* Drink Selection */}
+                {templateStyle === 'boheme' ? (
+                  <div className="bg-teal-900/50 backdrop-blur-sm rounded-2xl p-4 mb-3 border border-teal-400/40 shadow-xl">
+                    <h3 className="text-teal-200 font-bold mb-3 flex items-center justify-center tracking-wide">
+                      <Wine className="h-4 w-4 mr-2" />
+                      Sélection Bio
+                    </h3>
+                    <select
+                      value={selectedDrink}
+                      onChange={(e) => setSelectedDrink(e.target.value)}
+                      className="w-full bg-slate-800/90 text-teal-200 border border-teal-400/40 rounded-2xl px-3 py-2 text-xs focus:ring-2 focus:ring-teal-400 focus:border-teal-400 transition-all duration-200 font-medium"
+                    >
+                      <option value="">Choisissez votre nectar</option>
+                      {customTemplate.drinkOptions.slice(0, 3).map((drink) => (
+                        <option key={drink} value={drink}>{drink}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
+                    background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
+                    borderColor: `${primaryColor}30`
+                  }}>
+                    <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
+                      <Wine className="h-3 w-3 mr-1" />
+                      Choix de boisson
+                    </h3>
+                    <select
+                      value={selectedDrink}
+                      onChange={(e) => setSelectedDrink(e.target.value)}
+                      className="w-full bg-slate-800/80 text-white border rounded-lg px-2 py-1 text-xs focus:ring-1 transition-all duration-200"
+                      style={{ 
+                        borderColor: `${primaryColor}30`,
+                        focusRingColor: primaryColor
+                      }}
+                    >
+                      <option value="">Sélectionnez votre boisson</option>
+                      {customTemplate.drinkOptions.slice(0, 3).map((drink) => (
+                        <option key={drink} value={drink}>{drink}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Guest Book - Simplified */}
+                {templateStyle === 'boheme' ? (
+                  <div className="bg-emerald-900/50 backdrop-blur-sm rounded-2xl p-4 mb-3 border border-emerald-400/40 shadow-xl">
+                    <h3 className="text-emerald-200 font-bold mb-3 flex items-center justify-center tracking-wide">
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Livre de Nature
+                    </h3>
+                    <textarea
+                      value={guestMessage}
+                      onChange={(e) => setGuestMessage(e.target.value)}
+                      placeholder="Partagez vos vœux authentiques..."
+                      className="w-full bg-slate-800/90 text-emerald-200 border border-emerald-400/40 rounded-2xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition-all duration-200 resize-none font-medium"
+                      rows={2}
+                    />
+                    <div className="mt-3 space-y-2">
+                      <button 
+                        onClick={() => {
+                          if (guestMessage.trim()) {
+                            alert('Vos vœux ont été partagés avec amour !');
+                            setGuestMessage('');
+                          } else {
+                            alert('Veuillez écrire vos vœux avant de les partager.');
+                          }
+                        }}
+                        className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 text-white py-2 rounded-2xl hover:from-teal-600 hover:to-emerald-600 transition-all duration-300 font-bold text-xs shadow-xl transform hover:scale-105"
+                      >
+                        <Heart className="h-3 w-3 inline mr-1" />
+                        Partager mes Vœux
+                      </button>
+                      <button 
+                        className="w-full bg-gradient-to-r from-amber-500 to-emerald-500 text-slate-900 py-2 rounded-2xl hover:from-amber-600 hover:to-emerald-600 transition-all duration-300 font-bold text-xs shadow-xl"
+                      >
+                        <Camera className="h-3 w-3 inline mr-1" />
+                        Capturer ce Moment
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
+                    background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
+                    borderColor: `${primaryColor}30`
+                  }}>
+                    <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
+                      <MessageCircle className="h-3 w-3 mr-1" />
+                      Livre d'or
+                    </h3>
+                    <textarea
+                      value={guestMessage}
+                      onChange={(e) => setGuestMessage(e.target.value)}
+                      placeholder="Laissez un message aux mariés..."
+                      className="w-full bg-slate-800/80 text-white border rounded-lg px-2 py-1 text-xs focus:ring-1 transition-all duration-200 resize-none"
+                      rows={2}
+                      style={{ 
+                        borderColor: `${primaryColor}30`,
+                        focusRingColor: primaryColor
+                      }}
+                    />
+                    <div className="mt-2 grid grid-cols-2 gap-1">
+                      <button 
+                        onClick={() => {
+                          if (guestMessage.trim()) {
+                            alert('Message envoyé avec succès !');
+                            setGuestMessage('');
+                          } else {
+                            alert('Veuillez écrire un message avant d\'envoyer.');
+                          }
+                        }}
+                        className="py-1 rounded-lg text-xs font-semibold shadow-lg transform hover:scale-105 relative overflow-hidden group transition-all duration-300"
+                        style={{ background: 'linear-gradient(to right, #10b981, #059669)', color: 'white' }}
+                      >
+                        <MessageCircle className="h-3 w-3 inline mr-1" />
+                        Envoyer
+                      </button>
+                      <button 
+                        className="py-1 rounded-lg text-xs font-semibold transition-all duration-300"
+                        style={{ 
+                          background: `linear-gradient(to right, ${secondaryColor}, ${primaryColor})`,
+                          color: '#1e293b'
+                        }}
+                      >
+                        <Camera className="h-3 w-3 inline mr-1" />
+                        Photo
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
