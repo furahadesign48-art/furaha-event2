@@ -421,7 +421,7 @@ const WeddingTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: WeddingT
                       )}
                     </div>
                   </div>
-                </div>
+                
                           </>
                         ) : (
                           // Template Royal Elegance (nouveau)
