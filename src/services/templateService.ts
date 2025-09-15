@@ -277,15 +277,35 @@ export class UserModelService {
     try {
       const modelRef = doc(db, this.USERS_COLLECTION, userId, 'UserModel', modelId);
       
+      // S'assurer que les couleurs ne contiennent pas de valeurs undefined
+      const cleanColors = updates.colors ? {
+        primary: updates.colors.primary || '#f59e0b',
+        secondary: updates.colors.secondary || '#d97706', 
+        accent: updates.colors.accent || '#f43f5e'
+      } : undefined;
+      
+      const cleanCustomizations = updates.customizations ? {
+        ...updates.customizations,
+        colors: updates.customizations.colors ? {
+          primary: updates.customizations.colors.primary || '#f59e0b',
+          secondary: updates.customizations.colors.secondary || '#d97706',
+          accent: updates.customizations.colors.accent || '#f43f5e'
+        } : cleanColors
+      } : cleanColors ? { colors: cleanColors } : undefined;
+      
       const updateData = {
         ...updates,
-        // S'assurer que les couleurs sont incluses dans les customizations
-        customizations: {
-          ...updates.customizations,
-          colors: updates.colors || updates.customizations?.colors
-        },
+        ...(cleanColors && { colors: cleanColors }),
+        ...(cleanCustomizations && { customizations: cleanCustomizations }),
         updatedAt: serverTimestamp()
       };
+      
+      // Nettoyer les valeurs undefined du updateData
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
       
       await updateDoc(modelRef, updateData);
       console.log('Modèle utilisateur mis à jour:', modelId);

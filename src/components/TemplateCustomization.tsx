@@ -179,27 +179,21 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   };
 
   const handleSave = () => {
-    // Préparer les données avec les couleurs dans customizations ET colors
-    const templateToSave = {
-      ...customTemplate,
-      colors: {
-        primary: primaryColor,
-        secondary: secondaryColor,
-        accent: accentColor
-      },
-      customizations: {
-        ...customTemplate.customizations,
-        colors: {
-          primary: primaryColor,
-          secondary: secondaryColor,
-          accent: accentColor
-        }
-      }
+    // S'assurer que toutes les couleurs sont définies
+    const finalColors = {
+      primary: primaryColor || '#f59e0b',
+      secondary: secondaryColor || '#d97706', 
+      accent: accentColor || '#f43f5e'
     };
     
-    console.log('Sauvegarde du template avec couleurs:', templateToSave.colors, templateToSave.customizations);
+    // Préparer les données avec les couleurs validées
+    const templateToSave = {
+      ...customTemplate,
+      colors: finalColors
+    };
+    
+    console.log('Sauvegarde du template avec couleurs:', templateToSave.colors);
     onSave(templateToSave);
-    alert('Template sauvegardé avec succès !');
   };
 
   const renderTabContent = () => {

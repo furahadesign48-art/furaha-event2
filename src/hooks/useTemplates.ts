@@ -144,18 +144,13 @@ export const useTemplates = () => {
       setIsLoading(true);
       setError(null);
       
-      // S'assurer que les couleurs sont correctement structurées
-      const updateData = {
-        ...updates,
-        // Inclure les couleurs dans customizations si elles existent
-        customizations: {
-          ...updates.customizations,
-          colors: updates.colors || updates.customizations?.colors
-        }
-      };
+      // Nettoyer les données pour éviter les valeurs undefined
+      const cleanUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([_, value]) => value !== undefined)
+      );
       
-      console.log('Mise à jour du modèle avec données:', updateData);
-      await UserModelService.updateUserModel(user.id, modelId, updateData);
+      console.log('Mise à jour du modèle avec données:', cleanUpdates);
+      await UserModelService.updateUserModel(user.id, modelId, cleanUpdates);
       
       // Recharger les modèles utilisateur
       await loadUserModels();
