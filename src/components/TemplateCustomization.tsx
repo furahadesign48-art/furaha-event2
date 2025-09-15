@@ -70,6 +70,16 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
     { id: 'options', label: 'Options', icon: Wine }
   ];
 
+  const [customTemplate, setCustomTemplate] = useState<TemplateData>({
+  ...template,
+  colors: template.colors || {
+    primary: '#f59e0b',
+    secondary: '#d97706',
+    accent: '#f43f5e'
+  }
+});
+
+
   const handleInputChange = (field: keyof TemplateData, value: any) => {
     setCustomTemplate(prev => ({
       ...prev,
