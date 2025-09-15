@@ -135,19 +135,27 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
     handleInputChange('drinkOptions', newOptions);
   };
 
-  const handleSave = () => {
-    // Sauvegarder avec les couleurs personnalisées
-    const templateWithColors = {
+ const handleSave = async () => {
+  if (!customTemplate.id) return;
+
+  const templateRef = doc(db, 'templates', customTemplate.id);
+
+  try {
+    await setDoc(templateRef, {
       ...customTemplate,
       colors: {
         primary: primaryColor,
         secondary: secondaryColor,
         accent: accentColor
       }
-    };
-    onSave(templateWithColors);
+    }, { merge: true }); // merge:true pour ne pas écraser les autres champs
+
     alert('Template sauvegardé avec succès !');
-  };
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde des couleurs:', error);
+    alert('Erreur lors de la sauvegarde des couleurs. Vérifiez la console.');
+  }
+};
 
   const renderTabContent = () => {
     switch (activeTab) {
