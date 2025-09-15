@@ -896,7 +896,7 @@ const InvitationPreview = () => {
                 
                 {/* Contenu de l'écran */}
                 <div className="flex-1 flex items-center justify-center">
-                  {renderScreen()}
+                  {index === currentScreen && renderScreen()}
                 </div>
               </div>
             </div>
