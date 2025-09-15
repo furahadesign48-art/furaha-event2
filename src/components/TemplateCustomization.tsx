@@ -3,6 +3,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../config/firebase';
 import { useAuth } from './AuthContext';
 import { db } from '../config/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { 
   ArrowLeft, 
   Save, 
