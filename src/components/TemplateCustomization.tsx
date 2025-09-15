@@ -81,10 +81,32 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
     }));
   };
 
-  const handleSave = () => {
-    onSave(customTemplate);
+ const handleSave = async () => {
+  if (!user) return alert("Vous devez être connecté pour sauvegarder");
+
+  try {
+    // Mise à jour du document Firestore
+    await setDoc(
+      doc(db, 'users', user.id), // OU ton chemin correct
+      {
+        customizations: {
+          colors: customTemplate.colors,
+          fonts: {
+            body: customTemplate.fonts?.body || 'Inter',
+            title: customTemplate.fonts?.title || 'Playfair Display'
+          }
+        }
+      },
+      { merge: true } // fusionne avec les autres champs existants
+    );
+
     alert('Template sauvegardé avec succès !');
-  };
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde des couleurs:', error);
+    alert('Erreur lors de la sauvegarde. Réessayez.');
+  }
+};
+
 
   const tabs = [
     { id: 'general', label: 'Général', icon: Type },
