@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../config/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import { 
   ArrowLeft, 
