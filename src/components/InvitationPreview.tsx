@@ -484,12 +484,12 @@ const InvitationPreview = () => {
                   </div>
 
                   {/* Guest Book */}
-                 <div 
-  className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto mt-20" 
-  style={{ 
-    background: `linear-gradient(to right, ${colors.primary}40, ${colors.secondary}40)`,
-    borderColor: `${colors.primary}30`
-  }}
+                  <div 
+                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-lg mx-auto" 
+                    style={{ 
+                      background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
+                      borderColor: `${colors.primary}30`
+                    }}
                   >
                     <h3 
                       className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
