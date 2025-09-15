@@ -368,12 +368,12 @@ const InvitationPreview = () => {
                   </h1>
 
                   {/* Guest Info */}
-                <div 
-  className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto mt-12" 
-  style={{ 
-    background: `linear-gradient(to right, ${colors.primary}40, ${colors.secondary}40)`,
-    borderColor: `${colors.primary}30`
-  }}
+                  <div 
+                    <div className="text-center text-white space-y-6 sm:space-y-8 mt-16">
+                    style={{ 
+                      background: `linear-gradient(to right, ${colors.primary}40, ${colors.secondary}40)`,
+                      borderColor: `${colors.primary}30`
+                    }}
                   >
                     <p className="text-base sm:text-lg mb-3" style={{ color: `${colors.primary}cc` }}>Cher(e)</p>
                     <p className="text-2xl sm:text-3xl font-semibold text-white">{invite.nom}</p>
