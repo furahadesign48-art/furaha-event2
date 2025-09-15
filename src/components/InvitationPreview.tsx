@@ -369,7 +369,7 @@ const InvitationPreview = () => {
 
                   {/* Guest Info */}
                   <div 
-                    <div className="text-center text-white space-y-6 sm:space-y-8 mt-16">
+                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
                     style={{ 
                       background: `linear-gradient(to right, ${colors.primary}40, ${colors.secondary}40)`,
                       borderColor: `${colors.primary}30`
