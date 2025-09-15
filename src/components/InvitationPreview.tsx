@@ -288,26 +288,32 @@ const InvitationPreview = () => {
   const colors = userModel.colors || userModel.customizations?.colors || getColorScheme(userModel.category);
 
   return (
-<div className="absolute inset-0 h-[50vh] sm:h-[55vh] md:h-[60vh] lg:h-[65vh]">
-  <img
-    src={userModel.backgroundImage}
-    alt="Event Background"
-    className="w-full h-full object-cover scale-125"
-  />
-  <div className="absolute inset-0 bg-black/40"></div>
-</div>
+<div className="min-h-screen relative overflow-hidden">
+  {/* Haut avec l'image nette (agrandie + overlay sombre) */}
+  <div className="absolute top-0 left-0 w-full">
+    <img
+      src={userModel.backgroundImage}
+      alt="Event Background"
+      className="w-full object-cover 
+                 h-[800px] sm:h-[900px] md:h-[1000px] lg:h-[1100px] 
+                 scale-125"
+    />
+    {/* Overlay sombre fixe pour lisibilité */}
+    <div className="absolute inset-0 bg-black/40"></div>
+    {/* Gradient pour fondre avec le flou */}
+    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-transparent"></div>
+  </div>
 
-<div className="absolute inset-x-0 bottom-0 top-[50vh] sm:top-[55vh] md:top-[60vh] lg:top-[65vh]">
-  <img
-    src={userModel.backgroundImage}
-    alt="Event Background Blurred"
-    className="w-full h-full object-cover blur-2xl scale-125"
-  />
-  <div className="absolute inset-0 bg-black/60"></div>
-</div>
-
-
-
+  {/* Bas avec l'image floutée + overlay sombre */}
+  <div className="absolute w-full top-[750px] sm:top-[850px] md:top-[950px] lg:top-[1050px] bottom-0 overflow-hidden">
+    <img
+      src={userModel.backgroundImage}
+      alt="Event Background Blurred"
+      className="w-full h-full object-cover blur-2xl scale-125"
+    />
+    {/* Overlay sombre pour lisibilité */}
+    <div className="absolute inset-0 bg-black/60"></div>
+  </div>
 
 
       {/* Content */}
