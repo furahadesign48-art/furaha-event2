@@ -374,11 +374,11 @@ const handleSave = () => {
               </label>
               <div className="flex items-center space-x-4">
                 <input
-                  type="color"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
-                />
+  type="color"
+  value={customTemplate.colors?.primary || '#f59e0b'}
+  onChange={(e) => handleColorChange('primary', e.target.value)}
+/>
+
                 <input
                   type="text"
                   value={primaryColor}
