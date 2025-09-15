@@ -1,27 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../config/firebase';
-import { useAuth } from './AuthContext';
-import { 
-  ArrowLeft, 
-  Save, 
-  Eye, 
-  Download, 
-  Upload, 
-  Palette, 
-  Type, 
-  Calendar, 
-  MapPin, 
-  Users, 
-  Wine, 
-  MessageCircle, 
-  QrCode,
-  Heart,
-  Sparkles,
-  Camera,
-  Check,
-  X
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Save, Palette, Type, Image, Eye, EyeOff, Crown, Heart, Leaf, Feather, Sun, X } from 'lucide-react';
 
 interface TemplateData {
   id: string;
@@ -35,6 +13,23 @@ interface TemplateData {
   eventLocation: string;
   drinkOptions: string[];
   features: string[];
+  colors?: {
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
+  customizations?: {
+    colors?: {
+      primary: string;
+      secondary: string;
+      accent: string;
+    };
+    fonts?: {
+      title: string;
+      body: string;
+    };
+    layout?: string;
+  };
 }
 
 interface TemplateCustomizationProps {
@@ -44,23 +39,16 @@ interface TemplateCustomizationProps {
 }
 
 const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizationProps) => {
-  const { user } = useAuth();
-  const [customTemplate, setCustomTemplate] = useState<TemplateData>(template);
-  const [activeTab, setActiveTab] = useState('general');
-  const [selectedDrink, setSelectedDrink] = useState('');
-  const [guestMessage, setGuestMessage] = useState('');
-  const [isConfirmed, setIsConfirmed] = useState(false);
-  const [newDrink, setNewDrink] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('#f59e0b'); // amber-500
-  const [secondaryColor, setSecondaryColor] = useState('#d97706'); // amber-600
-  const [accentColor, setAccentColor] = useState('#f43f5e'); // rose-500
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showQRInfo, setShowQRInfo] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [customizedTemplate, setCustomizedTemplate] = useState<TemplateData>(template);
+  const [activeTab, setActiveTab] = useState('content');
+  const [showPreview, setShowPreview] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Déterminer le style du template
   const getTemplateStyle = () => {
-    if (template.name.toLowerCase().includes('bohème') || template.name.toLowerCase().includes('nature')) {
+    if (template.name.toLowerCase().includes('bohème') || 
+        template.name.toLowerCase().includes('nature') ||
+        template.originalTemplateId === 'wedding-boheme-nature') {
       return 'boheme';
     }
     return 'classic';
@@ -68,974 +56,557 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
 
   const templateStyle = getTemplateStyle();
 
-  // Couleurs et icônes selon le style
-  const getStyleConfig = () => {
-    if (templateStyle === 'boheme') {
-      return {
-        primaryColor: '#10b981', // emerald-500
-        secondaryColor: '#059669', // emerald-600
-        accentColor: '#14b8a6', // teal-500
-        icon: 'Leaf',
-        gradients: {
-          primary: 'from-emerald-500 to-teal-500',
-          bg: 'from-emerald-50 to-teal-50',
-          text: 'text-emerald-600',
-          border: 'border-emerald-200'
-        }
-      };
-    }
-    return {
-      primaryColor: '#f59e0b', // amber-500
-      secondaryColor: '#d97706', // amber-600
-      accentColor: '#f43f5e', // rose-500
-      icon: 'Heart',
-      gradients: {
-        primary: 'from-amber-500 to-rose-500',
-        bg: 'from-amber-50 to-rose-50',
-        text: 'text-amber-600',
-        border: 'border-amber-200'
-      }
+  // Initialiser les couleurs par défaut selon le style
+  useEffect(() => {
+    const defaultColors = templateStyle === 'boheme' ? {
+      primary: '#10b981',
+      secondary: '#059669',
+      accent: '#14b8a6'
+    } : {
+      primary: '#f59e0b',
+      secondary: '#d97706',
+      accent: '#f43f5e'
     };
+
+    // Utiliser les couleurs personnalisées existantes ou les couleurs par défaut
+    const currentColors = template.customizations?.colors || template.colors || defaultColors;
+    
+    setCustomizedTemplate(prev => ({
+      ...prev,
+      colors: currentColors,
+      customizations: {
+        ...prev.customizations,
+        colors: currentColors,
+        fonts: prev.customizations?.fonts || {
+          title: 'Playfair Display',
+          body: 'Inter'
+        },
+        layout: prev.customizations?.layout || 'default'
+      }
+    }));
+  }, [template, templateStyle]);
+
+  const handleColorChange = (colorType: 'primary' | 'secondary' | 'accent', value: string) => {
+    setCustomizedTemplate(prev => ({
+      ...prev,
+      colors: {
+        ...prev.colors,
+        [colorType]: value
+      },
+      customizations: {
+        ...prev.customizations,
+        colors: {
+          ...prev.customizations?.colors,
+          [colorType]: value
+        }
+      }
+    }));
   };
 
-  const styleConfig = getStyleConfig();
-
-  // Initialiser les couleurs selon le style du template
-  React.useEffect(() => {
-    setPrimaryColor(styleConfig.primaryColor);
-    setSecondaryColor(styleConfig.secondaryColor);
-    setAccentColor(styleConfig.accentColor);
-  }, [template.id]);
-
-  const tabs = [
-    { id: 'general', label: 'Général', icon: Type },
-    { id: 'design', label: 'Design', icon: Palette },
-    { id: 'colors', label: 'Couleurs', icon: Palette },
-    { id: 'event', label: 'Événement', icon: Calendar },
-    { id: 'options', label: 'Options', icon: Wine }
-  ];
-
-  const handleInputChange = (field: keyof TemplateData, value: any) => {
-    setCustomTemplate(prev => ({
+  const handleContentChange = (field: string, value: string) => {
+    setCustomizedTemplate(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) {
-      if (!user) {
-        alert('Vous devez être connecté pour télécharger une image');
-      }
-      return;
-    }
+  const handleDrinkOptionsChange = (options: string[]) => {
+    setCustomizedTemplate(prev => ({
+      ...prev,
+      drinkOptions: options
+    }));
+  };
 
-    // Vérifier le type de fichier
-    if (!file.type.startsWith('image/')) {
-      alert('Veuillez sélectionner un fichier image valide');
-      return;
-    }
-
-    // Vérifier la taille du fichier (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('L\'image ne doit pas dépasser 5MB');
-      return;
-    }
-
+  const handleSave = async () => {
+    setIsSaving(true);
     try {
-      setIsUploadingImage(true);
-      
-      // Créer une référence unique pour l'image
-      const timestamp = Date.now();
-      const fileName = `template-backgrounds/${user.id}/${timestamp}_${file.name}`;
-      const storageRef = ref(storage, fileName);
-      
-      // Télécharger l'image vers Firebase Storage
-      console.log('Téléchargement de l\'image vers Firebase Storage...');
-      const snapshot = await uploadBytes(storageRef, file);
-      
-      // Obtenir l'URL de téléchargement
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      console.log('Image téléchargée avec succès:', downloadURL);
-      
-      // Mettre à jour le template avec la nouvelle URL
-      handleInputChange('backgroundImage', downloadURL);
-      
-      alert('Image téléchargée avec succès !');
+      await onSave(customizedTemplate);
     } catch (error) {
-      console.error('Erreur lors du téléchargement de l\'image:', error);
-      alert('Erreur lors du téléchargement de l\'image. Veuillez réessayer.');
+      console.error('Erreur lors de la sauvegarde:', error);
     } finally {
-      setIsUploadingImage(false);
+      setIsSaving(false);
     }
   };
 
-  const addDrinkOption = () => {
-    if (newDrink.trim() && !customTemplate.drinkOptions.includes(newDrink.trim())) {
-      handleInputChange('drinkOptions', [...customTemplate.drinkOptions, newDrink.trim()]);
-      setNewDrink('');
-    }
-  };
+  const tabs = [
+    { id: 'content', label: 'Contenu', icon: Type },
+    { id: 'colors', label: 'Couleurs', icon: Palette },
+    { id: 'layout', label: 'Mise en page', icon: Layout }
+  ];
 
-  const removeDrinkOption = (index: number) => {
-    const newOptions = customTemplate.drinkOptions.filter((_, i) => i !== index);
-    handleInputChange('drinkOptions', newOptions);
-  };
-
-  const handleSave = () => {
-    // Sauvegarder avec les couleurs personnalisées
-    const templateWithColors = {
-      ...customTemplate,
-      colors: {
-        primary: primaryColor,
-        secondary: secondaryColor,
-        accent: accentColor
-      }
+  // Obtenir les couleurs actuelles pour l'aperçu
+  const getCurrentColors = () => {
+    return customizedTemplate.colors || customizedTemplate.customizations?.colors || {
+      primary: templateStyle === 'boheme' ? '#10b981' : '#f59e0b',
+      secondary: templateStyle === 'boheme' ? '#059669' : '#d97706',
+      accent: templateStyle === 'boheme' ? '#14b8a6' : '#f43f5e'
     };
-    onSave(templateWithColors);
-    alert('Template sauvegardé avec succès !');
   };
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'general':
-        return (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Titre de l'invitation
-              </label>
-              <input
-                type="text"
-                value={customTemplate.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                placeholder="Ex: Mariage de Sophie & Lucas"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Texte d'invitation
-              </label>
-              <textarea
-                value={customTemplate.invitationText}
-                onChange={(e) => handleInputChange('invitationText', e.target.value)}
-                rows={6}
-                className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 resize-none"
-                placeholder="Rédigez votre message d'invitation..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Nom du template
-              </label>
-              <input
-                type="text"
-                value={customTemplate.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                placeholder="Nom de votre template personnalisé"
-              />
-            </div>
-          </div>
-        );
-
-      case 'design':
-        return (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Image de fond
-              </label>
-              <div className="space-y-4">
-                <div className="relative h-32 bg-gradient-to-br from-neutral-100 to-amber-50 rounded-xl border-2 border-dashed border-neutral-300 hover:border-amber-400 transition-all duration-300">
-                  {customTemplate.backgroundImage ? (
-                    <img
-                      src={customTemplate.backgroundImage}
-                      alt="Background preview"
-                      className="w-full h-full object-cover rounded-xl"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <Camera className="h-8 w-8 text-neutral-400 mx-auto mb-2" />
-                        <p className="text-neutral-500 text-sm">Aucune image sélectionnée</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {isUploadingImage && (
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                      <div className="text-center text-white">
-                        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-2"></div>
-                        <p className="text-sm">Téléchargement...</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploadingImage}
-                    className="flex-1 bg-amber-500 text-white px-4 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isUploadingImage ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                        Téléchargement...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Télécharger une image
-                      </>
-                    )}
-                  </button>
-                  
-                  <button
-                    onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=1200')}
-                    className="flex-1 bg-neutral-500 text-white px-4 py-3 rounded-xl hover:bg-neutral-600 transition-all duration-300 font-semibold"
-                  >
-                    Image par défaut
-                  </button>
-                </div>
-                
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50">
-              <div className="flex items-center mb-4">
-                <Camera className="h-5 w-5 text-amber-600 mr-2" />
-                <h3 className="text-lg font-semibold text-amber-800">Téléchargement d'image</h3>
-              </div>
-              <div className="space-y-2 text-amber-700 text-sm">
-                <p>• Formats acceptés : JPEG, PNG, WebP</p>
-                <p>• Taille maximale : 5MB</p>
-                <p>• L'image sera stockée de manière sécurisée</p>
-                <p>• Résolution recommandée : 1200x800px minimum</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div
-                onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=1200')}
-                className="cursor-pointer group"
-              >
-                <div className="relative h-20 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-amber-400 transition-all duration-300">
-                  <img
-                    src="https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=400"
-                    alt="Template 1"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300"></div>
-                </div>
-                <p className="text-xs text-center mt-2 text-slate-600">Romantique</p>
-              </div>
-
-              <div
-                onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/1488482/pexels-photo-1488482.jpeg?auto=compress&cs=tinysrgb&w=1200')}
-                className="cursor-pointer group"
-              >
-                <div className="relative h-20 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-amber-400 transition-all duration-300">
-                  <img
-                    src="https://images.pexels.com/photos/1488482/pexels-photo-1488482.jpeg?auto=compress&cs=tinysrgb&w=400"
-                    alt="Template 2"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300"></div>
-                </div>
-                <p className="text-xs text-center mt-2 text-slate-600">Élégant</p>
-              </div>
-
-              <div
-                onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/2253870/pexels-photo-2253870.jpeg?auto=compress&cs=tinysrgb&w=1200')}
-                className="cursor-pointer group"
-              >
-                <div className="relative h-20 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-amber-400 transition-all duration-300">
-                  <img
-                    src="https://images.pexels.com/photos/2253870/pexels-photo-2253870.jpeg?auto=compress&cs=tinysrgb&w=400"
-                    alt="Template 3"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300"></div>
-                </div>
-                <p className="text-xs text-center mt-2 text-slate-600">Moderne</p>
-              </div>
-
-              <div
-                onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/1729808/pexels-photo-1729808.jpeg?auto=compress&cs=tinysrgb&w=1200')}
-                className="cursor-pointer group"
-              >
-                <div className="relative h-20 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-amber-400 transition-all duration-300">
-                  <img
-                    src="https://images.pexels.com/photos/1729808/pexels-photo-1729808.jpeg?auto=compress&cs=tinysrgb&w=400"
-                    alt="Template 4"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300"></div>
-                </div>
-                <p className="text-xs text-center mt-2 text-slate-600">Classique</p>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'colors':
-        return (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-4">
-                Couleur principale
-              </label>
-              <div className="flex items-center space-x-4">
-                <input
-                  type="color"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono"
-                  placeholder="#f59e0b"
-                />
-              </div>
-              <p className="text-sm text-slate-500 mt-2">Couleur utilisée pour les éléments principaux et les boutons</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-4">
-                Couleur secondaire
-              </label>
-              <div className="flex items-center space-x-4">
-                <input
-                  type="color"
-                  value={secondaryColor}
-                  onChange={(e) => setSecondaryColor(e.target.value)}
-                  className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={secondaryColor}
-                  onChange={(e) => setSecondaryColor(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono"
-                  placeholder="#d97706"
-                />
-              </div>
-              <p className="text-sm text-slate-500 mt-2">Couleur pour les effets de survol et les accents</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-4">
-                Couleur d'accent
-              </label>
-              <div className="flex items-center space-x-4">
-                <input
-                  type="color"
-                  value={accentColor}
-                  onChange={(e) => setAccentColor(e.target.value)}
-                  className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={accentColor}
-                  onChange={(e) => setAccentColor(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono"
-                  placeholder="#f43f5e"
-                />
-              </div>
-              <p className="text-sm text-slate-500 mt-2">Couleur pour les éléments décoratifs et les icônes</p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <button
-                onClick={() => {
-                  setPrimaryColor('#f59e0b');
-                  setSecondaryColor('#d97706');
-                  setAccentColor('#f43f5e');
-                }}
-                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-amber-400 transition-all duration-300 group"
-              >
-                <div className="flex space-x-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-amber-500"></div>
-                  <div className="w-6 h-6 rounded-full bg-amber-600"></div>
-                  <div className="w-6 h-6 rounded-full bg-rose-500"></div>
-                </div>
-                <p className="text-sm font-medium text-slate-700 group-hover:text-amber-700">Doré & Rose</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setPrimaryColor('#8b5cf6');
-                  setSecondaryColor('#7c3aed');
-                  setAccentColor('#ec4899');
-                }}
-                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-purple-400 transition-all duration-300 group"
-              >
-                <div className="flex space-x-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-violet-500"></div>
-                  <div className="w-6 h-6 rounded-full bg-violet-600"></div>
-                  <div className="w-6 h-6 rounded-full bg-pink-500"></div>
-                </div>
-                <p className="text-sm font-medium text-slate-700 group-hover:text-purple-700">Violet & Rose</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setPrimaryColor('#10b981');
-                  setSecondaryColor('#059669');
-                  setAccentColor('#3b82f6');
-                }}
-                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-emerald-400 transition-all duration-300 group"
-              >
-                <div className="flex space-x-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500"></div>
-                  <div className="w-6 h-6 rounded-full bg-emerald-600"></div>
-                  <div className="w-6 h-6 rounded-full bg-blue-500"></div>
-                </div>
-                <p className="text-sm font-medium text-slate-700 group-hover:text-emerald-700">Émeraude & Bleu</p>
-              </button>
-
-              {templateStyle === 'boheme' && (
-                <button
-                  onClick={() => {
-                    setPrimaryColor('#059669');
-                    setSecondaryColor('#047857');
-                    setAccentColor('#0d9488');
-                  }}
-                  className="p-4 rounded-xl border-2 border-neutral-200 hover:border-teal-400 transition-all duration-300 group"
-                >
-                  <div className="flex space-x-2 mb-2">
-                    <div className="w-6 h-6 rounded-full bg-emerald-600"></div>
-                    <div className="w-6 h-6 rounded-full bg-emerald-700"></div>
-                    <div className="w-6 h-6 rounded-full bg-teal-600"></div>
-                  </div>
-                  <p className="text-sm font-medium text-slate-700 group-hover:text-teal-700">Nature & Teal</p>
-                </button>
-              )}
-            </div>
-
-            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50">
-              <div className="flex items-center mb-4">
-                <Palette className="h-5 w-5 text-purple-600 mr-2" />
-                <h3 className="text-lg font-semibold text-purple-800">Personnalisation des couleurs</h3>
-              </div>
-              <p className="text-purple-700 text-sm">
-                Personnalisez les couleurs de votre invitation pour qu'elle corresponde parfaitement à votre thème.
-                Les modifications s'appliquent en temps réel dans l'aperçu.
-              </p>
-            </div>
-          </div>
-        );
-
-      case 'event':
-        return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Date de l'événement
-                </label>
-                <input
-                  type="date"
-                  value={customTemplate.eventDate.split(' ')[2] + '-' + 
-                        (customTemplate.eventDate.split(' ')[1] === 'Juin' ? '06' : '01') + '-' + 
-                        customTemplate.eventDate.split(' ')[0].padStart(2, '0')}
-                  onChange={(e) => {
-                    const date = new Date(e.target.value);
-                    const formattedDate = date.toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    });
-                    handleInputChange('eventDate', formattedDate);
-                  }}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Heure de l'événement
-                </label>
-                <input
-                  type="time"
-                  value={customTemplate.eventTime.replace('h', ':')}
-                  onChange={(e) => handleInputChange('eventTime', e.target.value.replace(':', 'h'))}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Lieu de l'événement
-              </label>
-              <input
-                type="text"
-                value={customTemplate.eventLocation}
-                onChange={(e) => handleInputChange('eventLocation', e.target.value)}
-                className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                placeholder="Adresse complète du lieu"
-              />
-            </div>
-
-            <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50">
-              <div className="flex items-center mb-4">
-                <MapPin className="h-5 w-5 text-amber-600 mr-2" />
-                <h3 className="text-lg font-semibold text-amber-800">Informations du lieu</h3>
-              </div>
-              <p className="text-amber-700 text-sm">
-                Assurez-vous que l'adresse est complète et précise pour faciliter l'accès de vos invités.
-                Vous pouvez inclure des indications supplémentaires dans le texte d'invitation.
-              </p>
-            </div>
-          </div>
-        );
-
-      case 'options':
-        return (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-4">
-                Options de boissons
-              </label>
-              
-              <div className="space-y-3 mb-4">
-                {customTemplate.drinkOptions.map((drink, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between bg-gradient-to-r from-neutral-50 to-amber-50/30 rounded-xl p-4 border border-neutral-200/50"
-                  >
-                    <div className="flex items-center">
-                      <Wine className="h-4 w-4 text-amber-600 mr-3" />
-                      <span className="text-slate-700 font-medium">{drink}</span>
-                    </div>
-                    <button
-                      onClick={() => removeDrinkOption(index)}
-                      className="p-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-all duration-200"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex space-x-3">
-                <input
-                  type="text"
-                  value={newDrink}
-                  onChange={(e) => setNewDrink(e.target.value)}
-                  placeholder="Nouvelle option de boisson"
-                  className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                  onKeyPress={(e) => e.key === 'Enter' && addDrinkOption()}
-                />
-                <button
-                  onClick={addDrinkOption}
-                  className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition-all duration-300 font-semibold"
-                >
-                  Ajouter
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50">
-              <div className="flex items-center mb-4">
-                <Wine className="h-5 w-5 text-purple-600 mr-2" />
-                <h3 className="text-lg font-semibold text-purple-800">Gestion des boissons</h3>
-              </div>
-              <p className="text-purple-700 text-sm">
-                Personnalisez les options de boissons selon vos préférences. Vos invités pourront 
-                sélectionner leur choix directement depuis l'invitation.
-              </p>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
+  const currentColors = getCurrentColors();
 
   const renderPreview = () => {
     return (
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-luxury border border-amber-500/30 overflow-hidden sticky top-8">
-        <div className="p-4">
-          <div className="text-center mb-4">
-            <h3 className="text-lg font-semibold text-amber-400 mb-2">Aperçu en temps réel</h3>
-            <p className="text-neutral-300 text-sm">Vos modifications apparaissent instantanément</p>
-          </div>
-          <div className="relative bg-black rounded-2xl overflow-hidden shadow-inner mx-auto w-full max-w-xs">
-            {/* Invitation Content */}
-            <div className="relative h-[500px] overflow-y-auto">
-              {/* Background Image */}
-              <div className="absolute inset-0">
-                <img
-                  src={customTemplate.backgroundImage}
-                  alt="Event Background"
-                  className="w-full h-full object-cover transition-all duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-900/20 via-transparent to-amber-900/20" style={{ background: `linear-gradient(to right, ${primaryColor}20, transparent, ${primaryColor}20)` }}></div>
+      <div className="relative">
+        {/* Phone Frame avec style adaptatif */}
+        <div className={`relative w-80 h-[700px] rounded-[3rem] p-6 shadow-luxury ${
+          templateStyle === 'boheme' 
+            ? 'bg-gradient-to-br from-emerald-900 to-teal-900 border border-emerald-700'
+            : 'bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700'
+        }`}>
+          <div className={`w-full h-full rounded-[2rem] overflow-hidden relative shadow-inner ${
+            templateStyle === 'boheme' 
+              ? 'bg-gradient-to-br from-emerald-50 to-teal-50/30'
+              : 'bg-gradient-to-br from-neutral-50 to-amber-50/30'
+          }`}>
+            {/* Status Bar */}
+            <div className={`h-6 flex items-center justify-between px-6 text-neutral-50 text-xs ${
+              templateStyle === 'boheme' 
+                ? 'bg-gradient-to-r from-emerald-900 to-teal-900'
+                : 'bg-gradient-to-r from-slate-900 to-slate-800'
+            }`}>
+              <span>9:41</span>
+              <div className="flex space-x-1">
+                <div 
+                  className="w-1 h-1 rounded-full animate-pulse" 
+                  style={{ backgroundColor: currentColors.primary }}
+                ></div>
+                <div 
+                  className="w-1 h-1 rounded-full animate-pulse" 
+                  style={{ backgroundColor: currentColors.secondary, animationDelay: '0.3s' }}
+                ></div>
+                <div 
+                  className="w-1 h-1 rounded-full animate-pulse" 
+                  style={{ backgroundColor: currentColors.accent, animationDelay: '0.6s' }}
+                ></div>
               </div>
-
-              {/* Content */}
-              <div className="relative z-10 p-4 text-center text-white">
-                {templateStyle === 'boheme' ? (
-                  // Style Bohème
+            </div>
+            
+            {/* Invitation Content */}
+            <div className="h-full bg-cover bg-center bg-no-repeat relative overflow-y-auto" style={{ backgroundImage: `url(${customizedTemplate.backgroundImage})` }}>
+              <div className={`absolute inset-0 ${
+                templateStyle === 'boheme' 
+                  ? 'bg-gradient-to-b from-black/50 via-black/20 to-black/60'
+                  : 'bg-gradient-to-b from-black/60 via-black/40 to-black/70'
+              }`}></div>
+              
+              <div className="relative z-10 p-6 h-full flex flex-col justify-between text-center text-white">
+                
+                {templateStyle === 'classic' ? (
+                  // Template classique avec couleurs personnalisées
                   <>
-                    <div className="mb-4">
-                      <div className="flex justify-center items-center mb-4">
-                        <div className="relative">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                            <div className="w-3 h-3 bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-                            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
-                          </div>
+                    <div>
+                      <div className="mb-6">
+                        <div className="flex justify-center space-x-2 mb-4">
+                          <Sparkles 
+                            className="h-6 w-6 animate-pulse" 
+                            style={{ color: currentColors.primary }} 
+                          />
+                          <Heart 
+                            className="h-8 w-8" 
+                            style={{ color: currentColors.accent }} 
+                          />
+                          <Sparkles 
+                            className="h-6 w-6 animate-pulse" 
+                            style={{ color: currentColors.primary }} 
+                          />
+                        </div>
+                        
+                        <div 
+                          className="w-24 h-px mx-auto mb-4" 
+                          style={{ 
+                            background: `linear-gradient(to right, transparent, ${currentColors.primary}, transparent)` 
+                          }}
+                        ></div>
+                        <div className="flex justify-center space-x-2 mb-4">
+                          <Sparkles 
+                            className="h-4 w-4 animate-pulse" 
+                            style={{ color: currentColors.primary }} 
+                          />
+                          <Sparkles 
+                            className="h-3 w-3 animate-pulse" 
+                            style={{ color: currentColors.secondary, animationDelay: '0.5s' }} 
+                          />
+                          <Sparkles 
+                            className="h-4 w-4 animate-pulse" 
+                            style={{ color: currentColors.primary, animationDelay: '1s' }} 
+                          />
                         </div>
                       </div>
-                      
-                      <div className="w-20 h-px mx-auto mb-4" style={{ background: `linear-gradient(to right, transparent, ${primaryColor}, transparent)` }}></div>
-                    </div>
 
-                    <div className="bg-emerald-900/40 backdrop-blur-sm rounded-3xl p-4 mb-4 border border-emerald-400/30 shadow-xl">
-                      <h1 className="text-lg font-bold mb-2 font-luxury drop-shadow-lg transition-all duration-300 tracking-wide" style={{ color: primaryColor }}>
-                        {customTemplate.title}
+                      <h1 
+                        className="text-2xl font-bold font-luxury drop-shadow-lg mb-6" 
+                        style={{ color: currentColors.primary }}
+                      >
+                        {customizedTemplate.title}
                       </h1>
-                      <div className="flex justify-center space-x-2">
-                        <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
-                        <div className="w-12 h-px bg-gradient-to-r from-transparent via-teal-300 to-transparent mt-1"></div>
-                        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  // Style Classique
-                  <>
-                    <div className="mb-4">
-                      <div className="flex justify-center items-center mb-3">
-                        <div className="relative">
-                          <Heart className="h-8 w-8 animate-glow drop-shadow-2xl" style={{ color: accentColor }} />
-                          <div className="absolute inset-0 animate-ping">
-                            <Heart className="h-8 w-8 opacity-30" style={{ color: accentColor }} />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="w-16 h-px mx-auto mb-3" style={{ background: `linear-gradient(to right, transparent, ${primaryColor}, transparent)` }}></div>
-                      <div className="flex justify-center space-x-1 mb-3">
-                        <Sparkles className="h-3 w-3 animate-pulse" style={{ color: primaryColor }} />
-                        <Sparkles className="h-2 w-2 animate-pulse" style={{ color: secondaryColor, animationDelay: '0.5s' }} />
-                        <Sparkles className="h-3 w-3 animate-pulse" style={{ color: primaryColor, animationDelay: '1s' }} />
-                      </div>
-                    </div>
 
-                    <h1 className="text-lg font-bold mb-4 font-luxury drop-shadow-lg transition-all duration-300" style={{ color: primaryColor }}>
-                      {customTemplate.title}
-                    </h1>
-                  </>
-                )}
-
-                {/* Guest Info */}
-                {templateStyle === 'boheme' ? (
-                  <div className="bg-teal-900/40 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-teal-400/30 shadow-xl">
-                    <div className="flex justify-center mb-2">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse"></div>
-                        <div className="w-2 h-2 bg-teal-300 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-                        <div className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
-                      </div>
-                    </div>
-                    <p className="text-emerald-200 text-xs mb-1 tracking-wide">Invité d'honneur</p>
-                    <p className="text-sm font-semibold text-emerald-100 tracking-wide">[Nom de l'invité]</p>
-                    <div className="w-12 h-px bg-gradient-to-r from-transparent via-teal-300 to-transparent mx-auto mt-2 mb-2"></div>
-                    <p className="text-xs mt-1 tracking-wide" style={{ color: `${primaryColor}dd` }}>Place n° [Numéro de table]</p>
-                  </div>
-                ) : (
-                  <div className="backdrop-blur-sm rounded-xl p-3 mb-4 border" style={{ 
-                    background: `linear-gradient(to right, ${primaryColor}40, ${secondaryColor}40)`,
-                    borderColor: `${primaryColor}30`
-                  }}>
-                    <p className="text-xs mb-1" style={{ color: `${primaryColor}cc` }}>Cher(e)</p>
-                    <p className="text-sm font-semibold text-white">[Nom de l'invité]</p>
-                    <p className="text-xs mt-1" style={{ color: `${primaryColor}dd` }}>Table n° [Numéro de table]</p>
-                  </div>
-                )}
-
-                {/* Invitation Text */}
-                {templateStyle === 'boheme' ? (
-                  <div className="bg-black/20 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-emerald-400/20 shadow-xl">
-                    <div className="flex justify-center mb-3">
-                      <div className="flex space-x-2">
-                        <div className="w-1 h-1 bg-emerald-300 rounded-full"></div>
-                        <div className="w-1 h-1 bg-teal-300 rounded-full"></div>
-                        <div className="w-1 h-1 bg-emerald-300 rounded-full"></div>
-                      </div>
-                    </div>
-                    <p className="text-neutral-100 leading-relaxed text-xs italic tracking-wide transition-all duration-300">
-                      {customTemplate.invitationText.length > 100 
-                        ? customTemplate.invitationText.substring(0, 100) + '...'
-                        : customTemplate.invitationText}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 mb-4 border" style={{ borderColor: `${primaryColor}20` }}>
-                    <p className="text-neutral-200 leading-relaxed text-xs transition-all duration-300">
-                      {customTemplate.invitationText.length > 120 
-                        ? customTemplate.invitationText.substring(0, 120) + '...'
-                        : customTemplate.invitationText}
-                    </p>
-                  </div>
-                )}
-
-                {/* Event Details */}
-                {templateStyle === 'boheme' ? (
-                  <div className="space-y-3 mb-6">
-                    <div className="bg-emerald-900/40 backdrop-blur-sm rounded-xl p-3 border border-emerald-400/30">
-                      <div className="flex items-center justify-center text-emerald-200">
-                        <Calendar className="h-4 w-4 mr-2 text-emerald-300" />
-                        <div className="text-center">
-                          <p className="text-sm font-bold tracking-wide transition-all duration-300">{customTemplate.eventDate}</p>
-                          <p className="text-xs text-emerald-300 tracking-wide transition-all duration-300">{customTemplate.eventTime}</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-teal-900/40 backdrop-blur-sm rounded-xl p-3 border border-teal-400/30">
-                      <div className="flex items-center justify-center text-teal-200">
-                        <MapPin className="h-4 w-4 mr-2 text-teal-300" />
-                        <p className="text-xs text-center tracking-wide transition-all duration-300">
-                          {customTemplate.eventLocation.length > 25 
-                            ? customTemplate.eventLocation.substring(0, 25) + '...'
-                            : customTemplate.eventLocation}
+                      <div 
+                        className="backdrop-blur-sm rounded-2xl p-4 mb-6 border" 
+                        style={{ 
+                          background: `linear-gradient(to right, ${currentColors.primary}40, ${currentColors.secondary}40)`,
+                          borderColor: `${currentColors.primary}30`
+                        }}
+                      >
+                        <p 
+                          className="text-base mb-2" 
+                          style={{ color: `${currentColors.primary}cc` }}
+                        >
+                          Cher(e)
+                        </p>
+                        <p className="text-xl font-semibold text-white">[Nom de l'invité]</p>
+                        <p 
+                          className="text-base mt-2" 
+                          style={{ color: `${currentColors.primary}dd` }}
+                        >
+                          Table n° [Numéro de table]
                         </p>
                       </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center justify-center text-neutral-200">
-                      <Calendar className="h-3 w-3 mr-2" style={{ color: primaryColor }} />
-                      <div className="text-left">
-                        <p className="text-xs font-semibold transition-all duration-300">{customTemplate.eventDate}</p>
-                        <p className="text-xs transition-all duration-300" style={{ color: `${primaryColor}dd` }}>{customTemplate.eventTime}</p>
+
+                      <div 
+                        className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 mb-6 border" 
+                        style={{ borderColor: `${currentColors.primary}20` }}
+                      >
+                        <p className="text-neutral-200 leading-relaxed text-sm">
+                          {customizedTemplate.invitationText}
+                        </p>
+                      </div>
+
+                      <div className="space-y-4 mb-6">
+                        <div className="flex items-center justify-center text-neutral-200">
+                          <Calendar 
+                            className="h-5 w-5 mr-3" 
+                            style={{ color: currentColors.primary }} 
+                          />
+                          <div className="text-left">
+                            <p className="font-semibold">{customizedTemplate.eventDate}</p>
+                            <p 
+                              className="text-sm" 
+                              style={{ color: `${currentColors.primary}dd` }}
+                            >
+                              {customizedTemplate.eventTime}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-center text-neutral-200">
+                          <MapPin 
+                            className="h-5 w-5 mr-3" 
+                            style={{ color: currentColors.primary }} 
+                          />
+                          <p className="text-sm text-center">{customizedTemplate.eventLocation}</p>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center justify-center text-neutral-200">
-                      <MapPin className="h-3 w-3 mr-2" style={{ color: primaryColor }} />
-                      <p className="text-xs transition-all duration-300">
-                        {customTemplate.eventLocation.length > 30 
-                          ? customTemplate.eventLocation.substring(0, 30) + '...'
-                          : customTemplate.eventLocation}
-                      </p>
-                    </div>
-                  </div>
-                )}
 
-                {/* RSVP Section */}
-                {templateStyle === 'boheme' ? (
-                  <div className="bg-emerald-900/50 backdrop-blur-sm rounded-2xl p-4 mb-3 border border-emerald-400/40 shadow-xl">
-                    <h3 className="text-emerald-200 font-bold mb-3 flex items-center justify-center tracking-wide">
-                      <Heart className="h-4 w-4 mr-2" />
-                      Confirmation Naturelle
-                    </h3>
-                    <button
-                      onClick={() => setIsConfirmed(!isConfirmed)}
-                      className="w-full py-3 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 tracking-wide"
-                      style={{
-                        background: isConfirmed 
-                          ? 'linear-gradient(to right, #0d9488, #0f766e)' 
-                          : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
-                        color: isConfirmed ? 'white' : '#1e293b'
-                      }}
-                    >
-                      {isConfirmed ? (
-                        <span className="flex items-center justify-center">
-                          <Check className="h-4 w-4 mr-2" />
-                          Je serai présent(e)
-                        </span>
-                      ) : (
-                        <span className="flex items-center justify-center">
-                          <Heart className="h-4 w-4 mr-2" />
-                          Confirmer ma Présence
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
-                    background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
-                    borderColor: `${primaryColor}30`
-                  }}>
-                    <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
-                      <Users className="h-3 w-3 mr-1" />
-                      Confirmation
-                    </h3>
-                    <button
-                      onClick={() => setIsConfirmed(!isConfirmed)}
-                      className="w-full py-2 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105"
-                      style={{
-                        background: isConfirmed 
-                          ? 'linear-gradient(to right, #10b981, #059669)' 
-                          : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
-                        color: isConfirmed ? 'white' : '#1e293b'
-                      }}
-                    >
-                      {isConfirmed ? (
-                        <span className="flex items-center justify-center">
-                          <Check className="h-3 w-3 mr-1" />
-                          Présence confirmée
-                        </span>
-                      ) : (
-                        'Confirmer ma présence'
-                      )}
-                    </button>
-                  </div>
-                )}
-
-                {/* Drink Selection */}
-                {templateStyle === 'boheme' ? (
-                  <div className="bg-teal-900/50 backdrop-blur-sm rounded-2xl p-4 mb-3 border border-teal-400/40 shadow-xl">
-                    <h3 className="text-teal-200 font-bold mb-3 flex items-center justify-center tracking-wide">
-                      <Wine className="h-4 w-4 mr-2" />
-                      Sélection Bio
-                    </h3>
-                    <select
-                      value={selectedDrink}
-                      onChange={(e) => setSelectedDrink(e.target.value)}
-                      className="w-full bg-slate-800/90 text-teal-200 border border-teal-400/40 rounded-2xl px-3 py-2 text-xs focus:ring-2 focus:ring-teal-400 focus:border-teal-400 transition-all duration-200 font-medium"
-                    >
-                      <option value="">Choisissez votre nectar</option>
-                      {customTemplate.drinkOptions.slice(0, 3).map((drink) => (
-                        <option key={drink} value={drink}>{drink}</option>
-                      ))}
-                    </select>
-                  </div>
-                ) : (
-                  <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
-                    background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
-                    borderColor: `${primaryColor}30`
-                  }}>
-                    <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
-                      <Wine className="h-3 w-3 mr-1" />
-                      Choix de boisson
-                    </h3>
-                    <select
-                      value={selectedDrink}
-                      onChange={(e) => setSelectedDrink(e.target.value)}
-                      className="w-full bg-slate-800/80 text-white border rounded-lg px-2 py-1 text-xs focus:ring-1 transition-all duration-200"
-                      style={{ 
-                        borderColor: `${primaryColor}30`,
-                        focusRingColor: primaryColor
-                      }}
-                    >
-                      <option value="">Sélectionnez votre boisson</option>
-                      {customTemplate.drinkOptions.slice(0, 3).map((drink) => (
-                        <option key={drink} value={drink}>{drink}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* Guest Book - Simplified */}
-                {templateStyle === 'boheme' ? (
-                  <div className="bg-emerald-900/50 backdrop-blur-sm rounded-2xl p-4 mb-3 border border-emerald-400/40 shadow-xl">
-                    <h3 className="text-emerald-200 font-bold mb-3 flex items-center justify-center tracking-wide">
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Livre de Nature
-                    </h3>
-                    <textarea
-                      value={guestMessage}
-                      onChange={(e) => setGuestMessage(e.target.value)}
-                      placeholder="Partagez vos vœux authentiques..."
-                      className="w-full bg-slate-800/90 text-emerald-200 border border-emerald-400/40 rounded-2xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition-all duration-200 resize-none font-medium"
-                      rows={2}
-                    />
-                    <div className="mt-3 space-y-2">
-                      <button 
-                        onClick={() => {
-                          if (guestMessage.trim()) {
-                            alert('Vos vœux ont été partagés avec amour !');
-                            setGuestMessage('');
-                          } else {
-                            alert('Veuillez écrire vos vœux avant de les partager.');
-                          }
-                        }}
-                        className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 text-white py-2 rounded-2xl hover:from-teal-600 hover:to-emerald-600 transition-all duration-300 font-bold text-xs shadow-xl transform hover:scale-105"
-                      >
-                        <Heart className="h-3 w-3 inline mr-1" />
-                        Partager mes Vœux
-                      </button>
-                      <button 
-                        className="w-full bg-gradient-to-r from-amber-500 to-emerald-500 text-slate-900 py-2 rounded-2xl hover:from-amber-600 hover:to-emerald-600 transition-all duration-300 font-bold text-xs shadow-xl"
-                      >
-                        <Camera className="h-3 w-3 inline mr-1" />
-                        Capturer ce Moment
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
-                    background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
-                    borderColor: `${primaryColor}30`
-                  }}>
-                    <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
-                      <MessageCircle className="h-3 w-3 mr-1" />
-                      Livre d'or
-                    </h3>
-                    <textarea
-                      value={guestMessage}
-                      onChange={(e) => setGuestMessage(e.target.value)}
-                      placeholder="Laissez un message aux mariés..."
-                      className="w-full bg-slate-800/80 text-white border rounded-lg px-2 py-1 text-xs focus:ring-1 transition-all duration-200 resize-none"
-                      rows={2}
-                      style={{ 
-                        borderColor: `${primaryColor}30`,
-                        focusRingColor: primaryColor
-                      }}
-                    />
-                    <div className="mt-2 grid grid-cols-2 gap-1">
-                      <button 
-                        onClick={() => {
-                          if (guestMessage.trim()) {
-                            alert('Message envoyé avec succès !');
-                            setGuestMessage('');
-                          } else {
-                            alert('Veuillez écrire un message avant d\'envoyer.');
-                          }
-                        }}
-                        className="py-1 rounded-lg text-xs font-semibold shadow-lg transform hover:scale-105 relative overflow-hidden group transition-all duration-300"
-                        style={{ background: 'linear-gradient(to right, #10b981, #059669)', color: 'white' }}
-                      >
-                        <MessageCircle className="h-3 w-3 inline mr-1" />
-                        Envoyer
-                      </button>
-                      <button 
-                        className="py-1 rounded-lg text-xs font-semibold transition-all duration-300"
+                    <div className="space-y-4">
+                      <div 
+                        className="backdrop-blur-sm rounded-2xl p-4 border" 
                         style={{ 
-                          background: `linear-gradient(to right, ${secondaryColor}, ${primaryColor})`,
-                          color: '#1e293b'
+                          background: `linear-gradient(to right, ${currentColors.primary}50, ${currentColors.secondary}50)`,
+                          borderColor: `${currentColors.primary}30`
                         }}
                       >
-                        <Camera className="h-3 w-3 inline mr-1" />
-                        Photo
-                      </button>
+                        <h3 
+                          className="font-semibold mb-3 flex items-center justify-center" 
+                          style={{ color: `${currentColors.primary}cc` }}
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          Confirmation de présence
+                        </h3>
+                        <button
+                          className="w-full py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+                          style={{
+                            background: `linear-gradient(to right, ${currentColors.primary}, ${currentColors.secondary})`,
+                            color: '#1e293b'
+                          }}
+                        >
+                          Confirmer ma présence
+                        </button>
+                      </div>
+
+                      <div 
+                        className="backdrop-blur-sm rounded-2xl p-4 border" 
+                        style={{ 
+                          background: `linear-gradient(to right, ${currentColors.primary}50, ${currentColors.secondary}50)`,
+                          borderColor: `${currentColors.primary}30`
+                        }}
+                      >
+                        <h3 
+                          className="font-semibold mb-3 flex items-center justify-center" 
+                          style={{ color: `${currentColors.primary}cc` }}
+                        >
+                          <Wine className="h-4 w-4 mr-2" />
+                          Choix de boisson
+                        </h3>
+                        <select
+                          className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-2 focus:ring-2 transition-all duration-200"
+                          style={{ 
+                            borderColor: `${currentColors.primary}30`
+                          }}
+                        >
+                          <option value="">Sélectionnez votre boisson</option>
+                          {customizedTemplate.drinkOptions.map((drink) => (
+                            <option key={drink} value={drink}>{drink}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                  </div>
+                  </>
+                ) : (
+                  // Template bohème avec couleurs personnalisées
+                  <>
+                    <div>
+                      <div className="mb-8">
+                        <div className="flex justify-center items-center mb-6">
+                          <div className="relative">
+                            <div className="flex items-center space-x-3">
+                              <Leaf 
+                                className="h-8 w-8 animate-float" 
+                                style={{ color: currentColors.primary }}
+                              />
+                              <Sun 
+                                className="h-10 w-10 animate-glow" 
+                                style={{ color: currentColors.accent }}
+                              />
+                              <Feather 
+                                className="h-8 w-8 animate-float" 
+                                style={{ color: currentColors.secondary, animationDelay: '1s' }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-center space-x-4 mb-6">
+                          <div 
+                            className="w-2 h-2 rounded-full animate-pulse" 
+                            style={{ backgroundColor: currentColors.primary }}
+                          ></div>
+                          <div 
+                            className="w-16 h-px" 
+                            style={{ 
+                              background: `linear-gradient(to right, transparent, ${currentColors.primary}, transparent)` 
+                            }}
+                          ></div>
+                          <div 
+                            className="w-2 h-2 rounded-full animate-pulse" 
+                            style={{ backgroundColor: currentColors.secondary, animationDelay: '0.5s' }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div 
+                        className="backdrop-blur-sm rounded-3xl p-6 mb-6 border shadow-2xl" 
+                        style={{ 
+                          background: `linear-gradient(to right, ${currentColors.primary}30, ${currentColors.secondary}30)`,
+                          borderColor: `${currentColors.primary}20`
+                        }}
+                      >
+                        <h1 
+                          className="text-2xl font-bold font-luxury drop-shadow-lg mb-4 tracking-wide" 
+                          style={{ color: currentColors.primary }}
+                        >
+                          {customizedTemplate.title}
+                        </h1>
+                        <div className="flex justify-center space-x-2">
+                          <Leaf 
+                            className="h-4 w-4" 
+                            style={{ color: currentColors.primary }}
+                          />
+                          <div 
+                            className="w-12 h-px mt-2" 
+                            style={{ 
+                              background: `linear-gradient(to right, transparent, ${currentColors.primary}, transparent)` 
+                            }}
+                          ></div>
+                          <Feather 
+                            className="h-4 w-4" 
+                            style={{ color: currentColors.secondary }}
+                          />
+                        </div>
+                      </div>
+
+                      <div 
+                        className="backdrop-blur-sm rounded-2xl p-5 mb-6 border shadow-xl" 
+                        style={{ 
+                          background: `linear-gradient(to right, ${currentColors.secondary}40, ${currentColors.accent}40)`,
+                          borderColor: `${currentColors.secondary}30`
+                        }}
+                      >
+                        <div className="flex justify-center mb-3">
+                          <div className="flex space-x-2">
+                            <Leaf 
+                              className="h-4 w-4 animate-float" 
+                              style={{ color: currentColors.primary }}
+                            />
+                            <Heart 
+                              className="h-5 w-5" 
+                              style={{ color: currentColors.accent }}
+                            />
+                            <Feather 
+                              className="h-4 w-4 animate-float" 
+                              style={{ color: currentColors.primary, animationDelay: '1s' }}
+                            />
+                          </div>
+                        </div>
+                        <p 
+                          className="text-sm mb-2 tracking-wide" 
+                          style={{ color: `${currentColors.primary}cc` }}
+                        >
+                          Invité d'honneur
+                        </p>
+                        <p 
+                          className="text-xl font-semibold tracking-wide" 
+                          style={{ color: currentColors.primary }}
+                        >
+                          [Nom de l'invité]
+                        </p>
+                        <div 
+                          className="w-16 h-px mx-auto mt-3 mb-3" 
+                          style={{ 
+                            background: `linear-gradient(to right, transparent, ${currentColors.secondary}, transparent)` 
+                          }}
+                        ></div>
+                        <p 
+                          className="text-sm tracking-wide" 
+                          style={{ color: currentColors.secondary }}
+                        >
+                          Place n° [Numéro de table]
+                        </p>
+                      </div>
+
+                      <div 
+                        className="bg-black/20 backdrop-blur-sm rounded-2xl p-5 mb-6 border shadow-xl" 
+                        style={{ borderColor: `${currentColors.primary}20` }}
+                      >
+                        <div className="flex justify-center mb-4">
+                          <div className="flex space-x-2">
+                            <Sun 
+                              className="h-4 w-4" 
+                              style={{ color: currentColors.accent }}
+                            />
+                            <Leaf 
+                              className="h-4 w-4" 
+                              style={{ color: currentColors.primary }}
+                            />
+                            <Sun 
+                              className="h-4 w-4" 
+                              style={{ color: currentColors.accent }}
+                            />
+                          </div>
+                        </div>
+                        <p className="text-neutral-100 leading-relaxed text-sm italic tracking-wide">
+                          {customizedTemplate.invitationText}
+                        </p>
+                      </div>
+
+                      <div className="space-y-4 mb-6">
+                        <div 
+                          className="backdrop-blur-sm rounded-xl p-4 border" 
+                          style={{ 
+                            background: `linear-gradient(to right, ${currentColors.primary}40, ${currentColors.secondary}40)`,
+                            borderColor: `${currentColors.primary}30`
+                          }}
+                        >
+                          <div className="flex items-center justify-center text-white">
+                            <Calendar 
+                              className="h-5 w-5 mr-3" 
+                              style={{ color: currentColors.primary }}
+                            />
+                            <div className="text-center">
+                              <p className="font-bold text-lg tracking-wide">{customizedTemplate.eventDate}</p>
+                              <p 
+                                className="text-sm tracking-wide" 
+                                style={{ color: currentColors.primary }}
+                              >
+                                {customizedTemplate.eventTime}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div 
+                          className="backdrop-blur-sm rounded-xl p-4 border" 
+                          style={{ 
+                            background: `linear-gradient(to right, ${currentColors.secondary}40, ${currentColors.accent}40)`,
+                            borderColor: `${currentColors.secondary}30`
+                          }}
+                        >
+                          <div className="flex items-center justify-center text-white">
+                            <MapPin 
+                              className="h-5 w-5 mr-3" 
+                              style={{ color: currentColors.secondary }}
+                            />
+                            <p className="text-sm text-center tracking-wide">{customizedTemplate.eventLocation}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div 
+                        className="backdrop-blur-sm rounded-2xl p-4 border shadow-xl" 
+                        style={{ 
+                          background: `linear-gradient(to right, ${currentColors.primary}50, ${currentColors.secondary}50)`,
+                          borderColor: `${currentColors.primary}40`
+                        }}
+                      >
+                        <h3 
+                          className="font-bold mb-4 flex items-center justify-center tracking-wide" 
+                          style={{ color: currentColors.primary }}
+                        >
+                          <div 
+                            className="w-4 h-4 rounded-full mr-3 animate-pulse" 
+                            style={{ backgroundColor: currentColors.primary }}
+                          ></div>
+                          Confirmation Naturelle
+                        </h3>
+                        <button
+                          className="w-full py-4 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 tracking-wide shadow-2xl"
+                          style={{
+                            background: `linear-gradient(to right, ${currentColors.primary}, ${currentColors.secondary})`,
+                            color: '#1e293b'
+                          }}
+                        >
+                          <span className="flex items-center justify-center">
+                            <Heart className="h-5 w-5 mr-2" />
+                            Confirmer ma Présence
+                          </span>
+                        </button>
+                      </div>
+
+                      <div 
+                        className="backdrop-blur-sm rounded-2xl p-4 border shadow-xl" 
+                        style={{ 
+                          background: `linear-gradient(to right, ${currentColors.secondary}50, ${currentColors.accent}50)`,
+                          borderColor: `${currentColors.secondary}40`
+                        }}
+                      >
+                        <h3 
+                          className="font-bold mb-4 flex items-center justify-center tracking-wide" 
+                          style={{ color: currentColors.secondary }}
+                        >
+                          <div 
+                            className="w-4 h-4 rounded-full mr-3 animate-pulse" 
+                            style={{ backgroundColor: currentColors.secondary }}
+                          ></div>
+                          Sélection Bio
+                        </h3>
+                        <select
+                          className="w-full bg-slate-800/90 text-white border rounded-2xl px-4 py-3 focus:ring-2 transition-all duration-200 font-medium"
+                          style={{ 
+                            borderColor: `${currentColors.secondary}40`,
+                            color: currentColors.secondary
+                          }}
+                        >
+                          <option value="">Choisissez votre nectar</option>
+                          {customizedTemplate.drinkOptions.map((drink) => (
+                            <option key={drink} value={drink}>{drink}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -1045,101 +616,633 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
     );
   };
 
-  return (
-    <div className="animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div className="flex items-center">
-          <button
-            onClick={onBack}
-            className="flex items-center text-amber-600 hover:text-amber-700 transition-all duration-300 group mr-4"
-          >
-            <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
-            Retour
-          </button>
-          <div>
-            <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-              Personnalisation du Template
-            </h2>
-            <p className="text-slate-600 mt-1">{customTemplate.name}</p>
-          </div>
-        </div>
-        
-        <button
-          onClick={handleSave}
-          className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-2 rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center shadow-glow-amber transform hover:scale-105"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          Sauvegarder
-        </button>
+  const renderContentTab = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Titre de l'événement
+        </label>
+        <input
+          type="text"
+          value={customizedTemplate.title}
+          onChange={(e) => handleContentChange('title', e.target.value)}
+          className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+          placeholder="Ex: Mariage de Sophie & Lucas"
+        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sidebar Navigation */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl shadow-luxury border border-neutral-200/50 overflow-hidden sticky top-8">
-            <div className="p-4 bg-gradient-to-r from-neutral-50 to-amber-50/30 border-b border-neutral-200/50">
-              <h3 className="text-base font-semibold text-slate-900">Personnalisation</h3>
-              <p className="text-xs text-slate-600 mt-1">Modifiez votre invitation</p>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Texte d'invitation
+        </label>
+        <textarea
+          value={customizedTemplate.invitationText}
+          onChange={(e) => handleContentChange('invitationText', e.target.value)}
+          rows={4}
+          className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 resize-none"
+          placeholder="Votre message d'invitation personnalisé..."
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Date de l'événement
+          </label>
+          <input
+            type="text"
+            value={customizedTemplate.eventDate}
+            onChange={(e) => handleContentChange('eventDate', e.target.value)}
+            className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+            placeholder="Ex: 15 Juin 2024"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Heure de l'événement
+          </label>
+          <input
+            type="text"
+            value={customizedTemplate.eventTime}
+            onChange={(e) => handleContentChange('eventTime', e.target.value)}
+            className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+            placeholder="Ex: 16h00"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Lieu de l'événement
+        </label>
+        <input
+          type="text"
+          value={customizedTemplate.eventLocation}
+          onChange={(e) => handleContentChange('eventLocation', e.target.value)}
+          className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+          placeholder="Ex: Château de Versailles, Versailles"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Options de boissons
+        </label>
+        <div className="space-y-2">
+          {customizedTemplate.drinkOptions.map((drink, index) => (
+            <div key={index} className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={drink}
+                onChange={(e) => {
+                  const newOptions = [...customizedTemplate.drinkOptions];
+                  newOptions[index] = e.target.value;
+                  handleDrinkOptionsChange(newOptions);
+                }}
+                className="flex-1 px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+              />
+              <button
+                onClick={() => {
+                  const newOptions = customizedTemplate.drinkOptions.filter((_, i) => i !== index);
+                  handleDrinkOptionsChange(newOptions);
+                }}
+                className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-all duration-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <nav className="p-3">
-              {tabs.map((tab) => {
-                const IconComponent = tab.icon;
-                return (
+          ))}
+          <button
+            onClick={() => {
+              const newOptions = [...customizedTemplate.drinkOptions, 'Nouvelle boisson'];
+              handleDrinkOptionsChange(newOptions);
+            }}
+            className="w-full px-4 py-2 border-2 border-dashed border-neutral-300 text-neutral-600 rounded-lg hover:border-amber-400 hover:text-amber-600 transition-all duration-200 font-medium"
+          >
+            + Ajouter une boisson
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderColorsTab = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">
+          Personnalisation des couleurs
+        </h3>
+        <p className="text-slate-600">
+          {templateStyle === 'boheme' 
+            ? 'Adaptez les couleurs naturelles à votre style bohème'
+            : 'Personnalisez la palette de couleurs de votre invitation'
+          }
+        </p>
+      </div>
+
+      {/* Aperçu des couleurs actuelles */}
+      <div className="bg-gradient-to-r from-neutral-50 to-amber-50/30 rounded-xl p-6 border border-neutral-200/50">
+        <h4 className="font-semibold text-slate-900 mb-4">Aperçu des couleurs</h4>
+        <div className="flex justify-center space-x-4">
+          <div className="text-center">
+            <div 
+              className="w-16 h-16 rounded-full shadow-lg border-4 border-white mb-2"
+              style={{ backgroundColor: currentColors.primary }}
+            ></div>
+            <p className="text-xs font-medium text-slate-600">Primaire</p>
+          </div>
+          <div className="text-center">
+            <div 
+              className="w-16 h-16 rounded-full shadow-lg border-4 border-white mb-2"
+              style={{ backgroundColor: currentColors.secondary }}
+            ></div>
+            <p className="text-xs font-medium text-slate-600">Secondaire</p>
+          </div>
+          <div className="text-center">
+            <div 
+              className="w-16 h-16 rounded-full shadow-lg border-4 border-white mb-2"
+              style={{ backgroundColor: currentColors.accent }}
+            ></div>
+            <p className="text-xs font-medium text-slate-600">Accent</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Sélecteurs de couleurs */}
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-3">
+            Couleur primaire
+          </label>
+          <div className="flex items-center space-x-4">
+            <input
+              type="color"
+              value={currentColors.primary}
+              onChange={(e) => handleColorChange('primary', e.target.value)}
+              className="w-16 h-12 rounded-lg border-2 border-neutral-300 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300"
+            />
+            <input
+              type="text"
+              value={currentColors.primary}
+              onChange={(e) => handleColorChange('primary', e.target.value)}
+              className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono"
+              placeholder="#f59e0b"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-3">
+            Couleur secondaire
+          </label>
+          <div className="flex items-center space-x-4">
+            <input
+              type="color"
+              value={currentColors.secondary}
+              onChange={(e) => handleColorChange('secondary', e.target.value)}
+              className="w-16 h-12 rounded-lg border-2 border-neutral-300 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300"
+            />
+            <input
+              type="text"
+              value={currentColors.secondary}
+              onChange={(e) => handleColorChange('secondary', e.target.value)}
+              className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono"
+              placeholder="#d97706"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-3">
+            Couleur d'accent
+          </label>
+          <div className="flex items-center space-x-4">
+            <input
+              type="color"
+              value={currentColors.accent}
+              onChange={(e) => handleColorChange('accent', e.target.value)}
+              className="w-16 h-12 rounded-lg border-2 border-neutral-300 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300"
+            />
+            <input
+              type="text"
+              value={currentColors.accent}
+              onChange={(e) => handleColorChange('accent', e.target.value)}
+              className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono"
+              placeholder="#f43f5e"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Palettes prédéfinies selon le style */}
+      <div>
+        <h4 className="font-semibold text-slate-900 mb-4">
+          {templateStyle === 'boheme' ? 'Palettes naturelles' : 'Palettes prédéfinies'}
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {templateStyle === 'boheme' ? (
+            // Palettes bohèmes
+            <>
+              <button
+                onClick={() => {
+                  handleColorChange('primary', '#10b981');
+                  handleColorChange('secondary', '#059669');
+                  handleColorChange('accent', '#14b8a6');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-emerald-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-emerald-500 rounded-full"></div>
+                  <div className="w-6 h-6 bg-emerald-600 rounded-full"></div>
+                  <div className="w-6 h-6 bg-teal-500 rounded-full"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-emerald-700">Émeraude Nature</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleColorChange('primary', '#059669');
+                  handleColorChange('secondary', '#047857');
+                  handleColorChange('accent', '#0d9488');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-teal-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-emerald-600 rounded-full"></div>
+                  <div className="w-6 h-6 bg-emerald-700 rounded-full"></div>
+                  <div className="w-6 h-6 bg-teal-600 rounded-full"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-teal-700">Forêt Profonde</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleColorChange('primary', '#84cc16');
+                  handleColorChange('secondary', '#65a30d');
+                  handleColorChange('accent', '#22c55e');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-lime-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-lime-500 rounded-full"></div>
+                  <div className="w-6 h-6 bg-lime-600 rounded-full"></div>
+                  <div className="w-6 h-6 bg-green-500 rounded-full"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-lime-700">Prairie Verte</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleColorChange('primary', '#0891b2');
+                  handleColorChange('secondary', '#0e7490');
+                  handleColorChange('accent', '#06b6d4');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-cyan-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-cyan-600 rounded-full"></div>
+                  <div className="w-6 h-6 bg-cyan-700 rounded-full"></div>
+                  <div className="w-6 h-6 bg-cyan-500 rounded-full"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-cyan-700">Océan Calme</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleColorChange('primary', '#7c3aed');
+                  handleColorChange('secondary', '#6d28d9');
+                  handleColorChange('accent', '#8b5cf6');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-violet-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-violet-600 rounded-full"></div>
+                  <div className="w-6 h-6 bg-violet-700 rounded-full"></div>
+                  <div className="w-6 h-6 bg-violet-500 rounded-full"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-violet-700">Lavande Mystique</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleColorChange('primary', '#dc2626');
+                  handleColorChange('secondary', '#b91c1c');
+                  handleColorChange('accent', '#ef4444');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-red-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-red-600 rounded-full"></div>
+                  <div className="w-6 h-6 bg-red-700 rounded-full"></div>
+                  <div className="w-6 h-6 bg-red-500 rounded-full"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-red-700">Coucher Soleil</p>
+              </button>
+            </>
+          ) : (
+            // Palettes classiques
+            <>
+              <button
+                onClick={() => {
+                  handleColorChange('primary', '#f59e0b');
+                  handleColorChange('secondary', '#d97706');
+                  handleColorChange('accent', '#f43f5e');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-amber-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-amber-500 rounded-full"></div>
+                  <div className="w-6 h-6 bg-amber-600 rounded-full"></div>
+                  <div className="w-6 h-6 bg-rose-500 rounded-full"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-amber-700">Or & Rose</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleColorChange('primary', '#8b5cf6');
+                  handleColorChange('secondary', '#7c3aed');
+                  handleColorChange('accent', '#ec4899');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-purple-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-purple-500 rounded-full"></div>
+                  <div className="w-6 h-6 bg-purple-600 rounded-full"></div>
+                  <div className="w-6 h-6 bg-pink-500 rounded-full"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-purple-700">Violet Royal</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleColorChange('primary', '#10b981');
+                  handleColorChange('secondary', '#059669');
+                  handleColorChange('accent', '#3b82f6');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-emerald-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-emerald-500 rounded-full"></div>
+                  <div className="w-6 h-6 bg-emerald-600 rounded-full"></div>
+                  <div className="w-6 h-6 bg-blue-500 rounded-full"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-emerald-700">Émeraude & Saphir</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleColorChange('primary', '#dc2626');
+                  handleColorChange('secondary', '#b91c1c');
+                  handleColorChange('accent', '#f59e0b');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-red-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-red-600 rounded-full"></div>
+                  <div className="w-6 h-6 bg-red-700 rounded-full"></div>
+                  <div className="w-6 h-6 bg-amber-500 rounded-full"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-red-700">Rouge Passion</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleColorChange('primary', '#0891b2');
+                  handleColorChange('secondary', '#0e7490');
+                  handleColorChange('accent', '#06b6d4');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-cyan-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-cyan-600 rounded-full"></div>
+                  <div className="w-6 h-6 bg-cyan-700 rounded-full"></div>
+                  <div className="w-6 h-6 bg-cyan-500 rounded-full"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-cyan-700">Bleu Océan</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleColorChange('primary', '#7c2d12');
+                  handleColorChange('secondary', '#92400e');
+                  handleColorChange('accent', '#f59e0b');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-orange-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-orange-800 rounded-full"></div>
+                  <div className="w-6 h-6 bg-orange-700 rounded-full"></div>
+                  <div className="w-6 h-6 bg-amber-500 rounded-full"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-orange-700">Automne Doré</p>
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderLayoutTab = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Image de fond
+        </label>
+        <input
+          type="url"
+          value={customizedTemplate.backgroundImage}
+          onChange={(e) => handleContentChange('backgroundImage', e.target.value)}
+          className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+          placeholder="URL de l'image de fond"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Nom du modèle
+        </label>
+        <input
+          type="text"
+          value={customizedTemplate.name}
+          onChange={(e) => handleContentChange('name', e.target.value)}
+          className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+          placeholder="Nom de votre modèle personnalisé"
+        />
+      </div>
+
+      <div className="bg-gradient-to-r from-amber-50 to-rose-50 rounded-xl p-6 border border-amber-200/50">
+        <h4 className="font-semibold text-amber-800 mb-3">Conseils de personnalisation</h4>
+        <ul className="text-amber-700 text-sm space-y-2">
+          <li>• Utilisez des images haute résolution (min. 1200px de largeur)</li>
+          <li>• Privilégiez des images avec un bon contraste pour la lisibilité</li>
+          <li>• Les couleurs sombres fonctionnent mieux pour le texte blanc</li>
+          <li>• Testez votre invitation sur différents appareils</li>
+        </ul>
+      </div>
+    </div>
+  );
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'content':
+        return renderContentTab();
+      case 'colors':
+        return renderColorsTab();
+      case 'layout':
+        return renderLayoutTab();
+      default:
+        return renderContentTab();
+    }
+  };
+
+  return (
+    <div className={`min-h-screen relative overflow-hidden ${
+      templateStyle === 'boheme' 
+        ? 'bg-gradient-to-br from-slate-900 via-emerald-900/30 to-slate-800'
+        : 'bg-gradient-to-br from-slate-900 via-amber-900/20 to-slate-800'
+    }`}>
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {templateStyle === 'boheme' ? (
+          <>
+            <div className="absolute top-10 right-10 w-60 h-60 bg-gradient-to-r from-emerald-300/8 to-teal-300/8 rounded-full blur-3xl animate-float"></div>
+            <div className="absolute bottom-10 left-10 w-48 h-48 bg-gradient-to-r from-emerald-400/8 to-emerald-200/8 rounded-full blur-3xl animate-bounce-slow"></div>
+          </>
+        ) : (
+          <>
+            <div className="absolute top-20 left-20 w-40 h-40 bg-gradient-to-r from-amber-400/10 to-rose-400/10 rounded-full blur-3xl animate-float"></div>
+            <div className="absolute bottom-20 right-20 w-32 h-32 bg-gradient-to-r from-amber-500/10 to-amber-300/10 rounded-full blur-3xl animate-bounce-slow"></div>
+          </>
+        )}
+      </div>
+
+      <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="max-w-7xl mx-auto mb-8">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={onBack}
+              className={`flex items-center transition-all duration-300 group ${
+                templateStyle === 'boheme' 
+                  ? 'text-emerald-400 hover:text-emerald-300'
+                  : 'text-amber-400 hover:text-amber-300'
+              }`}
+            >
+              <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
+              Retour au dashboard
+            </button>
+            
+            <div className="text-center">
+              <h1 className={`text-3xl md:text-4xl font-bold ${
+                templateStyle === 'boheme' 
+                  ? 'bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent'
+                  : 'bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 bg-clip-text text-transparent'
+              }`}>
+                Personnalisation du Template
+              </h1>
+              <p className="text-neutral-300 mt-2">
+                {templateStyle === 'boheme' 
+                  ? 'Adaptez votre invitation bohème à votre style naturel'
+                  : 'Personnalisez votre invitation selon vos goûts'
+                }
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className={`flex items-center transition-all duration-300 group ${
+                templateStyle === 'boheme' 
+                  ? 'text-emerald-400 hover:text-emerald-300'
+                  : 'text-amber-400 hover:text-amber-300'
+              }`}
+            >
+              {showPreview ? <EyeOff className="h-5 w-5 mr-2" /> : <Eye className="h-5 w-5 mr-2" />}
+              {showPreview ? 'Masquer' : 'Aperçu'}
+            </button>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Preview */}
+            {showPreview && (
+              <div className="flex justify-center animate-slide-up">
+                {renderPreview()}
+              </div>
+            )}
+
+            {/* Customization Panel */}
+            <div className={`animate-slide-up ${showPreview ? '' : 'lg:col-span-2 max-w-4xl mx-auto'}`}>
+              <div className={`backdrop-blur-xl rounded-3xl shadow-luxury p-6 ${
+                templateStyle === 'boheme' 
+                  ? 'bg-gradient-to-br from-emerald-900/40 to-teal-900/40 border border-emerald-400/30'
+                  : 'bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-amber-500/20'
+              }`}>
+                {/* Tabs */}
+                <div className="flex space-x-1 mb-8 bg-black/20 rounded-2xl p-2">
+                  {tabs.map((tab) => {
+                    const IconComponent = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-300 font-medium ${
+                          activeTab === tab.id
+                            ? templateStyle === 'boheme'
+                              ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
+                              : 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 shadow-glow-amber'
+                            : 'text-neutral-300 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <IconComponent className="h-4 w-4" />
+                        <span className="hidden sm:block">{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Tab Content */}
+                <div className="text-white">
+                  {renderTabContent()}
+                </div>
+
+                {/* Save Button */}
+                <div className="mt-8 pt-6 border-t border-white/10">
                   <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center px-3 py-2 rounded-lg transition-all duration-300 mb-1 text-sm ${
-                      activeTab === tab.id
-                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-glow-amber'
-                        : 'text-slate-600 hover:bg-amber-50 hover:text-amber-700'
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-luxury transform hover:scale-105 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all duration-500 ${
+                      templateStyle === 'boheme'
+                        ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 text-white hover:from-emerald-600 hover:via-teal-600 hover:to-emerald-600'
+                        : 'bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-slate-900 hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 shadow-glow-amber'
                     }`}
                   >
-                    <IconComponent className="h-4 w-4 mr-2" />
-                    {tab.label}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    <span className="relative flex items-center justify-center">
+                      {isSaving ? (
+                        <>
+                          <div className={`w-5 h-5 border-2 rounded-full animate-spin mr-2 ${
+                            templateStyle === 'boheme'
+                              ? 'border-white/30 border-t-white'
+                              : 'border-slate-900/30 border-t-slate-900'
+                          }`}></div>
+                          Sauvegarde en cours...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-5 w-5 mr-2" />
+                          Sauvegarder les modifications
+                        </>
+                      )}
+                    </span>
                   </button>
-                );
-              })}
-            </nav>
-            
-            {/* Quick Actions */}
-            <div className="p-3 border-t border-neutral-200/50 bg-gradient-to-r from-neutral-50 to-amber-50/30">
-              <div className="grid grid-cols-2 gap-2">
-                <button className="flex items-center justify-center px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-all duration-300 text-xs font-medium">
-                  <Eye className="h-3 w-3 mr-1" />
-                  Aperçu
-                </button>
-                <button className="flex items-center justify-center px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-all duration-300 text-xs font-medium">
-                  <Download className="h-3 w-3 mr-1" />
-                  Export
-                </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl shadow-luxury border border-neutral-200/50 p-6">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-slate-900 mb-1">
-                {tabs.find(tab => tab.id === activeTab)?.label}
-              </h3>
-              <p className="text-sm text-slate-600">
-                {activeTab === 'general' && 'Modifiez le contenu principal de votre invitation'}
-                {activeTab === 'design' && 'Personnalisez l\'apparence visuelle'}
-                {activeTab === 'colors' && 'Ajustez la palette de couleurs'}
-                {activeTab === 'event' && 'Configurez les détails de l\'événement'}
-                {activeTab === 'options' && 'Gérez les options pour vos invités'}
-              </p>
-            </div>
-            {renderTabContent()}
-          </div>
-        </div>
-        
-        {/* Real-time Preview */}
-        <div className="lg:col-span-1">
-          {renderPreview()}
         </div>
       </div>
     </div>
