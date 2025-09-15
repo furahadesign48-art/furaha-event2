@@ -382,7 +382,7 @@ const InvitationPreview = () => {
       {userModel.category === 'graduation' ? 'Place' : 'Table'} n° {invite.table || 'Non assigné'}
     </p>
   </div>
-
+</div>
 
 
                   {/* Invitation Text */}
