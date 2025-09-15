@@ -36,12 +36,11 @@ interface TemplateData {
   drinkOptions: string[];
   features: string[];
 
-    colors?: {
+  colors?: {
     primary: string;
     secondary: string;
     accent: string;
   };
-}
 }
 
 interface TemplateCustomizationProps {
