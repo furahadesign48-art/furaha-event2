@@ -17,7 +17,12 @@ import {
   GraduationCap,
   User,
   X,
-  Eye
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  Send,
+  Clock,
+  Star
 } from 'lucide-react';
 import { UserModelService, InviteService } from '../services/templateService';
 import { UserModel, Invite } from '../services/templateService';
@@ -32,8 +37,20 @@ const InvitationPreview = () => {
   const [selectedDrink, setSelectedDrink] = useState('');
   const [guestMessage, setGuestMessage] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
-  const [showQRInfo, setShowQRInfo] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  
+  // État pour le système de balayage
+  const [currentScreen, setCurrentScreen] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const screens = [
+    { id: 0, title: 'Bienvenue', subtitle: 'Votre invitation personnalisée' },
+    { id: 1, title: 'Détails', subtitle: 'Informations de l\'événement' },
+    { id: 2, title: 'Confirmation', subtitle: 'Répondez à l\'invitation' },
+    { id: 3, title: 'QR Code', subtitle: 'Votre code d\'accès' }
+  ];
 
   useEffect(() => {
     const loadInvitationData = async () => {
@@ -47,7 +64,6 @@ const InvitationPreview = () => {
         setIsLoading(true);
         console.log('Chargement de l\'invitation:', inviteId);
         
-        // Utiliser la méthode globale pour récupérer l'invitation
         const inviteData = await InviteService.getInviteGlobal(inviteId);
         console.log('Données d\'invitation récupérées:', inviteData);
         
@@ -61,16 +77,14 @@ const InvitationPreview = () => {
         setIsConfirmed(inviteData.confirmed);
         console.log('Invitation définie:', inviteData);
         
-        // Récupérer le modèle utilisateur associé
         console.log('Récupération des modèles pour l\'utilisateur:', inviteData.userId);
         const userModels = await UserModelService.getUserModels(inviteData.userId);
         console.log('Modèles utilisateur récupérés:', userModels);
         
         if (userModels.length > 0) {
-          setUserModel(userModels[0]); // Prendre le premier modèle
+          setUserModel(userModels[0]);
           console.log('Modèle utilisateur défini:', userModels[0]);
           
-          // Générer le QR code avec les informations de l'invité
           await generateQRCode(inviteData, userModels[0]);
         } else {
           setError('Modèle d\'invitation non trouvé');
@@ -87,7 +101,6 @@ const InvitationPreview = () => {
     loadInvitationData();
   }, [inviteId]);
 
-  // Générer le QR code avec les informations de l'invité
   const generateQRCode = async (inviteData: Invite, modelData: UserModel) => {
     try {
       const qrData = {
@@ -112,7 +125,6 @@ const InvitationPreview = () => {
     }
   };
 
-  // Mettre à jour le QR code quand la boisson change
   useEffect(() => {
     if (invite && userModel && selectedDrink) {
       const updateQRCode = async () => {
@@ -141,7 +153,56 @@ const InvitationPreview = () => {
       updateQRCode();
     }
   }, [selectedDrink, invite, userModel]);
-  
+
+  // Gestion du balayage tactile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && currentScreen < screens.length - 1) {
+      nextScreen();
+    }
+    if (isRightSwipe && currentScreen > 0) {
+      prevScreen();
+    }
+  };
+
+  const nextScreen = () => {
+    if (currentScreen < screens.length - 1 && !isTransitioning) {
+      setIsTransitioning(true);
+      setCurrentScreen(prev => prev + 1);
+      setTimeout(() => setIsTransitioning(false), 300);
+    }
+  };
+
+  const prevScreen = () => {
+    if (currentScreen > 0 && !isTransitioning) {
+      setIsTransitioning(true);
+      setCurrentScreen(prev => prev - 1);
+      setTimeout(() => setIsTransitioning(false), 300);
+    }
+  };
+
+  const goToScreen = (screenIndex: number) => {
+    if (screenIndex !== currentScreen && !isTransitioning) {
+      setIsTransitioning(true);
+      setCurrentScreen(screenIndex);
+      setTimeout(() => setIsTransitioning(false), 300);
+    }
+  };
+
   const handleConfirmation = async () => {
     if (!invite || !userModel) return;
     
@@ -284,350 +345,614 @@ const InvitationPreview = () => {
   }
 
   const IconComponent = getIconForCategory(userModel.category);
-  // Utiliser les couleurs personnalisées si elles existent, sinon les couleurs par défaut
   const colors = userModel.colors || userModel.customizations?.colors || getColorScheme(userModel.category);
 
-  return (
-<div className="min-h-screen relative overflow-hidden">
-  {/* Haut avec l'image nette (agrandie + overlay sombre) */}
-  <div className="absolute top-0 left-0 w-full">
-    <img
-      src={userModel.backgroundImage}
-      alt="Event Background"
-      className="w-full object-cover 
-                 h-[800px] sm:h-[900px] md:h-[1000px] lg:h-[1100px] 
-                 scale-125"
-    />
-    {/* Overlay sombre fixe pour lisibilité */}
-    <div className="absolute inset-0 bg-black/40"></div>
-    {/* Gradient pour fondre avec le flou */}
-    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-transparent"></div>
-  </div>
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 0: // Écran 1: Photo de profil + animation + titre + info du guest
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center text-white space-y-8 p-6">
+            {/* Animation d'entrée avec icône */}
+            <div className="relative">
+              <div className="relative">
+                <IconComponent 
+                  className="h-24 w-24 sm:h-32 sm:w-32 animate-glow drop-shadow-2xl transition-all duration-1000" 
+                  style={{ color: colors.accent }} 
+                />
+                <div className="absolute inset-0 animate-ping">
+                  <IconComponent 
+                    className="h-24 w-24 sm:h-32 sm:w-32 opacity-30" 
+                    style={{ color: colors.accent }} 
+                  />
+                </div>
+              </div>
+              
+              {/* Particules flottantes */}
+              <div className="absolute -top-4 -left-4">
+                <Sparkles className="h-6 w-6 text-white animate-pulse" />
+              </div>
+              <div className="absolute -top-2 -right-6">
+                <Sparkles className="h-4 w-4 text-white animate-pulse" style={{ animationDelay: '0.5s' }} />
+              </div>
+              <div className="absolute -bottom-4 -right-2">
+                <Sparkles className="h-5 w-5 text-white animate-pulse" style={{ animationDelay: '1s' }} />
+              </div>
+            </div>
 
-  {/* Bas avec l'image floutée + overlay sombre */}
-  <div className="absolute w-full top-[750px] sm:top-[850px] md:top-[950px] lg:top-[1050px] bottom-0 overflow-hidden">
-    <img
-      src={userModel.backgroundImage}
-      alt="Event Background Blurred"
-      className="w-full h-full object-cover blur-2xl scale-125"
-    />
-    {/* Overlay sombre pour lisibilité */}
-    <div className="absolute inset-0 bg-black/60"></div>
-  </div>
+            {/* Ligne décorative animée */}
+            <div className="flex items-center space-x-4">
+              <div 
+                className="w-16 h-px animate-pulse" 
+                style={{ background: `linear-gradient(to right, transparent, ${colors.primary})` }}
+              ></div>
+              <Star className="h-4 w-4" style={{ color: colors.primary }} />
+              <div 
+                className="w-16 h-px animate-pulse" 
+                style={{ background: `linear-gradient(to left, transparent, ${colors.primary})` }}
+              ></div>
+            </div>
 
+            {/* Titre principal */}
+            <div className="space-y-4">
+              <h1 
+                className="text-4xl sm:text-5xl lg:text-6xl font-bold font-luxury drop-shadow-lg animate-fade-in" 
+                style={{ color: colors.primary }}
+              >
+                {userModel.title}
+              </h1>
+              
+              <div className="text-lg sm:text-xl text-neutral-200 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+                Vous êtes cordialement invité(e)
+              </div>
+            </div>
 
-      {/* Content */}
-      <div className="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-2xl mx-auto">
-          <div className="text-center text-white space-y-6 sm:space-y-8">
-                  {/* Decorative Header */}
-                  <div>
-                    <div className="flex justify-center items-center mb-6">
-                      <div className="relative">
-                        <IconComponent 
-                          className="h-16 w-16 sm:h-20 sm:w-20 animate-glow drop-shadow-2xl" 
-                          style={{ color: colors.accent }} 
-                        />
-                        <div className="absolute inset-0 animate-ping">
-                          <IconComponent 
-                            className="h-16 w-16 sm:h-20 sm:w-20 opacity-30" 
-                            style={{ color: colors.accent }} 
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div 
-                      className="w-32 sm:w-48 h-px mx-auto mb-6" 
-                      style={{ 
-                        background: `linear-gradient(to right, transparent, ${colors.primary}, transparent)` 
-                      }}
-                    ></div>
-                    <div className="flex justify-center space-x-3 mb-6">
-                      <Sparkles 
-                        className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" 
-                        style={{ color: colors.primary }} 
-                      />
-                      <Sparkles 
-                        className="h-4 w-4 sm:h-5 sm:w-5 animate-pulse" 
-                        style={{ color: colors.secondary, animationDelay: '0.5s' }} 
-                      />
-                      <Sparkles 
-                        className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" 
-                        style={{ color: colors.primary, animationDelay: '1s' }} 
-                      />
-                    </div>
-                  </div>
-
-                  {/* Title */}
-                  <h1 
-                    className="text-3xl sm:text-4xl lg:text-5xl font-bold font-luxury drop-shadow-lg" 
-                    style={{ color: colors.primary }}
-                  >
-                    {userModel.title}
-                  </h1>
-
-                 <div className="text-center text-white space-y-6 sm:space-y-8 mt-20">
-  {/* Guest Info Section */}
-  <div 
-    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
-    style={{ 
-      background: `linear-gradient(to right, ${colors.primary}40, ${colors.secondary}40)`,
-      borderColor: `${colors.primary}30`
-    }}
-  >
-    <p className="text-base sm:text-lg mb-3" style={{ color: `${colors.primary}cc` }}>Cher(e)</p>
-    <p className="text-2xl sm:text-3xl font-semibold text-white">{invite.nom}</p>
-    <p className="text-base sm:text-lg mt-3" style={{ color: `${colors.primary}dd` }}>
-      {userModel.category === 'graduation' ? 'Place' : 'Table'} n° {invite.table || 'Non assigné'}
-    </p>
-  </div>
-</div>
-
-
-                  {/* Invitation Text */}
-                  <div 
-                    className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-2xl mx-auto" 
-                    style={{ borderColor: `${colors.primary}20` }}
-                  >
-                    <p className="text-neutral-200 leading-relaxed text-base sm:text-lg">
-                      {userModel.invitationText}
-                    </p>
-                  </div>
-
-                  {/* Event Details */}
-                  <div className="space-y-6 max-w-lg mx-auto">
-                    <div className="flex items-center justify-center text-neutral-200 text-lg sm:text-xl">
-                      <Calendar 
-                        className="h-6 w-6 sm:h-7 sm:w-7 mr-4" 
-                        style={{ color: colors.primary }} 
-                      />
-                      <div className="text-left">
-                        <p className="font-semibold text-lg sm:text-xl">{userModel.eventDate}</p>
-                        <p className="text-base sm:text-lg" style={{ color: `${colors.primary}dd` }}>
-                          {userModel.eventTime}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-center text-neutral-200 text-lg sm:text-xl">
-                      <MapPin 
-                        className="h-6 w-6 sm:h-7 sm:w-7 mr-4" 
-                        style={{ color: colors.primary }} 
-                      />
-                      <p className="text-base sm:text-lg text-center">{userModel.eventLocation}</p>
-                    </div>
-                  </div>
-
-                  {/* RSVP Section */}
-                  <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
-                    style={{ 
-                      background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                      borderColor: `${colors.primary}30`
-                    }}
-                  >
-                    <h3 
-                      className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
-                      style={{ color: `${colors.primary}cc` }}
-                    >
-                      <Users className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
-                      Confirmation de présence
-                    </h3>
-                    <button
-                      onClick={handleConfirmation}
-                      className="w-full py-4 sm:py-5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 text-lg sm:text-xl"
-                      style={{
-                        background: isConfirmed 
-                          ? 'linear-gradient(to right, #10b981, #059669)' 
-                          : `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
-                        color: isConfirmed ? 'white' : '#1e293b'
-                      }}
-                    >
-                      {isConfirmed ? (
-                        <span className="flex items-center justify-center">
-                          <Check className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
-                          Présence confirmée
-                        </span>
-                      ) : (
-                        'Confirmer ma présence'
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Drink Selection */}
-                  <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
-                    style={{ 
-                      background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                      borderColor: `${colors.primary}30`
-                    }}
-                  >
-                    <h3 
-                      className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
-                      style={{ color: `${colors.primary}cc` }}
-                    >
-                      <Wine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
-                      Choix de boisson
-                    </h3>
-                    <select
-                      value={selectedDrink}
-                      onChange={(e) => handleDrinkSelection(e.target.value)}
-                      className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-4 focus:ring-2 transition-all duration-200 text-base sm:text-lg"
-                      style={{ 
-                        borderColor: `${colors.primary}30`,
-                        focusRingColor: colors.primary
-                      }}
-                    >
-                      <option value="">Sélectionnez votre boisson</option>
-                      {userModel.drinkOptions.map((drink) => (
-                        <option key={drink} value={drink}>{drink}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Guest Book */}
-                  <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-lg mx-auto" 
-                    style={{ 
-                      background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                      borderColor: `${colors.primary}30`
-                    }}
-                  >
-                    <h3 
-                      className="font-semibold mb-6 flex items-center justify-center text-lg sm:text-xl" 
-                      style={{ color: `${colors.primary}cc` }}
-                    >
-                      <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
-                      Livre d'or
-                    </h3>
-                    <textarea
-                      value={guestMessage}
-                      onChange={(e) => setGuestMessage(e.target.value)}
-                      placeholder="Laissez un message..."
-                      className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-4 focus:ring-2 transition-all duration-200 resize-none text-base sm:text-lg"
-                      rows={4}
-                      style={{ 
-                        borderColor: `${colors.primary}30`,
-                        focusRingColor: colors.primary
-                      }}
-                    />
-                    <div className="mt-6 space-y-4">
-                      <button 
-                        onClick={handleSendMessage}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold text-base sm:text-lg shadow-lg transform hover:scale-105"
-                      >
-                        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 inline mr-3" />
-                        Envoyer le message
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* QR Code Section */}
-                  {qrCodeDataUrl && (
-                    <div 
-                      className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-sm mx-auto shadow-2xl" 
-                      style={{ 
-                        background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-                        borderColor: `${colors.primary}30`
-                      }}
-                    >
-                      <h3 
-                        className="font-bold mb-6 flex items-center justify-center text-lg sm:text-xl tracking-wide" 
-                        style={{ color: `${colors.primary}cc` }}
-                      >
-                        <div className="relative mr-3">
-                          <QrCode className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-lg" />
-                          <div className="absolute inset-0 animate-pulse opacity-30">
-                            <QrCode className="h-6 w-6 sm:h-7 sm:w-7" />
-                          </div>
-                        </div>
-                        Code d'Invitation
-                      </h3>
-                      
-                      <div className="bg-white rounded-2xl p-6 mb-6 shadow-inner border-4 border-white/20 backdrop-blur-sm">
-                        <img 
-                          src={qrCodeDataUrl} 
-                          alt="QR Code" 
-                          className="w-full max-w-[180px] sm:max-w-[200px] mx-auto drop-shadow-lg"
-                        />
-                      </div>
-                      
-                      <button
-                        onClick={() => setShowQRInfo(!showQRInfo)}
-                        className="w-full py-4 sm:py-5 rounded-2xl text-base sm:text-lg font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                        style={{ 
-                          background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
-                          color: '#1e293b',
-                          boxShadow: `0 10px 25px ${colors.primary}30`
-                        }}
-                      >
-                        <div className="flex items-center justify-center">
-                          <div className="relative mr-2">
-                            {showQRInfo ? (
-                              <X className="h-5 w-5 sm:h-6 sm:w-6" />
-                            ) : (
-                              <Eye className="h-5 w-5 sm:h-6 sm:w-6" />
-                            )}
-                          </div>
-                          {showQRInfo ? 'Masquer les détails' : 'Voir les détails'}
-                        </div>
-                      </button>
-                      
-                      {showQRInfo && (
-                        <div className="mt-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 sm:p-6 animate-slide-up shadow-xl border border-white/30">
-                          <div className="text-center mb-4">
-                            <h4 className="font-bold text-slate-900 text-base sm:text-lg mb-2">Informations QR Code</h4>
-                            <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-auto"></div>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm">
-                              <div className="flex items-center">
-                                <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
-                                <span className="font-semibold text-slate-700 text-sm sm:text-base">Nom</span>
-                              </div>
-                              <span className="font-bold text-slate-900 text-sm sm:text-base">{invite.nom}</span>
-                            </div>
-                            
-                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm">
-                              <div className="flex items-center">
-                                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
-                                <span className="font-semibold text-slate-700 text-sm sm:text-base">
-                                  {userModel.category === 'graduation' ? 'Place' : 'Table'}
-                                </span>
-                              </div>
-                              <span className="font-bold text-slate-900 text-sm sm:text-base">
-                                {invite.table || 'Non assigné'}
-                              </span>
-                            </div>
-                            
-                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm">
-                              <div className="flex items-center">
-                                <Wine className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
-                                <span className="font-semibold text-slate-700 text-sm sm:text-base">Boisson</span>
-                              </div>
-                              <span className="font-bold text-slate-900 text-sm sm:text-base">
-                                {selectedDrink || 'Non sélectionnée'}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-4 pt-4 border-t border-slate-200/50">
-                            <p className="text-xs sm:text-sm text-slate-600 text-center leading-relaxed">
-                              <span className="inline-flex items-center">
-                                <Sparkles className="h-3 w-3 mr-1" style={{ color: colors.primary }} />
-                                Scannez ce code pour accéder rapidement à vos informations
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+            {/* Informations de l'invité avec animation */}
+            <div 
+              className="backdrop-blur-sm rounded-3xl p-8 border max-w-md mx-auto animate-slide-up shadow-2xl" 
+              style={{ 
+                background: `linear-gradient(135deg, ${colors.primary}40, ${colors.secondary}40)`,
+                borderColor: `${colors.primary}30`,
+                animationDelay: '0.6s'
+              }}
+            >
+              <div className="flex items-center justify-center mb-4">
+                <div 
+                  className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-2xl animate-glow"
+                  style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}
+                >
+                  {invite.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                </div>
+              </div>
+              
+              <p className="text-2xl sm:text-3xl font-bold text-white mb-2">{invite.nom}</p>
+              <div className="flex items-center justify-center space-x-2">
+                <User className="h-5 w-5" style={{ color: colors.primary }} />
+                <p className="text-lg" style={{ color: `${colors.primary}dd` }}>
+                  {userModel.category === 'graduation' ? 'Place' : 'Table'} n° {invite.table || 'Non assigné'}
+                </p>
+              </div>
+              
+              {/* Badge du type d'invité */}
+              <div className="mt-4">
+                <span 
+                  className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold shadow-lg"
+                  style={{ 
+                    background: invite.etat === 'couple' 
+                      ? `linear-gradient(135deg, ${colors.accent}, ${colors.primary})` 
+                      : `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                    color: '#1e293b'
+                  }}
+                >
+                  {invite.etat === 'couple' ? (
+                    <>
+                      <Heart className="h-4 w-4 mr-2" />
+                      Invitation Couple (2 places)
+                    </>
+                  ) : (
+                    <>
+                      <User className="h-4 w-4 mr-2" />
+                      Invitation Simple (1 place)
+                    </>
                   )}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 1: // Écran 2: Texte d'invitation + date + heure + lieu
+        return (
+          <div className="flex flex-col justify-center h-full text-center text-white space-y-8 p-6">
+            {/* Texte d'invitation */}
+            <div 
+              className="bg-black/40 backdrop-blur-sm rounded-3xl p-8 border max-w-2xl mx-auto animate-fade-in shadow-2xl" 
+              style={{ borderColor: `${colors.primary}20` }}
+            >
+              <div className="flex justify-center mb-6">
+                <MessageCircle 
+                  className="h-12 w-12 animate-glow drop-shadow-lg" 
+                  style={{ color: colors.primary }} 
+                />
+              </div>
+              
+              <p className="text-neutral-200 leading-relaxed text-lg sm:text-xl font-light">
+                {userModel.invitationText}
+              </p>
+            </div>
+
+            {/* Détails de l'événement avec animations */}
+            <div className="space-y-6 max-w-lg mx-auto">
+              <div 
+                className="flex items-center justify-center text-neutral-200 text-xl sm:text-2xl animate-slide-up"
+                style={{ animationDelay: '0.2s' }}
+              >
+                <div 
+                  className="p-4 rounded-full mr-6 shadow-2xl animate-glow"
+                  style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}
+                >
+                  <Calendar className="h-8 w-8 text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-2xl sm:text-3xl">{userModel.eventDate}</p>
+                  <p className="text-lg sm:text-xl" style={{ color: `${colors.primary}dd` }}>
+                    {userModel.eventTime}
+                  </p>
+                </div>
+              </div>
+              
+              <div 
+                className="flex items-center justify-center text-neutral-200 text-xl sm:text-2xl animate-slide-up"
+                style={{ animationDelay: '0.4s' }}
+              >
+                <div 
+                  className="p-4 rounded-full mr-6 shadow-2xl animate-glow"
+                  style={{ background: `linear-gradient(135deg, ${colors.secondary}, ${colors.accent})` }}
+                >
+                  <MapPin className="h-8 w-8 text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="text-lg sm:text-xl font-semibold">{userModel.eventLocation}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Informations supplémentaires */}
+            <div 
+              className="backdrop-blur-sm rounded-2xl p-6 border max-w-md mx-auto animate-slide-up"
+              style={{ 
+                background: `linear-gradient(135deg, ${colors.primary}30, ${colors.secondary}30)`,
+                borderColor: `${colors.primary}30`,
+                animationDelay: '0.6s'
+              }}
+            >
+              <div className="flex items-center justify-center mb-3">
+                <Clock className="h-5 w-5 mr-2" style={{ color: colors.primary }} />
+                <span className="text-lg font-semibold" style={{ color: `${colors.primary}cc` }}>
+                  Informations importantes
+                </span>
+              </div>
+              <p className="text-neutral-200 text-sm leading-relaxed">
+                Merci de confirmer votre présence avant le {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('fr-FR')}
+              </p>
+            </div>
+          </div>
+        );
+
+      case 2: // Écran 3: Confirmation + message
+        return (
+          <div className="flex flex-col justify-center h-full text-center text-white space-y-8 p-6">
+            {/* Section de confirmation */}
+            <div 
+              className="backdrop-blur-sm rounded-3xl p-8 border max-w-md mx-auto animate-fade-in shadow-2xl" 
+              style={{ 
+                background: `linear-gradient(135deg, ${colors.primary}50, ${colors.secondary}50)`,
+                borderColor: `${colors.primary}30`
+              }}
+            >
+              <div className="flex justify-center mb-6">
+                <div 
+                  className="p-4 rounded-full shadow-2xl animate-glow"
+                  style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}
+                >
+                  <Users className="h-12 w-12 text-white" />
+                </div>
+              </div>
+              
+              <h3 className="text-2xl font-bold mb-6" style={{ color: `${colors.primary}cc` }}>
+                Confirmation de présence
+              </h3>
+              
+              <button
+                onClick={handleConfirmation}
+                className="w-full py-5 rounded-2xl font-bold text-xl transition-all duration-500 transform hover:scale-105 shadow-2xl relative overflow-hidden group"
+                style={{
+                  background: isConfirmed 
+                    ? 'linear-gradient(135deg, #10b981, #059669)' 
+                    : `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                  color: isConfirmed ? 'white' : '#1e293b'
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                <span className="relative flex items-center justify-center">
+                  {isConfirmed ? (
+                    <>
+                      <Check className="h-6 w-6 mr-3" />
+                      Présence confirmée ✨
+                    </>
+                  ) : (
+                    <>
+                      <Heart className="h-6 w-6 mr-3" />
+                      Confirmer ma présence
+                    </>
+                  )}
+                </span>
+              </button>
+            </div>
+
+            {/* Sélection de boisson */}
+            <div 
+              className="backdrop-blur-sm rounded-3xl p-8 border max-w-md mx-auto animate-slide-up shadow-2xl" 
+              style={{ 
+                background: `linear-gradient(135deg, ${colors.primary}50, ${colors.secondary}50)`,
+                borderColor: `${colors.primary}30`,
+                animationDelay: '0.2s'
+              }}
+            >
+              <div className="flex justify-center mb-6">
+                <div 
+                  className="p-4 rounded-full shadow-2xl animate-glow"
+                  style={{ background: `linear-gradient(135deg, ${colors.secondary}, ${colors.accent})` }}
+                >
+                  <Wine className="h-12 w-12 text-white" />
+                </div>
+              </div>
+              
+              <h3 className="text-2xl font-bold mb-6" style={{ color: `${colors.primary}cc` }}>
+                Choix de boisson
+              </h3>
+              
+              <select
+                value={selectedDrink}
+                onChange={(e) => handleDrinkSelection(e.target.value)}
+                className="w-full bg-slate-800/90 text-white border-2 rounded-2xl px-6 py-4 focus:ring-4 transition-all duration-300 text-lg font-medium shadow-inner"
+                style={{ 
+                  borderColor: `${colors.primary}40`,
+                  focusRingColor: `${colors.primary}30`
+                }}
+              >
+                <option value="">Sélectionnez votre boisson préférée</option>
+                {userModel.drinkOptions.map((drink) => (
+                  <option key={drink} value={drink}>{drink}</option>
+                ))}
+              </select>
+              
+              {selectedDrink && (
+                <div 
+                  className="mt-4 p-4 rounded-2xl animate-slide-up"
+                  style={{ background: `linear-gradient(135deg, ${colors.accent}30, ${colors.primary}30)` }}
+                >
+                  <div className="flex items-center justify-center">
+                    <Wine className="h-5 w-5 mr-2" style={{ color: colors.primary }} />
+                    <span className="font-semibold" style={{ color: `${colors.primary}cc` }}>
+                      Choix enregistré: {selectedDrink}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Livre d'or */}
+            <div 
+              className="backdrop-blur-sm rounded-3xl p-8 border max-w-lg mx-auto animate-slide-up shadow-2xl" 
+              style={{ 
+                background: `linear-gradient(135deg, ${colors.primary}50, ${colors.secondary}50)`,
+                borderColor: `${colors.primary}30`,
+                animationDelay: '0.4s'
+              }}
+            >
+              <div className="flex justify-center mb-6">
+                <div 
+                  className="p-4 rounded-full shadow-2xl animate-glow"
+                  style={{ background: `linear-gradient(135deg, ${colors.accent}, ${colors.primary})` }}
+                >
+                  <MessageCircle className="h-12 w-12 text-white" />
+                </div>
+              </div>
+              
+              <h3 className="text-2xl font-bold mb-6" style={{ color: `${colors.primary}cc` }}>
+                Livre d'or
+              </h3>
+              
+              <textarea
+                value={guestMessage}
+                onChange={(e) => setGuestMessage(e.target.value)}
+                placeholder="Laissez un message de vœux..."
+                className="w-full bg-slate-800/90 text-white border-2 rounded-2xl px-6 py-4 focus:ring-4 transition-all duration-300 resize-none text-lg shadow-inner"
+                rows={4}
+                style={{ 
+                  borderColor: `${colors.primary}40`,
+                  focusRingColor: `${colors.primary}30`
+                }}
+              />
+              
+              <button 
+                onClick={handleSendMessage}
+                disabled={!guestMessage.trim()}
+                className="w-full mt-6 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4 rounded-2xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-bold text-lg shadow-2xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                <span className="relative flex items-center justify-center">
+                  <Send className="h-6 w-6 mr-3" />
+                  Envoyer le message
+                </span>
+              </button>
+            </div>
+          </div>
+        );
+
+      case 3: // Écran 4: QR Code
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center text-white space-y-8 p-6">
+            {/* QR Code principal */}
+            <div 
+              className="backdrop-blur-sm rounded-3xl p-8 border max-w-sm mx-auto animate-fade-in shadow-2xl" 
+              style={{ 
+                background: `linear-gradient(135deg, ${colors.primary}50, ${colors.secondary}50)`,
+                borderColor: `${colors.primary}30`
+              }}
+            >
+              <div className="flex justify-center mb-6">
+                <div 
+                  className="p-4 rounded-full shadow-2xl animate-glow"
+                  style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent})` }}
+                >
+                  <QrCode className="h-12 w-12 text-white" />
+                </div>
+              </div>
+              
+              <h3 className="text-2xl font-bold mb-6" style={{ color: `${colors.primary}cc` }}>
+                Votre Code d'Accès
+              </h3>
+              
+              {qrCodeDataUrl && (
+                <div className="bg-white rounded-3xl p-8 mb-6 shadow-inner border-4 border-white/20 backdrop-blur-sm transform hover:scale-105 transition-all duration-300">
+                  <img 
+                    src={qrCodeDataUrl} 
+                    alt="QR Code" 
+                    className="w-full max-w-[200px] mx-auto drop-shadow-2xl"
+                  />
+                </div>
+              )}
+              
+              <p className="text-neutral-200 text-sm leading-relaxed mb-4">
+                Présentez ce code QR à l'entrée de l'événement pour un accès rapide
+              </p>
+              
+              <div 
+                className="p-4 rounded-2xl animate-pulse"
+                style={{ background: `linear-gradient(135deg, ${colors.accent}20, ${colors.primary}20)` }}
+              >
+                <div className="flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 mr-2" style={{ color: colors.primary }} />
+                  <span className="font-semibold text-lg" style={{ color: `${colors.primary}cc` }}>
+                    Code unique et sécurisé
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Résumé des informations */}
+            <div 
+              className="backdrop-blur-sm rounded-2xl p-6 border max-w-md mx-auto animate-slide-up shadow-xl"
+              style={{ 
+                background: `linear-gradient(135deg, ${colors.primary}30, ${colors.secondary}30)`,
+                borderColor: `${colors.primary}30`,
+                animationDelay: '0.3s'
+              }}
+            >
+              <h4 className="text-lg font-bold mb-4" style={{ color: `${colors.primary}cc` }}>
+                Résumé de votre réponse
+              </h4>
+              
+              <div className="space-y-3 text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-300">Présence:</span>
+                  <span 
+                    className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      isConfirmed 
+                        ? 'bg-emerald-500 text-white' 
+                        : 'bg-amber-500 text-slate-900'
+                    }`}
+                  >
+                    {isConfirmed ? 'Confirmée' : 'En attente'}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-300">Boisson:</span>
+                  <span 
+                    className="px-3 py-1 rounded-full text-sm font-semibold"
+                    style={{ 
+                      background: selectedDrink ? `${colors.primary}` : '#6b7280',
+                      color: selectedDrink ? '#1e293b' : 'white'
+                    }}
+                  >
+                    {selectedDrink || 'Non sélectionnée'}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-300">Message:</span>
+                  <span 
+                    className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      guestMessage.trim() 
+                        ? 'bg-emerald-500 text-white' 
+                        : 'bg-neutral-500 text-white'
+                    }`}
+                  >
+                    {guestMessage.trim() ? 'Envoyé' : 'Aucun'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background avec parallax */}
+      <div className="absolute inset-0">
+        <img
+          src={userModel.backgroundImage}
+          alt="Event Background"
+          className="w-full h-full object-cover scale-110 transition-transform duration-1000"
+          style={{ 
+            transform: `scale(1.1) translateX(${currentScreen * -2}px)`,
+            filter: 'blur(1px)'
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80"></div>
+        <div 
+          className="absolute inset-0 transition-all duration-1000"
+          style={{ 
+            background: `linear-gradient(135deg, ${colors.primary}20, ${colors.secondary}20, ${colors.accent}20)`
+          }}
+        ></div>
+      </div>
+
+      {/* Header fixe */}
+      <div className="absolute top-0 left-0 right-0 z-20 p-4 sm:p-6">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center text-white/80 hover:text-white transition-all duration-300 group backdrop-blur-sm bg-black/30 rounded-full px-4 py-2"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
+            <span className="hidden sm:block">Retour</span>
+          </button>
+          
+          {/* Indicateur de progression */}
+          <div className="flex items-center space-x-2 backdrop-blur-sm bg-black/30 rounded-full px-4 py-2">
+            {screens.map((screen, index) => (
+              <button
+                key={screen.id}
+                onClick={() => goToScreen(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentScreen 
+                    ? 'scale-125 shadow-lg' 
+                    : 'hover:scale-110'
+                }`}
+                style={{ 
+                  backgroundColor: index === currentScreen ? colors.primary : 'rgba(255,255,255,0.4)'
+                }}
+              />
+            ))}
+          </div>
+          
+          <div className="text-white/80 text-sm backdrop-blur-sm bg-black/30 rounded-full px-4 py-2">
+            {currentScreen + 1} / {screens.length}
           </div>
         </div>
       </div>
+
+      {/* Contenu principal avec balayage */}
+      <div 
+        className="relative z-10 h-screen overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div 
+          className="flex h-full transition-transform duration-500 ease-out"
+          style={{ 
+            transform: `translateX(-${currentScreen * 100}%)`,
+            width: `${screens.length * 100}%`
+          }}
+        >
+          {screens.map((screen, index) => (
+            <div 
+              key={screen.id} 
+              className="w-full h-full flex-shrink-0 relative"
+              style={{ width: `${100 / screens.length}%` }}
+            >
+              <div className="h-full flex flex-col">
+                {/* Titre de l'écran */}
+                <div className="pt-24 pb-8 text-center">
+                  <h2 
+                    className="text-2xl sm:text-3xl font-bold mb-2 animate-fade-in"
+                    style={{ color: colors.primary }}
+                  >
+                    {screen.title}
+                  </h2>
+                  <p className="text-white/80 text-lg animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                    {screen.subtitle}
+                  </p>
+                </div>
+                
+                {/* Contenu de l'écran */}
+                <div className="flex-1 flex items-center justify-center">
+                  {renderScreen()}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Navigation en bas */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 p-4 sm:p-6">
+        <div className="flex items-center justify-between max-w-md mx-auto">
+          <button
+            onClick={prevScreen}
+            disabled={currentScreen === 0 || isTransitioning}
+            className="flex items-center justify-center w-14 h-14 rounded-full backdrop-blur-sm bg-black/40 text-white hover:bg-black/60 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-110 shadow-2xl"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+
+          {/* Indicateur central avec titre */}
+          <div className="text-center backdrop-blur-sm bg-black/30 rounded-2xl px-6 py-3">
+            <p className="text-white font-semibold text-lg">
+              {screens[currentScreen].title}
+            </p>
+            <p className="text-white/70 text-sm">
+              Balayez pour naviguer
+            </p>
+          </div>
+
+          <button
+            onClick={nextScreen}
+            disabled={currentScreen === screens.length - 1 || isTransitioning}
+            className="flex items-center justify-center w-14 h-14 rounded-full backdrop-blur-sm bg-black/40 text-white hover:bg-black/60 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-110 shadow-2xl"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        </div>
+        
+        {/* Instructions de balayage */}
+        <div className="text-center mt-4">
+          <p className="text-white/60 text-sm backdrop-blur-sm bg-black/20 rounded-full px-4 py-2 inline-block">
+            👆 Balayez horizontalement ou utilisez les flèches
+          </p>
+        </div>
+      </div>
+
+      {/* Effets de transition */}
+      {isTransitioning && (
+        <div className="absolute inset-0 z-30 pointer-events-none">
+          <div 
+            className="absolute inset-0 animate-pulse"
+            style={{ 
+              background: `linear-gradient(90deg, transparent, ${colors.primary}10, transparent)`
+            }}
+          ></div>
+        </div>
+      )}
     </div>
   );
 };
