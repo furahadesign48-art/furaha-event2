@@ -82,13 +82,12 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
     }));
   };
 
- const handleSave = async () => {
+const handleSave = async () => {
   if (!user) return alert("Vous devez être connecté pour sauvegarder");
 
   try {
-    // Mise à jour du document Firestore
     await setDoc(
-      doc(db, 'users', user.id), // OU ton chemin correct
+      doc(db, 'users', user.id), // ou le chemin correct vers ton document
       {
         customizations: {
           colors: customTemplate.colors,
@@ -98,7 +97,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
           }
         }
       },
-      { merge: true } // fusionne avec les autres champs existants
+      { merge: true }
     );
 
     alert('Template sauvegardé avec succès !');
