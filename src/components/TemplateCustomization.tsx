@@ -35,6 +35,13 @@ interface TemplateData {
   eventLocation: string;
   drinkOptions: string[];
   features: string[];
+
+    colors?: {
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
+}
 }
 
 interface TemplateCustomizationProps {
