@@ -17,7 +17,8 @@ import {
   GraduationCap,
   User,
   X,
-  Eye
+  Eye,
+  Download
 } from 'lucide-react';
 import { UserModelService, InviteService } from '../services/templateService';
 import { UserModel, Invite } from '../services/templateService';
@@ -142,6 +143,18 @@ const InvitationPreview = () => {
     }
   }, [selectedDrink, invite, userModel]);
   
+  const downloadQRCode = () => {
+    if (!qrCodeDataUrl || !invite) return;
+    
+    // Créer un lien de téléchargement
+    const link = document.createElement('a');
+    link.href = qrCodeDataUrl;
+    link.download = `qrcode-${invite.nom.replace(/\s+/g, '-').toLowerCase()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleConfirmation = async () => {
     if (!invite || !userModel) return;
     
@@ -554,7 +567,7 @@ const InvitationPreview = () => {
                       </div>
                       
                       <button
-                        onClick={() => setShowQRInfo(!showQRInfo)}
+                        onClick={downloadQRCode}
                         className="w-full py-4 sm:py-5 rounded-2xl text-base sm:text-lg font-bold transition-all duration-500 transform hover:scale-110 shadow-lg hover:shadow-2xl hover:animate-pulse group-hover:bg-opacity-90"
                         style={{ 
                           background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
@@ -564,65 +577,11 @@ const InvitationPreview = () => {
                       >
                         <div className="flex items-center justify-center">
                           <div className="relative mr-2">
-                            {showQRInfo ? (
-                              <X className="h-5 w-5 sm:h-6 sm:w-6" />
-                            ) : (
-                              <Eye className="h-5 w-5 sm:h-6 sm:w-6" />
-                            )}
+                            <Download className="h-5 w-5 sm:h-6 sm:w-6" />
                           </div>
-                          {showQRInfo ? 'Masquer les détails' : 'Voir les détails'}
+                          Télécharger QR Code
                         </div>
                       </button>
-                      
-                      {showQRInfo && (
-                        <div className="mt-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 sm:p-6 animate-slide-up shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-500">
-                          <div className="text-center mb-4">
-                            <h4 className="font-bold text-slate-900 text-base sm:text-lg mb-2">Informations QR Code</h4>
-                            <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-auto"></div>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300">
-                              <div className="flex items-center">
-                                <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
-                                <span className="font-semibold text-slate-700 text-sm sm:text-base">Nom</span>
-                              </div>
-                              <span className="font-bold text-slate-900 text-sm sm:text-base">{invite.nom}</span>
-                            </div>
-                            
-                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300">
-                              <div className="flex items-center">
-                                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
-                                <span className="font-semibold text-slate-700 text-sm sm:text-base">
-                                  {userModel.category === 'graduation' ? 'Place' : 'Table'}
-                                </span>
-                              </div>
-                              <span className="font-bold text-slate-900 text-sm sm:text-base">
-                                {invite.table || 'Non assigné'}
-                              </span>
-                            </div>
-                            
-                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300">
-                              <div className="flex items-center">
-                                <Wine className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
-                                <span className="font-semibold text-slate-700 text-sm sm:text-base">Boisson</span>
-                              </div>
-                              <span className="font-bold text-slate-900 text-sm sm:text-base">
-                                {selectedDrink || 'Non sélectionnée'}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-4 pt-4 border-t border-slate-200/50">
-                            <p className="text-xs sm:text-sm text-slate-600 text-center leading-relaxed hover:text-slate-800 transition-all duration-300">
-                              <span className="inline-flex items-center">
-                                <Sparkles className="h-3 w-3 mr-1" style={{ color: colors.primary }} />
-                                Scannez ce code pour accéder rapidement à vos informations
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
           </div>
