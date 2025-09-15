@@ -485,7 +485,7 @@ const InvitationPreview = () => {
 
                   {/* Guest Book */}
                   <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-lg mx-auto" 
+                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto mt-16 sm:mt-24 lg:mt-32" 
                     style={{ 
                       background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
                       borderColor: `${colors.primary}30`
