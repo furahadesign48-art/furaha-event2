@@ -367,20 +367,23 @@ const InvitationPreview = () => {
                     {userModel.title}
                   </h1>
 
-                  {/* Guest Info */}
-                  <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
-                    style={{ 
-                      background: `linear-gradient(to right, ${colors.primary}40, ${colors.secondary}40)`,
-                      borderColor: `${colors.primary}30`
-                    }}
-                  >
-                    <p className="text-base sm:text-lg mb-3" style={{ color: `${colors.primary}cc` }}>Cher(e)</p>
-                    <p className="text-2xl sm:text-3xl font-semibold text-white">{invite.nom}</p>
-                    <p className="text-base sm:text-lg mt-3" style={{ color: `${colors.primary}dd` }}>
-                      {userModel.category === 'graduation' ? 'Place' : 'Table'} n° {invite.table || 'Non assigné'}
-                    </p>
-                  </div>
+                 <div className="text-center text-white space-y-6 sm:space-y-8 mt-20">
+  {/* Guest Info Section */}
+  <div 
+    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
+    style={{ 
+      background: `linear-gradient(to right, ${colors.primary}40, ${colors.secondary}40)`,
+      borderColor: `${colors.primary}30`
+    }}
+  >
+    <p className="text-base sm:text-lg mb-3" style={{ color: `${colors.primary}cc` }}>Cher(e)</p>
+    <p className="text-2xl sm:text-3xl font-semibold text-white">{invite.nom}</p>
+    <p className="text-base sm:text-lg mt-3" style={{ color: `${colors.primary}dd` }}>
+      {userModel.category === 'graduation' ? 'Place' : 'Table'} n° {invite.table || 'Non assigné'}
+    </p>
+  </div>
+
+
 
                   {/* Invitation Text */}
                   <div 
