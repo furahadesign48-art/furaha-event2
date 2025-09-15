@@ -460,7 +460,7 @@ const handleSave = () => {
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-              <button
+             <button
   onClick={() => setCustomTemplate(prev => ({
     ...prev,
     colors: {
@@ -479,38 +479,6 @@ const handleSave = () => {
   <p className="text-sm font-medium text-slate-700 group-hover:text-amber-700">Doré & Rose</p>
 </button>
 
-
-              <button
-                onClick={() => {
-                  setPrimaryColor('#8b5cf6');
-                  setSecondaryColor('#7c3aed');
-                  setAccentColor('#ec4899');
-                }}
-                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-purple-400 transition-all duration-300 group"
-              >
-                <div className="flex space-x-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-violet-500"></div>
-                  <div className="w-6 h-6 rounded-full bg-violet-600"></div>
-                  <div className="w-6 h-6 rounded-full bg-pink-500"></div>
-                </div>
-                <p className="text-sm font-medium text-slate-700 group-hover:text-purple-700">Violet & Rose</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setPrimaryColor('#10b981');
-                  setSecondaryColor('#059669');
-                  setAccentColor('#3b82f6');
-                }}
-                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-emerald-400 transition-all duration-300 group"
-              >
-                <div className="flex space-x-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500"></div>
-                  <div className="w-6 h-6 rounded-full bg-emerald-600"></div>
-                  <div className="w-6 h-6 rounded-full bg-blue-500"></div>
-                </div>
-                <p className="text-sm font-medium text-slate-700 group-hover:text-emerald-700">Émeraude & Bleu</p>
-              </button>
             </div>
 
             <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50">
