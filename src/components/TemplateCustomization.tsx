@@ -402,7 +402,7 @@ const handleSave = () => {
               </label>
               <div className="flex items-center space-x-4">
                 <input
-               {/* Couleur secondaire */}
+              
 <input
   type="color"
   value={customTemplate.colors?.primary || '#f59e0b'}
