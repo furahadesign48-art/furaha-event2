@@ -201,23 +201,6 @@ const InvitationPreview = () => {
     }
   };
 
-  <button
-  onClick={handleDownloadQRCode}
-  className="w-full py-4 sm:py-5 rounded-2xl text-base sm:text-lg font-bold transition-all duration-500 transform hover:scale-110 shadow-lg hover:shadow-2xl hover:animate-pulse group-hover:bg-opacity-90"
-  style={{ 
-    background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
-    color: '#1e293b',
-    boxShadow: `0 10px 25px ${colors.primary}30`
-  }}
->
-  <div className="flex items-center justify-center">
-    <QrCode className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
-    Télécharger QR Code
-  </div>
-</button>
-
-  
-
   const getColorScheme = (category: string) => {
     switch (category) {
       case 'wedding':
@@ -542,52 +525,106 @@ const InvitationPreview = () => {
 
                   {/* QR Code Section */}
                   {qrCodeDataUrl && (
-  <div 
-    className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-sm mx-auto shadow-2xl group hover:scale-105 hover:backdrop-blur-md hover:shadow-3xl transition-all duration-500 hover:border-opacity-60" 
-    style={{ 
-      background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
-      borderColor: `${colors.primary}30`
-    }}
-  >
-    <h3 
-      className="font-bold mb-6 flex items-center justify-center text-lg sm:text-xl tracking-wide" 
-      style={{ color: `${colors.primary}cc` }}
-    >
-      <div className="relative mr-3">
-        <QrCode className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-lg" />
-        <div className="absolute inset-0 animate-pulse opacity-30">
-          <QrCode className="h-6 w-6 sm:h-7 sm:w-7" />
-        </div>
-      </div>
-      Code d'Invitation
-    </h3>
-    
-    <div className="bg-white rounded-2xl p-6 mb-6 shadow-inner border-4 border-white/20 backdrop-blur-sm">
-      <img 
-        src={qrCodeDataUrl} 
-        alt="QR Code" 
-        className="w-full max-w-[180px] sm:max-w-[200px] mx-auto drop-shadow-lg"
-      />
-    </div>
-
-    {/* Bouton Télécharger QR Code */}
-    <button
-      onClick={handleDownloadQRCode}
-      className="w-full py-4 sm:py-5 rounded-2xl text-base sm:text-lg font-bold transition-all duration-500 transform hover:scale-110 shadow-lg hover:shadow-2xl hover:animate-pulse group-hover:bg-opacity-90"
-      style={{ 
-        background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
-        color: '#1e293b',
-        boxShadow: `0 10px 25px ${colors.primary}30`
-      }}
-    >
-      <div className="flex items-center justify-center">
-        <QrCode className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
-        Télécharger QR Code
-      </div>
-    </button>
-  </div>
-)}
-
+                    <div 
+                      className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-sm mx-auto shadow-2xl group hover:scale-105 hover:backdrop-blur-md hover:shadow-3xl transition-all duration-500 hover:border-opacity-60" 
+                      style={{ 
+                        background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
+                        borderColor: `${colors.primary}30`
+                      }}
+                    >
+                      <h3 
+                        className="font-bold mb-6 flex items-center justify-center text-lg sm:text-xl tracking-wide" 
+                        style={{ color: `${colors.primary}cc` }}
+                      >
+                        <div className="relative mr-3">
+                          <QrCode className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-lg" />
+                          <div className="absolute inset-0 animate-pulse opacity-30">
+                            <QrCode className="h-6 w-6 sm:h-7 sm:w-7" />
+                          </div>
+                        </div>
+                        Code d'Invitation
+                      </h3>
+                      
+                      <div className="bg-white rounded-2xl p-6 mb-6 shadow-inner border-4 border-white/20 backdrop-blur-sm">
+                        <img 
+                          src={qrCodeDataUrl} 
+                          alt="QR Code" 
+                          className="w-full max-w-[180px] sm:max-w-[200px] mx-auto drop-shadow-lg"
+                        />
+                      </div>
+                      
+                      <button
+                        onClick={() => setShowQRInfo(!showQRInfo)}
+                        className="w-full py-4 sm:py-5 rounded-2xl text-base sm:text-lg font-bold transition-all duration-500 transform hover:scale-110 shadow-lg hover:shadow-2xl hover:animate-pulse group-hover:bg-opacity-90"
+                        style={{ 
+                          background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
+                          color: '#1e293b',
+                          boxShadow: `0 10px 25px ${colors.primary}30`
+                        }}
+                      >
+                        <div className="flex items-center justify-center">
+                          <div className="relative mr-2">
+                            {showQRInfo ? (
+                              <X className="h-5 w-5 sm:h-6 sm:w-6" />
+                            ) : (
+                              <Eye className="h-5 w-5 sm:h-6 sm:w-6" />
+                            )}
+                          </div>
+                          {showQRInfo ? 'Masquer les détails' : 'Voir les détails'}
+                        </div>
+                      </button>
+                      
+                      {showQRInfo && (
+                        <div className="mt-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 sm:p-6 animate-slide-up shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-500">
+                          <div className="text-center mb-4">
+                            <h4 className="font-bold text-slate-900 text-base sm:text-lg mb-2">Informations QR Code</h4>
+                            <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-auto"></div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300">
+                              <div className="flex items-center">
+                                <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
+                                <span className="font-semibold text-slate-700 text-sm sm:text-base">Nom</span>
+                              </div>
+                              <span className="font-bold text-slate-900 text-sm sm:text-base">{invite.nom}</span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300">
+                              <div className="flex items-center">
+                                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
+                                <span className="font-semibold text-slate-700 text-sm sm:text-base">
+                                  {userModel.category === 'graduation' ? 'Place' : 'Table'}
+                                </span>
+                              </div>
+                              <span className="font-bold text-slate-900 text-sm sm:text-base">
+                                {invite.table || 'Non assigné'}
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300">
+                              <div className="flex items-center">
+                                <Wine className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
+                                <span className="font-semibold text-slate-700 text-sm sm:text-base">Boisson</span>
+                              </div>
+                              <span className="font-bold text-slate-900 text-sm sm:text-base">
+                                {selectedDrink || 'Non sélectionnée'}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-4 pt-4 border-t border-slate-200/50">
+                            <p className="text-xs sm:text-sm text-slate-600 text-center leading-relaxed hover:text-slate-800 transition-all duration-300">
+                              <span className="inline-flex items-center">
+                                <Sparkles className="h-3 w-3 mr-1" style={{ color: colors.primary }} />
+                                Scannez ce code pour accéder rapidement à vos informations
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
           </div>
         </div>
       </div>
