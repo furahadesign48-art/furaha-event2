@@ -98,6 +98,15 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
     accent: '#f43f5e'
   }
 });
+const handleColorChange = (colorType: 'primary' | 'secondary' | 'accent', value: string) => {
+  setCustomTemplate(prev => ({
+    ...prev,
+    colors: {
+      ...prev.colors,
+      [colorType]: value
+    }
+  }));
+};
 
 
     // Vérifier le type de fichier
