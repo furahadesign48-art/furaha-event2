@@ -295,8 +295,8 @@ const InvitationPreview = () => {
       src={userModel.backgroundImage}
       alt="Event Background"
       className="w-full object-cover 
-                 h-[800px] sm:h-[900px] md:h-[1000px] lg:h-[1100px] 
-                 scale-125"
+                 h-[600px] sm:h-[700px] md:h-[800px] lg:h-[900px] 
+                 scale-110"
     />
     {/* Overlay sombre fixe pour lisibilité */}
     <div className="absolute inset-0 bg-black/40"></div>
@@ -305,11 +305,11 @@ const InvitationPreview = () => {
   </div>
 
   {/* Bas avec l'image floutée + overlay sombre */}
-  <div className="absolute w-full top-[750px] sm:top-[850px] md:top-[950px] lg:top-[1050px] bottom-0 overflow-hidden">
+  <div className="absolute w-full top-[550px] sm:top-[650px] md:top-[750px] lg:top-[850px] bottom-0 overflow-hidden">
     <img
       src={userModel.backgroundImage}
       alt="Event Background Blurred"
-      className="w-full h-full object-cover blur-2xl scale-125"
+      className="w-full h-full object-cover blur-2xl scale-110"
     />
     {/* Overlay sombre pour lisibilité */}
     <div className="absolute inset-0 bg-black/60"></div>
@@ -318,7 +318,7 @@ const InvitationPreview = () => {
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-2xl mx-auto mt-20 sm:mt-24 md:mt-32 lg:mt-40">
+        <div className="w-full max-w-2xl mx-auto mt-32 sm:mt-40 md:mt-48 lg:mt-56">
           <div className="text-center text-white space-y-6 sm:space-y-8 animate-fade-in">
                   {/* Decorative Header */}
                   <div className="group hover:scale-105 transition-all duration-500 hover:drop-shadow-2xl">
