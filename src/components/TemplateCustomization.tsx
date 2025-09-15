@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../config/firebase';
 import { useAuth } from './AuthContext';
+import { db } from '../config/firebase';
 import { 
   ArrowLeft, 
   Save, 
