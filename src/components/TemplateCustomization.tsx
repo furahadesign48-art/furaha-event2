@@ -51,13 +51,33 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   const [guestMessage, setGuestMessage] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [newDrink, setNewDrink] = useState('');
-  const [primaryColor, setPrimaryColor] = useState(template.colors?.primary || '#f59e0b'); // amber-500
-  const [secondaryColor, setSecondaryColor] = useState(template.colors?.secondary || '#d97706'); // amber-600
-  const [accentColor, setAccentColor] = useState(template.colors?.accent || '#f43f5e'); // rose-500
+  
+  // Initialiser les couleurs depuis le template avec des valeurs par défaut
+  const [primaryColor, setPrimaryColor] = useState(() => {
+    return template.colors?.primary || template.customizations?.colors?.primary || '#f59e0b';
+  });
+  const [secondaryColor, setSecondaryColor] = useState(() => {
+    return template.colors?.secondary || template.customizations?.colors?.secondary || '#d97706';
+  });
+  const [accentColor, setAccentColor] = useState(() => {
+    return template.colors?.accent || template.customizations?.colors?.accent || '#f43f5e';
+  });
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showQRInfo, setShowQRInfo] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
+  // Initialiser le template avec les couleurs au montage
+  React.useEffect(() => {
+    setCustomTemplate(prev => ({
+      ...prev,
+      colors: {
+        primary: primaryColor,
+        secondary: secondaryColor,
+        accent: accentColor
+      }
+    }));
+  }, []);
   const tabs = [
     { id: 'general', label: 'Général', icon: Type },
     { id: 'design', label: 'Design', icon: Palette },
@@ -73,23 +93,24 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
     }));
   };
 
-  // Fonction pour mettre à jour les couleurs dans le template
+  // Fonction pour mettre à jour les couleurs
   const handleColorChange = (colorType: 'primary' | 'secondary' | 'accent', value: string) => {
-    const newColors = {
-      ...customTemplate.colors,
-      [colorType]: value
-    };
-    
-    setCustomTemplate(prev => ({
-      ...prev,
-      colors: newColors
-    }));
-    
-    // Mettre à jour l'état local des couleurs
+    // Mettre à jour l'état local
     if (colorType === 'primary') setPrimaryColor(value);
     if (colorType === 'secondary') setSecondaryColor(value);
     if (colorType === 'accent') setAccentColor(value);
+    
+    // Mettre à jour le template avec les nouvelles couleurs
+    setCustomTemplate(prev => ({
+      ...prev,
+      colors: {
+        primary: colorType === 'primary' ? value : primaryColor,
+        secondary: colorType === 'secondary' ? value : secondaryColor,
+        accent: colorType === 'accent' ? value : accentColor
+      }
+    }));
   };
+
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) {
@@ -152,8 +173,18 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   };
 
   const handleSave = () => {
-    // Les couleurs sont déjà dans customTemplate grâce à handleColorChange
-    onSave(customTemplate);
+    // S'assurer que les couleurs actuelles sont incluses
+    const templateToSave = {
+      ...customTemplate,
+      colors: {
+        primary: primaryColor,
+        secondary: secondaryColor,
+        accent: accentColor
+      }
+    };
+    
+    console.log('Sauvegarde du template avec couleurs:', templateToSave.colors);
+    onSave(templateToSave);
     alert('Template sauvegardé avec succès !');
   };
 
