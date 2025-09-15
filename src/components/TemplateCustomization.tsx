@@ -53,7 +53,6 @@ interface TemplateCustomizationProps {
 
 const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizationProps) => {
   const { user } = useAuth();
-  const [customTemplate, setCustomTemplate] = useState<TemplateData>(template);
   const [activeTab, setActiveTab] = useState('general');
   const [selectedDrink, setSelectedDrink] = useState('');
   const [guestMessage, setGuestMessage] = useState('');
