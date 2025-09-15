@@ -90,6 +90,16 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
       return;
     }
 
+    const [customTemplate, setCustomTemplate] = useState<TemplateData>({
+  ...template,
+  colors: template.colors || {
+    primary: '#f59e0b',
+    secondary: '#d97706',
+    accent: '#f43f5e'
+  }
+});
+
+
     // Vérifier le type de fichier
     if (!file.type.startsWith('image/')) {
       alert('Veuillez sélectionner un fichier image valide');
