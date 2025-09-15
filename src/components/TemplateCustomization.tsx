@@ -25,7 +25,8 @@ interface TemplateData {
       accent: string;
     };
     fonts?: {
-      title: string;
+  X,
+  Layout
       body: string;
     };
     layout?: string;
