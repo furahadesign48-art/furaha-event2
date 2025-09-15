@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../config/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import { 
   ArrowLeft, 
@@ -36,15 +35,7 @@ interface TemplateData {
   eventLocation: string;
   drinkOptions: string[];
   features: string[];
-
-  // ✅ Ajouter ceci pour les couleurs
-  colors?: {
-    primary: string;
-    secondary: string;
-    accent: string;
-  };
 }
-
 
 interface TemplateCustomizationProps {
   template: TemplateData;
@@ -54,59 +45,18 @@ interface TemplateCustomizationProps {
 
 const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizationProps) => {
   const { user } = useAuth();
+  const [customTemplate, setCustomTemplate] = useState<TemplateData>(template);
   const [activeTab, setActiveTab] = useState('general');
   const [selectedDrink, setSelectedDrink] = useState('');
   const [guestMessage, setGuestMessage] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [newDrink, setNewDrink] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('#f59e0b'); // amber-500
+  const [secondaryColor, setSecondaryColor] = useState('#d97706'); // amber-600
+  const [accentColor, setAccentColor] = useState('#f43f5e'); // rose-500
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showQRInfo, setShowQRInfo] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-
-  const [customTemplate, setCustomTemplate] = useState<TemplateData>({
-    ...template,
-    colors: template.colors || {
-      primary: '#f59e0b',
-      secondary: '#d97706',
-      accent: '#f43f5e'
-    }
-  });
-
-  const handleColorChange = (colorType: 'primary' | 'secondary' | 'accent', value: string) => {
-    setCustomTemplate(prev => ({
-      ...prev,
-      colors: {
-        ...prev.colors,
-        [colorType]: value
-      }
-    }));
-  };
-
-const handleSave = async () => {
-  if (!user) return alert("Vous devez être connecté pour sauvegarder");
-
-  try {
-    await setDoc(
-      doc(db, 'users', user.id), // ou le chemin correct vers ton document
-      {
-        customizations: {
-          colors: customTemplate.colors,
-          fonts: {
-            body: customTemplate.fonts?.body || 'Inter',
-            title: customTemplate.fonts?.title || 'Playfair Display'
-          }
-        }
-      },
-      { merge: true }
-    );
-
-    alert('Template sauvegardé avec succès !');
-  } catch (error) {
-    console.error('Erreur lors de la sauvegarde des couleurs:', error);
-    alert('Erreur lors de la sauvegarde. Réessayez.');
-  }
-};
-
 
   const tabs = [
     { id: 'general', label: 'Général', icon: Type },
@@ -182,6 +132,20 @@ const handleSave = async () => {
   const removeDrinkOption = (index: number) => {
     const newOptions = customTemplate.drinkOptions.filter((_, i) => i !== index);
     handleInputChange('drinkOptions', newOptions);
+  };
+
+  const handleSave = () => {
+    // Sauvegarder avec les couleurs personnalisées
+    const templateWithColors = {
+      ...customTemplate,
+      colors: {
+        primary: primaryColor,
+        secondary: secondaryColor,
+        accent: accentColor
+      }
+    };
+    onSave(templateWithColors);
+    alert('Template sauvegardé avec succès !');
   };
 
   const renderTabContent = () => {
@@ -388,14 +352,14 @@ const handleSave = async () => {
               <div className="flex items-center space-x-4">
                 <input
                   type="color"
-                  value={customTemplate.colors?.primary || '#f59e0b'}
-                  onChange={(e) => handleColorChange('primary', e.target.value)}
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
                   className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
                 />
                 <input
                   type="text"
-                  value={customTemplate.colors?.primary || '#f59e0b'}
-                  onChange={(e) => handleColorChange('primary', e.target.value)}
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
                   className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono"
                   placeholder="#f59e0b"
                 />
@@ -410,14 +374,14 @@ const handleSave = async () => {
               <div className="flex items-center space-x-4">
                 <input
                   type="color"
-                  value={customTemplate.colors?.secondary || '#d97706'}
-                  onChange={(e) => handleColorChange('secondary', e.target.value)}
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
                   className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
                 />
                 <input
                   type="text"
-                  value={customTemplate.colors?.secondary || '#d97706'}
-                  onChange={(e) => handleColorChange('secondary', e.target.value)}
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
                   className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono"
                   placeholder="#d97706"
                 />
@@ -432,14 +396,14 @@ const handleSave = async () => {
               <div className="flex items-center space-x-4">
                 <input
                   type="color"
-                  value={customTemplate.colors?.accent || '#f43f5e'}
-                  onChange={(e) => handleColorChange('accent', e.target.value)}
+                  value={accentColor}
+                  onChange={(e) => setAccentColor(e.target.value)}
                   className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
                 />
                 <input
                   type="text"
-                  value={customTemplate.colors?.accent || '#f43f5e'}
-                  onChange={(e) => handleColorChange('accent', e.target.value)}
+                  value={accentColor}
+                  onChange={(e) => setAccentColor(e.target.value)}
                   className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono"
                   placeholder="#f43f5e"
                 />
@@ -449,14 +413,11 @@ const handleSave = async () => {
 
             <div className="grid grid-cols-3 gap-4">
               <button
-                onClick={() => setCustomTemplate(prev => ({
-                  ...prev,
-                  colors: {
-                    primary: '#f59e0b',
-                    secondary: '#d97706',
-                    accent: '#f43f5e'
-                  }
-                }))}
+                onClick={() => {
+                  setPrimaryColor('#f59e0b');
+                  setSecondaryColor('#d97706');
+                  setAccentColor('#f43f5e');
+                }}
                 className="p-4 rounded-xl border-2 border-neutral-200 hover:border-amber-400 transition-all duration-300 group"
               >
                 <div className="flex space-x-2 mb-2">
@@ -465,6 +426,38 @@ const handleSave = async () => {
                   <div className="w-6 h-6 rounded-full bg-rose-500"></div>
                 </div>
                 <p className="text-sm font-medium text-slate-700 group-hover:text-amber-700">Doré & Rose</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  setPrimaryColor('#8b5cf6');
+                  setSecondaryColor('#7c3aed');
+                  setAccentColor('#ec4899');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-purple-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-violet-500"></div>
+                  <div className="w-6 h-6 rounded-full bg-violet-600"></div>
+                  <div className="w-6 h-6 rounded-full bg-pink-500"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-purple-700">Violet & Rose</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  setPrimaryColor('#10b981');
+                  setSecondaryColor('#059669');
+                  setAccentColor('#3b82f6');
+                }}
+                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-emerald-400 transition-all duration-300 group"
+              >
+                <div className="flex space-x-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500"></div>
+                  <div className="w-6 h-6 rounded-full bg-emerald-600"></div>
+                  <div className="w-6 h-6 rounded-full bg-blue-500"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-emerald-700">Émeraude & Bleu</p>
               </button>
             </div>
 
@@ -629,7 +622,7 @@ const handleSave = async () => {
                   className="w-full h-full object-cover transition-all duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-900/20 via-transparent to-amber-900/20" style={{ background: `linear-gradient(to right, ${customTemplate.colors?.primary || '#f59e0b'}20, transparent, ${customTemplate.colors?.primary || '#f59e0b'}20)` }}></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-900/20 via-transparent to-amber-900/20" style={{ background: `linear-gradient(to right, ${primaryColor}20, transparent, ${primaryColor}20)` }}></div>
               </div>
 
               {/* Content */}
@@ -638,38 +631,38 @@ const handleSave = async () => {
                 <div className="mb-4">
                   <div className="flex justify-center items-center mb-3">
                     <div className="relative">
-                      <Heart className="h-8 w-8 animate-glow drop-shadow-2xl" style={{ color: customTemplate.colors?.accent || '#f43f5e' }} />
+                      <Heart className="h-8 w-8 animate-glow drop-shadow-2xl" style={{ color: accentColor }} />
                       <div className="absolute inset-0 animate-ping">
-                        <Heart className="h-8 w-8 opacity-30" style={{ color: customTemplate.colors?.accent || '#f43f5e' }} />
+                        <Heart className="h-8 w-8 opacity-30" style={{ color: accentColor }} />
                       </div>
                     </div>
                   </div>
                   
-                  <div className="w-16 h-px mx-auto mb-3" style={{ background: `linear-gradient(to right, transparent, ${customTemplate.colors?.primary || '#f59e0b'}, transparent)` }}></div>
+                  <div className="w-16 h-px mx-auto mb-3" style={{ background: `linear-gradient(to right, transparent, ${primaryColor}, transparent)` }}></div>
                   <div className="flex justify-center space-x-1 mb-3">
-                    <Sparkles className="h-3 w-3 animate-pulse" style={{ color: customTemplate.colors?.primary || '#f59e0b' }} />
-                    <Sparkles className="h-2 w-2 animate-pulse" style={{ color: customTemplate.colors?.secondary || '#d97706', animationDelay: '0.5s' }} />
-                    <Sparkles className="h-3 w-3 animate-pulse" style={{ color: customTemplate.colors?.primary || '#f59e0b', animationDelay: '1s' }} />
+                    <Sparkles className="h-3 w-3 animate-pulse" style={{ color: primaryColor }} />
+                    <Sparkles className="h-2 w-2 animate-pulse" style={{ color: secondaryColor, animationDelay: '0.5s' }} />
+                    <Sparkles className="h-3 w-3 animate-pulse" style={{ color: primaryColor, animationDelay: '1s' }} />
                   </div>
                 </div>
 
                 {/* Title */}
-                <h1 className="text-lg font-bold mb-4 font-luxury drop-shadow-lg transition-all duration-300" style={{ color: customTemplate.colors?.primary || '#f59e0b' }}>
+                <h1 className="text-lg font-bold mb-4 font-luxury drop-shadow-lg transition-all duration-300" style={{ color: primaryColor }}>
                   {customTemplate.title}
                 </h1>
 
                 {/* Guest Info */}
                 <div className="backdrop-blur-sm rounded-xl p-3 mb-4 border" style={{ 
-                  background: `linear-gradient(to right, ${customTemplate.colors?.primary || '#f59e0b'}40, ${customTemplate.colors?.secondary || '#d97706'}40)`,
-                  borderColor: `${customTemplate.colors?.primary || '#f59e0b'}30`
+                  background: `linear-gradient(to right, ${primaryColor}40, ${secondaryColor}40)`,
+                  borderColor: `${primaryColor}30`
                 }}>
-                  <p className="text-xs mb-1" style={{ color: `${customTemplate.colors?.primary || '#f59e0b'}cc` }}>Cher(e)</p>
+                  <p className="text-xs mb-1" style={{ color: `${primaryColor}cc` }}>Cher(e)</p>
                   <p className="text-sm font-semibold text-white">[Nom de l'invité]</p>
-                  <p className="text-xs mt-1" style={{ color: `${customTemplate.colors?.primary || '#f59e0b'}dd` }}>Table n° [Numéro de table]</p>
+                  <p className="text-xs mt-1" style={{ color: `${primaryColor}dd` }}>Table n° [Numéro de table]</p>
                 </div>
 
                 {/* Invitation Text */}
-                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 mb-4 border" style={{ borderColor: `${customTemplate.colors?.primary || '#f59e0b'}20` }}>
+                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 mb-4 border" style={{ borderColor: `${primaryColor}20` }}>
                   <p className="text-neutral-200 leading-relaxed text-xs transition-all duration-300">
                     {customTemplate.invitationText.length > 120 
                       ? customTemplate.invitationText.substring(0, 120) + '...'
@@ -680,15 +673,15 @@ const handleSave = async () => {
                 {/* Event Details */}
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-center text-neutral-200">
-                    <Calendar className="h-3 w-3 mr-2" style={{ color: customTemplate.colors?.primary || '#f59e0b' }} />
+                    <Calendar className="h-3 w-3 mr-2" style={{ color: primaryColor }} />
                     <div className="text-left">
                       <p className="text-xs font-semibold transition-all duration-300">{customTemplate.eventDate}</p>
-                      <p className="text-xs transition-all duration-300" style={{ color: `${customTemplate.colors?.primary || '#f59e0b'}dd` }}>{customTemplate.eventTime}</p>
+                      <p className="text-xs transition-all duration-300" style={{ color: `${primaryColor}dd` }}>{customTemplate.eventTime}</p>
                     </div>
                   </div>
                   
                   <div className="flex items-center justify-center text-neutral-200">
-                    <MapPin className="h-3 w-3 mr-2" style={{ color: customTemplate.colors?.primary || '#f59e0b' }} />
+                    <MapPin className="h-3 w-3 mr-2" style={{ color: primaryColor }} />
                     <p className="text-xs transition-all duration-300">
                       {customTemplate.eventLocation.length > 30 
                         ? customTemplate.eventLocation.substring(0, 30) + '...'
@@ -699,10 +692,10 @@ const handleSave = async () => {
 
                 {/* RSVP Section */}
                 <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
-                  background: `linear-gradient(to right, ${customTemplate.colors?.primary || '#f59e0b'}50, ${customTemplate.colors?.secondary || '#d97706'}50)`,
-                  borderColor: `${customTemplate.colors?.primary || '#f59e0b'}30`
+                  background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
+                  borderColor: `${primaryColor}30`
                 }}>
-                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${customTemplate.colors?.primary || '#f59e0b'}cc` }}>
+                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
                     <Users className="h-3 w-3 mr-1" />
                     Confirmation
                   </h3>
@@ -712,7 +705,7 @@ const handleSave = async () => {
                     style={{
                       background: isConfirmed 
                         ? 'linear-gradient(to right, #10b981, #059669)' 
-                        : `linear-gradient(to right, ${customTemplate.colors?.primary || '#f59e0b'}, ${customTemplate.colors?.secondary || '#d97706'})`,
+                        : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
                       color: isConfirmed ? 'white' : '#1e293b'
                     }}
                   >
@@ -729,10 +722,10 @@ const handleSave = async () => {
 
                 {/* Drink Selection */}
                 <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
-                  background: `linear-gradient(to right, ${customTemplate.colors?.primary || '#f59e0b'}50, ${customTemplate.colors?.secondary || '#d97706'}50)`,
-                  borderColor: `${customTemplate.colors?.primary || '#f59e0b'}30`
+                  background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
+                  borderColor: `${primaryColor}30`
                 }}>
-                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${customTemplate.colors?.primary || '#f59e0b'}cc` }}>
+                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
                     <Wine className="h-3 w-3 mr-1" />
                     Choix de boisson
                   </h3>
@@ -741,8 +734,8 @@ const handleSave = async () => {
                     onChange={(e) => setSelectedDrink(e.target.value)}
                     className="w-full bg-slate-800/80 text-white border rounded-lg px-2 py-1 text-xs focus:ring-1 transition-all duration-200"
                     style={{ 
-                      borderColor: `${customTemplate.colors?.primary || '#f59e0b'}30`,
-                      focusRingColor: customTemplate.colors?.primary || '#f59e0b'
+                      borderColor: `${primaryColor}30`,
+                      focusRingColor: primaryColor
                     }}
                   >
                     <option value="">Sélectionnez votre boisson</option>
@@ -754,10 +747,10 @@ const handleSave = async () => {
 
                 {/* Guest Book - Simplified */}
                 <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
-                  background: `linear-gradient(to right, ${customTemplate.colors?.primary || '#f59e0b'}50, ${customTemplate.colors?.secondary || '#d97706'}50)`,
-                  borderColor: `${customTemplate.colors?.primary || '#f59e0b'}30`
+                  background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
+                  borderColor: `${primaryColor}30`
                 }}>
-                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${customTemplate.colors?.primary || '#f59e0b'}cc` }}>
+                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
                     <MessageCircle className="h-3 w-3 mr-1" />
                     Livre d'or
                   </h3>
@@ -768,8 +761,8 @@ const handleSave = async () => {
                     className="w-full bg-slate-800/80 text-white border rounded-lg px-2 py-1 text-xs focus:ring-1 transition-all duration-200 resize-none"
                     rows={2}
                     style={{ 
-                      borderColor: `${customTemplate.colors?.primary || '#f59e0b'}30`,
-                      focusRingColor: customTemplate.colors?.primary || '#f59e0b'
+                      borderColor: `${primaryColor}30`,
+                      focusRingColor: primaryColor
                     }}
                   />
                   <div className="mt-2 grid grid-cols-2 gap-1">
@@ -791,7 +784,7 @@ const handleSave = async () => {
                     <button 
                       className="py-1 rounded-lg text-xs font-semibold transition-all duration-300"
                       style={{ 
-                        background: `linear-gradient(to right, ${customTemplate.colors?.secondary || '#d97706'}, ${customTemplate.colors?.primary || '#f59e0b'})`,
+                        background: `linear-gradient(to right, ${secondaryColor}, ${primaryColor})`,
                         color: '#1e293b'
                       }}
                     >
