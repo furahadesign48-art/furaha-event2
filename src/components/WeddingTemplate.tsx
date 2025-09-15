@@ -24,7 +24,7 @@ const WeddingTemplate = ({ onBack, onSelectTemplate, isAuthenticated }: WeddingT
     id: 'wedding-gold-premium',
     name: 'Mariage Gold Premium',
     category: 'wedding',
-    backgroundImage: 'https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    backgroundImage: 'https://static.vecteezy.com/ti/photos-gratuite/t1/51675899-une-joyeux-scene-de-un-africain-americain-la-mariee-et-jeune-marie-a-leur-mariage-la-ceremonie-photo.jpeg',
     title: 'Mariage de Sophie & Lucas',
     invitationText: 'Nous avons l\'honneur de vous inviter à célébrer notre union dans la joie et l\'amour. Votre présence sera le plus beau des cadeaux pour ce jour si spécial.',
     eventDate: '15 Juin 2024',
