@@ -51,9 +51,9 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   const [guestMessage, setGuestMessage] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [newDrink, setNewDrink] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('#f59e0b'); // amber-500
-  const [secondaryColor, setSecondaryColor] = useState('#d97706'); // amber-600
-  const [accentColor, setAccentColor] = useState('#f43f5e'); // rose-500
+  const [primaryColor, setPrimaryColor] = useState(template.colors?.primary || '#f59e0b'); // amber-500
+  const [secondaryColor, setSecondaryColor] = useState(template.colors?.secondary || '#d97706'); // amber-600
+  const [accentColor, setAccentColor] = useState(template.colors?.accent || '#f43f5e'); // rose-500
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showQRInfo, setShowQRInfo] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -73,6 +73,23 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
     }));
   };
 
+  // Fonction pour mettre à jour les couleurs dans le template
+  const handleColorChange = (colorType: 'primary' | 'secondary' | 'accent', value: string) => {
+    const newColors = {
+      ...customTemplate.colors,
+      [colorType]: value
+    };
+    
+    setCustomTemplate(prev => ({
+      ...prev,
+      colors: newColors
+    }));
+    
+    // Mettre à jour l'état local des couleurs
+    if (colorType === 'primary') setPrimaryColor(value);
+    if (colorType === 'secondary') setSecondaryColor(value);
+    if (colorType === 'accent') setAccentColor(value);
+  };
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) {
@@ -135,16 +152,8 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   };
 
   const handleSave = () => {
-    // Sauvegarder avec les couleurs personnalisées
-    const templateWithColors = {
-      ...customTemplate,
-      colors: {
-        primary: primaryColor,
-        secondary: secondaryColor,
-        accent: accentColor
-      }
-    };
-    onSave(templateWithColors);
+    // Les couleurs sont déjà dans customTemplate grâce à handleColorChange
+    onSave(customTemplate);
     alert('Template sauvegardé avec succès !');
   };
 
@@ -353,13 +362,13 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                 <input
                   type="color"
                   value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  onChange={(e) => handleColorChange('primary', e.target.value)}
                   className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
                 />
                 <input
                   type="text"
                   value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  onChange={(e) => handleColorChange('primary', e.target.value)}
                   className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono"
                   placeholder="#f59e0b"
                 />
@@ -375,13 +384,13 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                 <input
                   type="color"
                   value={secondaryColor}
-                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  onChange={(e) => handleColorChange('secondary', e.target.value)}
                   className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
                 />
                 <input
                   type="text"
                   value={secondaryColor}
-                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  onChange={(e) => handleColorChange('secondary', e.target.value)}
                   className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono"
                   placeholder="#d97706"
                 />
@@ -397,13 +406,13 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                 <input
                   type="color"
                   value={accentColor}
-                  onChange={(e) => setAccentColor(e.target.value)}
+                  onChange={(e) => handleColorChange('accent', e.target.value)}
                   className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
                 />
                 <input
                   type="text"
                   value={accentColor}
-                  onChange={(e) => setAccentColor(e.target.value)}
+                  onChange={(e) => handleColorChange('accent', e.target.value)}
                   className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono"
                   placeholder="#f43f5e"
                 />
@@ -414,9 +423,9 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
             <div className="grid grid-cols-3 gap-4">
               <button
                 onClick={() => {
-                  setPrimaryColor('#f59e0b');
-                  setSecondaryColor('#d97706');
-                  setAccentColor('#f43f5e');
+                  handleColorChange('primary', '#f59e0b');
+                  handleColorChange('secondary', '#d97706');
+                  handleColorChange('accent', '#f43f5e');
                 }}
                 className="p-4 rounded-xl border-2 border-neutral-200 hover:border-amber-400 transition-all duration-300 group"
               >
@@ -430,9 +439,9 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
 
               <button
                 onClick={() => {
-                  setPrimaryColor('#8b5cf6');
-                  setSecondaryColor('#7c3aed');
-                  setAccentColor('#ec4899');
+                  handleColorChange('primary', '#8b5cf6');
+                  handleColorChange('secondary', '#7c3aed');
+                  handleColorChange('accent', '#ec4899');
                 }}
                 className="p-4 rounded-xl border-2 border-neutral-200 hover:border-purple-400 transition-all duration-300 group"
               >
@@ -446,9 +455,9 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
 
               <button
                 onClick={() => {
-                  setPrimaryColor('#10b981');
-                  setSecondaryColor('#059669');
-                  setAccentColor('#3b82f6');
+                  handleColorChange('primary', '#10b981');
+                  handleColorChange('secondary', '#059669');
+                  handleColorChange('accent', '#3b82f6');
                 }}
                 className="p-4 rounded-xl border-2 border-neutral-200 hover:border-emerald-400 transition-all duration-300 group"
               >
