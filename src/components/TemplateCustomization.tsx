@@ -380,10 +380,20 @@ const handleSave = () => {
               </label>
               <div className="flex items-center space-x-4">
                 <input
+{/* Couleur principale */}
+<input
   type="color"
   value={customTemplate.colors?.primary || '#f59e0b'}
   onChange={(e) => handleColorChange('primary', e.target.value)}
+  className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
 />
+<input
+  type="text"
+  value={customTemplate.colors?.primary || '#f59e0b'}
+  onChange={(e) => handleColorChange('primary', e.target.value)}
+  className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl"
+/>
+
 
                 <input
                   type="text"
@@ -402,11 +412,20 @@ const handleSave = () => {
               </label>
               <div className="flex items-center space-x-4">
                 <input
-                  type="color"
-                  value={secondaryColor}
-                  onChange={(e) => setSecondaryColor(e.target.value)}
-                  className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
-                />
+               {/* Couleur secondaire */}
+<input
+  type="color"
+  value={customTemplate.colors?.primary || '#f59e0b'}
+  onChange={(e) => handleColorChange('primary', e.target.value)}
+  className="w-16 h-12 rounded-xl border-2 border-neutral-300 cursor-pointer"
+/>
+<input
+  type="text"
+  value={customTemplate.colors?.primary || '#f59e0b'}
+  onChange={(e) => handleColorChange('primary', e.target.value)}
+  className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl"
+/>
+
                 <input
                   type="text"
                   value={secondaryColor}
@@ -442,20 +461,24 @@ const handleSave = () => {
 
             <div className="grid grid-cols-3 gap-4">
               <button
-                onClick={() => {
-                  setPrimaryColor('#f59e0b');
-                  setSecondaryColor('#d97706');
-                  setAccentColor('#f43f5e');
-                }}
-                className="p-4 rounded-xl border-2 border-neutral-200 hover:border-amber-400 transition-all duration-300 group"
-              >
-                <div className="flex space-x-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-amber-500"></div>
-                  <div className="w-6 h-6 rounded-full bg-amber-600"></div>
-                  <div className="w-6 h-6 rounded-full bg-rose-500"></div>
-                </div>
-                <p className="text-sm font-medium text-slate-700 group-hover:text-amber-700">Doré & Rose</p>
-              </button>
+  onClick={() => setCustomTemplate(prev => ({
+    ...prev,
+    colors: {
+      primary: '#f59e0b',
+      secondary: '#d97706',
+      accent: '#f43f5e'
+    }
+  }))}
+  className="p-4 rounded-xl border-2 border-neutral-200 hover:border-amber-400 transition-all duration-300 group"
+>
+  <div className="flex space-x-2 mb-2">
+    <div className="w-6 h-6 rounded-full bg-amber-500"></div>
+    <div className="w-6 h-6 rounded-full bg-amber-600"></div>
+    <div className="w-6 h-6 rounded-full bg-rose-500"></div>
+  </div>
+  <p className="text-sm font-medium text-slate-700 group-hover:text-amber-700">Doré & Rose</p>
+</button>
+
 
               <button
                 onClick={() => {
