@@ -143,7 +143,19 @@ export const useTemplates = () => {
     try {
       setIsLoading(true);
       setError(null);
-      await UserModelService.updateUserModel(user.id, modelId, updates);
+      
+      // S'assurer que les couleurs sont correctement structurées
+      const updateData = {
+        ...updates,
+        // Inclure les couleurs dans customizations si elles existent
+        customizations: {
+          ...updates.customizations,
+          colors: updates.colors || updates.customizations?.colors
+        }
+      };
+      
+      console.log('Mise à jour du modèle avec données:', updateData);
+      await UserModelService.updateUserModel(user.id, modelId, updateData);
       
       // Recharger les modèles utilisateur
       await loadUserModels();

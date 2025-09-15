@@ -279,6 +279,11 @@ export class UserModelService {
       
       const updateData = {
         ...updates,
+        // S'assurer que les couleurs sont incluses dans les customizations
+        customizations: {
+          ...updates.customizations,
+          colors: updates.colors || updates.customizations?.colors
+        },
         updatedAt: serverTimestamp()
       };
       
