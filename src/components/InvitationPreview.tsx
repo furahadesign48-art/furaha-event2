@@ -310,7 +310,7 @@ const InvitationPreview = () => {
     {/* Overlay sombre pour lisibilité */}
     <div className="absolute inset-0 bg-black/60"></div>
   </div>
-</div>
+
 
 
 
