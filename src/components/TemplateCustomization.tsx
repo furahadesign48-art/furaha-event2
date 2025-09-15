@@ -161,19 +161,11 @@ const handleColorChange = (colorType: 'primary' | 'secondary' | 'accent', value:
     handleInputChange('drinkOptions', newOptions);
   };
 
-  const handleSave = () => {
-    // Sauvegarder avec les couleurs personnalisées
-    const templateWithColors = {
-      ...customTemplate,
-      colors: {
-        primary: primaryColor,
-        secondary: secondaryColor,
-        accent: accentColor
-      }
-    };
-    onSave(templateWithColors);
-    alert('Template sauvegardé avec succès !');
-  };
+const handleSave = () => {
+  onSave(customTemplate);
+  alert('Template sauvegardé avec succès !');
+};
+
 
   const renderTabContent = () => {
     switch (activeTab) {
