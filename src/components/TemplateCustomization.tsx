@@ -107,6 +107,10 @@ const handleColorChange = (colorType: 'primary' | 'secondary' | 'accent', value:
     }
   }));
 };
+const handleSave = () => {
+  onSave(customTemplate);
+  alert('Template sauvegardé avec succès !');
+};
 
 
     // Vérifier le type de fichier
