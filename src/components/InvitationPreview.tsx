@@ -318,10 +318,10 @@ const InvitationPreview = () => {
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-2xl mx-auto">
-          <div className="text-center text-white space-y-6 sm:space-y-8">
+        <div className="w-full max-w-2xl mx-auto mt-20 sm:mt-24 md:mt-32 lg:mt-40">
+          <div className="text-center text-white space-y-6 sm:space-y-8 animate-fade-in">
                   {/* Decorative Header */}
-                  <div>
+                  <div className="group hover:scale-105 transition-all duration-500 hover:drop-shadow-2xl">
                     <div className="flex justify-center items-center mb-6">
                       <div className="relative">
                         <IconComponent 
@@ -361,16 +361,16 @@ const InvitationPreview = () => {
 
                   {/* Title */}
                   <h1 
-                    className="text-3xl sm:text-4xl lg:text-5xl font-bold font-luxury drop-shadow-lg" 
+                    className="text-3xl sm:text-4xl lg:text-5xl font-bold font-luxury drop-shadow-lg group hover:scale-105 hover:drop-shadow-2xl transition-all duration-500 cursor-default" 
                     style={{ color: colors.primary }}
                   >
                     {userModel.title}
                   </h1>
 
-                 <div className="text-center text-white space-y-6 sm:space-y-8 mt-20">
+                 <div className="text-center text-white space-y-6 sm:space-y-8 mt-12 sm:mt-16 md:mt-20">
   {/* Guest Info Section */}
   <div 
-    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
+    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto group hover:scale-105 hover:backdrop-blur-md hover:shadow-2xl transition-all duration-500 hover:border-opacity-60" 
     style={{ 
       background: `linear-gradient(to right, ${colors.primary}40, ${colors.secondary}40)`,
       borderColor: `${colors.primary}30`
@@ -387,7 +387,7 @@ const InvitationPreview = () => {
 
                   {/* Invitation Text */}
                   <div 
-                    className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-2xl mx-auto" 
+                    className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-2xl mx-auto group hover:scale-105 hover:bg-black/40 hover:backdrop-blur-md hover:shadow-2xl transition-all duration-500 hover:border-opacity-60" 
                     style={{ borderColor: `${colors.primary}20` }}
                   >
                     <p className="text-neutral-200 leading-relaxed text-base sm:text-lg">
@@ -396,7 +396,7 @@ const InvitationPreview = () => {
                   </div>
 
                   {/* Event Details */}
-                  <div className="space-y-6 max-w-lg mx-auto">
+                  <div className="space-y-6 max-w-lg mx-auto group hover:scale-105 transition-all duration-500">
                     <div className="flex items-center justify-center text-neutral-200 text-lg sm:text-xl">
                       <Calendar 
                         className="h-6 w-6 sm:h-7 sm:w-7 mr-4" 
@@ -421,7 +421,7 @@ const InvitationPreview = () => {
 
                   {/* RSVP Section */}
                   <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
+                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto group hover:scale-105 hover:backdrop-blur-md hover:shadow-2xl transition-all duration-500 hover:border-opacity-60" 
                     style={{ 
                       background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
                       borderColor: `${colors.primary}30`
@@ -436,7 +436,7 @@ const InvitationPreview = () => {
                     </h3>
                     <button
                       onClick={handleConfirmation}
-                      className="w-full py-4 sm:py-5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 text-lg sm:text-xl"
+                      className="w-full py-4 sm:py-5 rounded-xl font-semibold transition-all duration-500 transform hover:scale-110 hover:shadow-2xl text-lg sm:text-xl group-hover:animate-pulse"
                       style={{
                         background: isConfirmed 
                           ? 'linear-gradient(to right, #10b981, #059669)' 
@@ -457,7 +457,7 @@ const InvitationPreview = () => {
 
                   {/* Drink Selection */}
                   <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto" 
+                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-md mx-auto group hover:scale-105 hover:backdrop-blur-md hover:shadow-2xl transition-all duration-500 hover:border-opacity-60" 
                     style={{ 
                       background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
                       borderColor: `${colors.primary}30`
@@ -473,7 +473,7 @@ const InvitationPreview = () => {
                     <select
                       value={selectedDrink}
                       onChange={(e) => handleDrinkSelection(e.target.value)}
-                      className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-4 focus:ring-2 transition-all duration-200 text-base sm:text-lg"
+                      className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-4 focus:ring-2 transition-all duration-500 text-base sm:text-lg hover:bg-slate-700/90 hover:shadow-xl group-hover:scale-105"
                       style={{ 
                         borderColor: `${colors.primary}30`,
                         focusRingColor: colors.primary
@@ -488,7 +488,7 @@ const InvitationPreview = () => {
 
                   {/* Guest Book */}
                   <div 
-                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-lg mx-auto" 
+                    className="backdrop-blur-sm rounded-2xl p-6 sm:p-8 border max-w-lg mx-auto group hover:scale-105 hover:backdrop-blur-md hover:shadow-2xl transition-all duration-500 hover:border-opacity-60" 
                     style={{ 
                       background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
                       borderColor: `${colors.primary}30`
@@ -505,7 +505,7 @@ const InvitationPreview = () => {
                       value={guestMessage}
                       onChange={(e) => setGuestMessage(e.target.value)}
                       placeholder="Laissez un message..."
-                      className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-4 focus:ring-2 transition-all duration-200 resize-none text-base sm:text-lg"
+                      className="w-full bg-slate-800/80 text-white border rounded-xl px-4 py-4 focus:ring-2 transition-all duration-500 resize-none text-base sm:text-lg hover:bg-slate-700/90 hover:shadow-xl group-hover:scale-105"
                       rows={4}
                       style={{ 
                         borderColor: `${colors.primary}30`,
@@ -515,7 +515,7 @@ const InvitationPreview = () => {
                     <div className="mt-6 space-y-4">
                       <button 
                         onClick={handleSendMessage}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-semibold text-base sm:text-lg shadow-lg transform hover:scale-105"
+                        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-500 font-semibold text-base sm:text-lg shadow-lg transform hover:scale-110 hover:shadow-2xl hover:animate-pulse"
                       >
                         <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 inline mr-3" />
                         Envoyer le message
@@ -526,7 +526,7 @@ const InvitationPreview = () => {
                   {/* QR Code Section */}
                   {qrCodeDataUrl && (
                     <div 
-                      className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-sm mx-auto shadow-2xl" 
+                      className="backdrop-blur-sm rounded-3xl p-6 sm:p-8 border max-w-sm mx-auto shadow-2xl group hover:scale-105 hover:backdrop-blur-md hover:shadow-3xl transition-all duration-500 hover:border-opacity-60" 
                       style={{ 
                         background: `linear-gradient(to right, ${colors.primary}50, ${colors.secondary}50)`,
                         borderColor: `${colors.primary}30`
@@ -555,7 +555,7 @@ const InvitationPreview = () => {
                       
                       <button
                         onClick={() => setShowQRInfo(!showQRInfo)}
-                        className="w-full py-4 sm:py-5 rounded-2xl text-base sm:text-lg font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                        className="w-full py-4 sm:py-5 rounded-2xl text-base sm:text-lg font-bold transition-all duration-500 transform hover:scale-110 shadow-lg hover:shadow-2xl hover:animate-pulse group-hover:bg-opacity-90"
                         style={{ 
                           background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
                           color: '#1e293b',
@@ -575,14 +575,14 @@ const InvitationPreview = () => {
                       </button>
                       
                       {showQRInfo && (
-                        <div className="mt-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 sm:p-6 animate-slide-up shadow-xl border border-white/30">
+                        <div className="mt-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 sm:p-6 animate-slide-up shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-500">
                           <div className="text-center mb-4">
                             <h4 className="font-bold text-slate-900 text-base sm:text-lg mb-2">Informations QR Code</h4>
                             <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-auto"></div>
                           </div>
                           
                           <div className="space-y-3">
-                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm">
+                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300">
                               <div className="flex items-center">
                                 <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
                                 <span className="font-semibold text-slate-700 text-sm sm:text-base">Nom</span>
@@ -590,7 +590,7 @@ const InvitationPreview = () => {
                               <span className="font-bold text-slate-900 text-sm sm:text-base">{invite.nom}</span>
                             </div>
                             
-                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm">
+                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300">
                               <div className="flex items-center">
                                 <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
                                 <span className="font-semibold text-slate-700 text-sm sm:text-base">
@@ -602,7 +602,7 @@ const InvitationPreview = () => {
                               </span>
                             </div>
                             
-                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm">
+                            <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200/50 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300">
                               <div className="flex items-center">
                                 <Wine className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 mr-3" />
                                 <span className="font-semibold text-slate-700 text-sm sm:text-base">Boisson</span>
@@ -614,7 +614,7 @@ const InvitationPreview = () => {
                           </div>
                           
                           <div className="mt-4 pt-4 border-t border-slate-200/50">
-                            <p className="text-xs sm:text-sm text-slate-600 text-center leading-relaxed">
+                            <p className="text-xs sm:text-sm text-slate-600 text-center leading-relaxed hover:text-slate-800 transition-all duration-300">
                               <span className="inline-flex items-center">
                                 <Sparkles className="h-3 w-3 mr-1" style={{ color: colors.primary }} />
                                 Scannez ce code pour accéder rapidement à vos informations
