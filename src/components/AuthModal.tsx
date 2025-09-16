@@ -127,7 +127,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
               <button
                 onClick={handleCheckVerification}
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-500 text-white py-3 rounded-xl hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-600 transition-all duration-500 font-semibold shadow-lg hover:shadow-luxury transform hover:scale-105 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-500 text-white py-3 rounded-xl hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-600 transition-all duration-500 font-bold shadow-lg hover:shadow-2xl transform hover:scale-105 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border border-emerald-300/50"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
@@ -145,7 +145,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
               <button
                 onClick={handleResendVerification}
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-slate-900 py-3 rounded-xl hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 transition-all duration-500 font-semibold shadow-glow-amber hover:shadow-luxury transform hover:scale-105 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-slate-900 py-3 rounded-xl hover:from-yellow-500 hover:via-amber-500 hover:to-yellow-600 transition-all duration-500 font-bold shadow-lg hover:shadow-2xl transform hover:scale-105 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border border-yellow-300/50"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
@@ -360,7 +360,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
               <button
                 type="submit"
                 disabled={isLoading}
-               className="w-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-slate-900 py-3 rounded-xl hover:from-yellow-500 hover:via-amber-500 hover:to-yellow-600 transition-all duration-500 font-bold shadow-lg hover:shadow-2xl transform hover:scale-105 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border border-yellow-300/50"
+                className="w-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-slate-900 py-3 rounded-xl hover:from-yellow-500 hover:via-amber-500 hover:to-yellow-600 transition-all duration-500 font-bold shadow-lg hover:shadow-2xl transform hover:scale-105 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border border-yellow-300/50"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
@@ -368,8 +368,11 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                     Envoi en cours...
                   </div>
                 ) : (
-                  'Envoyer le lien de réinitialisation'
-                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                  <>
+                    Envoyer le lien de réinitialisation
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                  </>
+                )}
               </button>
 
               <div className="text-center">
@@ -396,17 +399,17 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-rose-200/20 to-amber-200/20 rounded-full blur-2xl"></div>
         
         {/* Header */}
-       <div className="relative p-6 border-b border-yellow-200/50 bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-100/50">
+        <div className="relative p-6 border-b border-yellow-200/50 bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-100/50">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <div className="relative mr-3">
-               <Crown className="h-8 w-8 text-yellow-500 animate-glow drop-shadow-lg" />
+                <Crown className="h-8 w-8 text-yellow-500 animate-glow drop-shadow-lg" />
                 <div className="absolute inset-0 animate-pulse">
-                 <Crown className="h-8 w-8 text-yellow-300 opacity-30" />
+                  <Crown className="h-8 w-8 text-yellow-300 opacity-30" />
                 </div>
               </div>
               <div>
-               <h2 className="text-2xl font-bold bg-gradient-to-r from-yellow-700 via-amber-700 to-yellow-800 bg-clip-text text-transparent">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-yellow-700 via-amber-700 to-yellow-800 bg-clip-text text-transparent">
                   {isLoginMode ? 'Connexion' : 'Inscription'}
                 </h2>
                 <p className="text-slate-600 text-sm">
@@ -606,7 +609,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
               <button
                 type="button"
                 onClick={() => setShowResetPassword(true)}
-               className="text-yellow-600 hover:text-yellow-700 transition-colors duration-300 text-sm font-medium"
+                className="text-slate-500 hover:text-slate-700 transition-colors duration-300 text-sm"
               >
                 Mot de passe oublié ?
               </button>
