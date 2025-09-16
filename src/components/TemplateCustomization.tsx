@@ -60,6 +60,19 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   const [showQRInfo, setShowQRInfo] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
+  // Initialiser les couleurs depuis le template au chargement
+  useEffect(() => {
+    if (template.colors) {
+      setPrimaryColor(template.colors.primary);
+      setSecondaryColor(template.colors.secondary);
+      setAccentColor(template.colors.accent);
+    } else if (template.customizations?.colors) {
+      setPrimaryColor(template.customizations.colors.primary);
+      setSecondaryColor(template.customizations.colors.secondary);
+      setAccentColor(template.customizations.colors.accent);
+    }
+  }, [template]);
+
   const tabs = [
     { id: 'general', label: 'Général', icon: Type },
     { id: 'design', label: 'Design', icon: Palette },
@@ -717,7 +730,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                   </div>
                 </div>
 
-                {/* RSVP Sections */}
+                {/* RSVP Section */}
                 <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
                   background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
                   borderColor: `${primaryColor}30`
