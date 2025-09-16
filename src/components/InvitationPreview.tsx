@@ -18,7 +18,10 @@ import {
   User,
   X,
   Eye,
-  Download
+  Download,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { UserModelService, InviteService } from '../services/templateService';
 import { UserModel, Invite } from '../services/templateService';
@@ -28,6 +31,14 @@ const InvitationPreview = () => {
   const navigate = useNavigate();
   const [userModel, setUserModel] = useState<UserModel | null>(null);
   const [invite, setInvite] = useState<Invite | null>(null);
+  const [allGuestMessages, setAllGuestMessages] = useState<Array<{
+    id: string;
+    nom: string;
+    message?: string;
+    timestamp?: string;
+  }>>([]);
+  const [showAllMessages, setShowAllMessages] = useState(false);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDrink, setSelectedDrink] = useState('');
@@ -73,6 +84,9 @@ const InvitationPreview = () => {
           
           // Générer le QR code avec les informations de l'invité
           await generateQRCode(inviteData, userModels[0]);
+          
+          // Charger tous les messages des autres invités
+          await loadAllGuestMessages(inviteData.userId);
         } else {
           setError('Modèle d\'invitation non trouvé');
         }
@@ -88,6 +102,44 @@ const InvitationPreview = () => {
     loadInvitationData();
   }, [inviteId]);
 
+  // Charger tous les messages des invités pour cet événement
+  const loadAllGuestMessages = async (userId: string) => {
+    try {
+      const allInvites = await InviteService.getUserInvites(userId);
+      
+      // Récupérer les messages de tous les invités
+      const messagesWithDetails = await Promise.all(
+        allInvites.map(async (invite) => {
+          try {
+            const fullInviteData = await InviteService.getInvite(userId, invite.id);
+            return {
+              id: invite.id,
+              nom: invite.nom,
+              message: fullInviteData?.message || '',
+              timestamp: fullInviteData?.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
+            };
+          } catch (error) {
+            console.error('Erreur lors du chargement du message pour:', invite.id);
+            return {
+              id: invite.id,
+              nom: invite.nom,
+              message: '',
+              timestamp: new Date().toISOString()
+            };
+          }
+        })
+      );
+      
+      // Filtrer seulement les invités qui ont envoyé des messages
+      const messagesWithContent = messagesWithDetails
+        .filter(msg => msg.message && msg.message.trim())
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      
+      setAllGuestMessages(messagesWithContent);
+    } catch (error) {
+      console.error('Erreur lors du chargement des messages des invités:', error);
+    }
+  };
   // Générer le QR code avec les informations de l'invité
   const generateQRCode = async (inviteData: Invite, modelData: UserModel) => {
     try {
@@ -182,6 +234,8 @@ const InvitationPreview = () => {
       });
       alert('Message envoyé avec succès !');
       setGuestMessage('');
+      // Recharger les messages après envoi
+      await loadAllGuestMessages(userModel.userId);
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
       alert('Erreur lors de l\'envoi du message');
@@ -201,6 +255,13 @@ const InvitationPreview = () => {
     }
   };
 
+  const nextMessage = () => {
+    setCurrentMessageIndex((prev) => (prev + 1) % allGuestMessages.length);
+  };
+
+  const prevMessage = () => {
+    setCurrentMessageIndex((prev) => (prev - 1 + allGuestMessages.length) % allGuestMessages.length);
+  };
   const getIconForCategory = (category: string) => {
     switch (category) {
       case 'wedding':
@@ -535,6 +596,17 @@ const InvitationPreview = () => {
                         <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 inline mr-3" />
                         Envoyer le message
                       </button>
+                      
+                      {/* Bouton pour voir les messages des autres invités */}
+                      {allGuestMessages.length > 0 && (
+                        <button 
+                          onClick={() => setShowAllMessages(true)}
+                          className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-4 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-500 font-semibold text-base sm:text-lg shadow-lg transform hover:scale-110 hover:shadow-2xl hover:animate-pulse"
+                        >
+                          <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 inline mr-3" />
+                          Lire les messages des invités ({allGuestMessages.length})
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -589,6 +661,229 @@ const InvitationPreview = () => {
           </div>
         </div>
       </div>
+      
+      {/* Modal pour afficher tous les messages des invités */}
+      {showAllMessages && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-luxury max-w-2xl w-full max-h-[85vh] overflow-hidden animate-slide-up">
+            {/* Header */}
+            <div 
+              className="p-6 border-b border-neutral-200/50 relative overflow-hidden"
+              style={{ 
+                background: `linear-gradient(to right, ${colors.primary}10, ${colors.secondary}10)`
+              }}
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="relative mr-4">
+                    <BookOpen 
+                      className="h-8 w-8 animate-glow drop-shadow-lg" 
+                      style={{ color: colors.primary }}
+                    />
+                    <div className="absolute inset-0 animate-pulse">
+                      <BookOpen 
+                        className="h-8 w-8 opacity-30" 
+                        style={{ color: colors.accent }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                      Messages des Invités
+                    </h2>
+                    <p className="text-slate-600">
+                      {allGuestMessages.length} message{allGuestMessages.length > 1 ? 's' : ''} de vœux
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAllMessages(false)}
+                  className="p-2 hover:bg-neutral-100 rounded-lg transition-colors duration-200"
+                >
+                  <X className="h-6 w-6 text-neutral-500" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              {allGuestMessages.length === 0 ? (
+                <div className="text-center py-12">
+                  <MessageCircle className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-neutral-500 mb-2">Aucun message pour le moment</h3>
+                  <p className="text-neutral-400">Soyez le premier à laisser un message de vœux !</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Navigation des messages */}
+                  {allGuestMessages.length > 1 && (
+                    <div className="flex items-center justify-between mb-6">
+                      <button
+                        onClick={prevMessage}
+                        className="p-3 rounded-full bg-gradient-to-r from-neutral-100 to-neutral-200 hover:from-neutral-200 hover:to-neutral-300 transition-all duration-300 shadow-lg transform hover:scale-110"
+                        style={{ color: colors.primary }}
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+                      
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-slate-600">
+                          Message {currentMessageIndex + 1} sur {allGuestMessages.length}
+                        </p>
+                        <div className="flex justify-center space-x-2 mt-2">
+                          {allGuestMessages.map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={() => setCurrentMessageIndex(index)}
+                              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                                index === currentMessageIndex 
+                                  ? 'w-6' 
+                                  : 'hover:scale-125'
+                              }`}
+                              style={{ 
+                                backgroundColor: index === currentMessageIndex ? colors.primary : '#d1d5db'
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={nextMessage}
+                        className="p-3 rounded-full bg-gradient-to-r from-neutral-100 to-neutral-200 hover:from-neutral-200 hover:to-neutral-300 transition-all duration-300 shadow-lg transform hover:scale-110"
+                        style={{ color: colors.primary }}
+                      >
+                        <ChevronRight className="h-5 w-5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Message actuel */}
+                  {allGuestMessages[currentMessageIndex] && (
+                    <div 
+                      className="rounded-2xl p-6 border shadow-lg animate-slide-up"
+                      style={{ 
+                        background: `linear-gradient(to right, ${colors.primary}05, ${colors.secondary}05)`,
+                        borderColor: `${colors.primary}20`
+                      }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div 
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-lg mr-4"
+                          style={{ 
+                            background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`
+                          }}
+                        >
+                          {allGuestMessages[currentMessageIndex].nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-slate-900">
+                            {allGuestMessages[currentMessageIndex].nom}
+                          </h4>
+                          <p className="text-sm text-slate-600">
+                            {new Date(allGuestMessages[currentMessageIndex].timestamp || '').toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'long',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white rounded-xl p-4 border border-neutral-200/50 shadow-sm">
+                        <div className="flex items-center mb-3">
+                          <MessageCircle 
+                            className="h-4 w-4 mr-2" 
+                            style={{ color: colors.primary }}
+                          />
+                          <span className="text-sm font-medium text-slate-700">Message de vœux</span>
+                        </div>
+                        <p className="text-slate-800 leading-relaxed whitespace-pre-wrap">
+                          {allGuestMessages[currentMessageIndex].message}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Liste compacte de tous les messages */}
+                  {allGuestMessages.length > 1 && (
+                    <div className="mt-8">
+                      <h4 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
+                        <MessageCircle 
+                          className="h-5 w-5 mr-2" 
+                          style={{ color: colors.primary }}
+                        />
+                        Tous les messages
+                      </h4>
+                      <div className="space-y-3 max-h-64 overflow-y-auto">
+                        {allGuestMessages.map((message, index) => (
+                          <button
+                            key={message.id}
+                            onClick={() => setCurrentMessageIndex(index)}
+                            className={`w-full text-left p-4 rounded-xl border transition-all duration-300 hover:shadow-lg ${
+                              index === currentMessageIndex
+                                ? 'shadow-lg transform scale-105'
+                                : 'hover:transform hover:scale-102'
+                            }`}
+                            style={{ 
+                              background: index === currentMessageIndex 
+                                ? `linear-gradient(to right, ${colors.primary}10, ${colors.secondary}10)`
+                                : 'linear-gradient(to right, #f8fafc, #f1f5f9)',
+                              borderColor: index === currentMessageIndex ? `${colors.primary}30` : '#e2e8f0'
+                            }}
+                          >
+                            <div className="flex items-center mb-2">
+                              <div 
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md mr-3"
+                                style={{ 
+                                  background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`
+                                }}
+                              >
+                                {message.nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                              </div>
+                              <div>
+                                <p className="font-medium text-slate-900 text-sm">{message.nom}</p>
+                                <p className="text-xs text-slate-500">
+                                  {new Date(message.timestamp || '').toLocaleDateString('fr-FR')}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-slate-700 text-sm leading-relaxed">
+                              {message.message && message.message.length > 100 
+                                ? `${message.message.substring(0, 100)}...`
+                                : message.message}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div 
+              className="p-6 border-t border-neutral-200/50"
+              style={{ 
+                background: `linear-gradient(to right, ${colors.primary}05, ${colors.secondary}05)`
+              }}
+            >
+              <button
+                onClick={() => setShowAllMessages(false)}
+                className="w-full py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg transform hover:scale-105"
+                style={{ 
+                  background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
+                  color: '#1e293b'
+                }}
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
