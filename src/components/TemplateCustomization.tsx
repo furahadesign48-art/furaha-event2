@@ -320,7 +320,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div
-                onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=1200')}
+                onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/29895188/pexels-photo-29895188/free-photo-of-traditional-african-wedding-couple-embrace.jpeg')}
                 className="cursor-pointer group"
               >
                 <div className="relative h-20 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-amber-400 transition-all duration-300">
