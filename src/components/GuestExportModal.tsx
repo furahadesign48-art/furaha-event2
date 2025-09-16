@@ -1,6 +1,4 @@
 
-const guestCount = (guest: Guest) => guest.etat === 'couple' ? 2 : 1;
-
 onst summaryData = [
         ['Résumé Global'],
         [],
