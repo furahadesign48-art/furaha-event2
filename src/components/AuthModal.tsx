@@ -379,7 +379,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                 <button
                   type="button"
                   onClick={() => setShowResetPassword(false)}
-                 className="text-yellow-600 hover:text-yellow-700 transition-colors duration-300 font-semibold"
+                  className="text-amber-600 hover:text-amber-700 transition-colors duration-300 font-medium"
                 >
                   Retour à la connexion
                 </button>
