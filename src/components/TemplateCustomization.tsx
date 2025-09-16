@@ -137,24 +137,41 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   };
 
  const handleSave = async () => {
-  if (!customTemplate.id) return;
+  if (!customTemplate.id || !user) return;
 
-  const templateRef = doc(db, 'templates', customTemplate.id);
+  // Sauvegarder dans la collection UserModel de l'utilisateur
+  const modelRef = doc(db, 'users', user.id, 'UserModel', customTemplate.id);
 
   try {
-    await setDoc(templateRef, {
+    await setDoc(modelRef, {
       ...customTemplate,
       colors: {
         primary: primaryColor,
         secondary: secondaryColor,
         accent: accentColor
-      }
-    }, { merge: true }); // merge:true pour ne pas écraser les autres champs
+      },
+      customizations: {
+        colors: {
+          primary: primaryColor,
+          secondary: secondaryColor,
+          accent: accentColor
+        },
+        fonts: {
+          title: 'Playfair Display',
+          body: 'Inter'
+        },
+        layout: 'default'
+      },
+      updatedAt: new Date()
+    }, { merge: true });
 
+    // Appeler la fonction onSave pour mettre à jour l'état parent
+    onSave(customTemplate);
+    
     alert('Template sauvegardé avec succès !');
   } catch (error) {
-    console.error('Erreur lors de la sauvegarde des couleurs:', error);
-    alert('Erreur lors de la sauvegarde des couleurs. Vérifiez la console.');
+    console.error('Erreur lors de la sauvegarde du template:', error);
+    alert('Erreur lors de la sauvegarde du template. Vérifiez la console.');
   }
 };
 
