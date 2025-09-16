@@ -417,8 +417,8 @@ const confirmedGuests = guests.reduce((sum, g) => sum + (g.confirmed ? guestCoun
 <div>
   • {guests.reduce((sum, g) => sum + (g.confirmed ? guestCount(g) : 0), 0)} confirmé
   {guests.reduce((sum, g) => sum + (g.confirmed ? guestCount(g) : 0), 0) > 1 ? 's' : ''}
+</div 
 </div>
-
               ) : (
                 (() => {
                   const selectedTableData = tablesWithGuests.find(t => t.name === selectedTable);
