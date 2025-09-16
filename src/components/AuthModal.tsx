@@ -606,7 +606,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
               <button
                 type="button"
                 onClick={() => setShowResetPassword(true)}
-                className="text-slate-500 hover:text-slate-700 transition-colors duration-300 text-sm"
+               className="text-yellow-600 hover:text-yellow-700 transition-colors duration-300 text-sm font-medium"
               >
                 Mot de passe oublié ?
               </button>
