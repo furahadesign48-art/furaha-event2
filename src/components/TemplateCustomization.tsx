@@ -60,19 +60,6 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   const [showQRInfo, setShowQRInfo] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  // Initialiser les couleurs depuis le template au chargement
-  useEffect(() => {
-    if (template.colors) {
-      setPrimaryColor(template.colors.primary);
-      setSecondaryColor(template.colors.secondary);
-      setAccentColor(template.colors.accent);
-    } else if (template.customizations?.colors) {
-      setPrimaryColor(template.customizations.colors.primary);
-      setSecondaryColor(template.customizations.colors.secondary);
-      setAccentColor(template.customizations.colors.accent);
-    }
-  }, [template]);
-
   const tabs = [
     { id: 'general', label: 'Général', icon: Type },
     { id: 'design', label: 'Design', icon: Palette },
@@ -340,7 +327,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
               >
                 <div className="relative h-20 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-amber-400 transition-all duration-300">
                   <img
-                    src="https://images.pexels.com/photos/29895188/pexels-photo-29895188/free-photo-of-traditional-african-wedding-couple-embrace.jpeg"
+                    src="https://images.pexels.com/photos/1488482/pexels-photo-1488482.jpeg?auto=compress&cs=tinysrgb&w=400"
                     alt="Template 2"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
