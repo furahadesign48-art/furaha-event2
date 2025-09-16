@@ -288,7 +288,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                   </button>
                   
                   <button
-                    onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=1200')}
+                    onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/29895188/pexels-photo-29895188/free-photo-of-traditional-african-wedding-couple-embrace.jpeg')}
                     className="flex-1 bg-neutral-500 text-white px-4 py-3 rounded-xl hover:bg-neutral-600 transition-all duration-300 font-semibold"
                   >
                     Image par défaut
