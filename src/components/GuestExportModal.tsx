@@ -3,10 +3,6 @@ import { X, Download, FileText, FileSpreadsheet, Users, Table } from 'lucide-rea
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 
-
-const guestCount = (guest: Guest) => guest.etat === 'couple' ? 2 : 1;
-
-
 interface Guest {
   id: string;
   nom: string;
@@ -166,9 +162,11 @@ const GuestExportModal = ({ isOpen, onClose, guests, tables }: GuestExportModalP
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       
-     const totalGuests = guests.reduce((sum, g) => sum + guestCount(g), 0);
-const confirmedGuests = guests.reduce((sum, g) => sum + (g.confirmed ? guestCount(g) : 0), 0);
-
+      const totalGuests = guests.length;
+      const confirmedGuests = guests.filter(g => g.confirmed).length;
+      const totalSeats = guests.reduce((total, guest) => {
+        return total + (guest.etat === 'couple' ? 2 : 1);
+      }, 0);
 
       doc.text(`Total invités: ${totalGuests}`, 20, yPosition);
       doc.text(`Invités confirmés: ${confirmedGuests}`, 20, yPosition + 15);
@@ -226,10 +224,10 @@ const confirmedGuests = guests.reduce((sum, g) => sum + (g.confirmed ? guestCoun
         ['Résumé Global'],
         [],
         ['Statistiques Générales'],
-        ['Total invités', guests.reduce((sum, g) => sum + guestCount(g), 0)],
-['Invités confirmés', guests.reduce((sum, g) => sum + (g.confirmed ? guestCount(g) : 0), 0)],
-['Invités en attente', guests.reduce((sum, g) => sum + (!g.confirmed ? guestCount(g) : 0), 0)],
-['Total places occupées', guests.reduce((sum, g) => sum + guestCount(g), 0)],
+        ['Total invités', guests.length],
+        ['Invités confirmés', guests.filter(g => g.confirmed).length],
+        ['Invités en attente', guests.filter(g => !g.confirmed).length],
+        ['Total places occupées', guests.reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)],
         [],
         ['Répartition par Table'],
         ['Nom de la table', 'Nombre d\'invités', 'Places occupées', 'Places disponibles'],
@@ -410,14 +408,8 @@ const confirmedGuests = guests.reduce((sum, g) => sum + (g.confirmed ? guestCoun
               {selectedTable === 'all' ? (
                 <div className="space-y-2 text-sm text-slate-600">
                   <div>• {tablesWithGuests.length} table{tablesWithGuests.length > 1 ? 's' : ''}</div>
-                  <div>
-  • {guests.reduce((sum, g) => sum + guestCount(g), 0)} invité
-  {guests.reduce((sum, g) => sum + guestCount(g), 0) > 1 ? 's' : ''} au total
-</div>
-                  <div>
-  • {guests.reduce((sum, g) => sum + (g.confirmed ? guestCount(g) : 0), 0)} confirmé
-  {guests.reduce((sum, g) => sum + (g.confirmed ? guestCount(g) : 0), 0) > 1 ? 's' : ''}
-</div>
+                  <div>• {guests.length} invité{guests.length > 1 ? 's' : ''} au total</div>
+                  <div>• {guests.filter(g => g.confirmed).length} confirmé{guests.filter(g => g.confirmed).length > 1 ? 's' : ''}</div>
                 </div>
               ) : (
                 (() => {
