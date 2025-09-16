@@ -167,7 +167,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                     setShowEmailVerification(false);
                     setIsLoginMode(true);
                   }}
-                 className="text-yellow-600 hover:text-yellow-700 transition-colors duration-300 font-semibold"
+                  className="text-amber-600 hover:text-amber-700 transition-colors duration-300 font-medium text-sm"
                 >
                   Retour à la connexion
                 </button>
