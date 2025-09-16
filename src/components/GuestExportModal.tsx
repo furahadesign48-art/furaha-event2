@@ -3,6 +3,10 @@ import { X, Download, FileText, FileSpreadsheet, Users, Table } from 'lucide-rea
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 
+
+const guestCount = (guest: Guest) => guest.etat === 'couple' ? 2 : 1;
+
+
 interface Guest {
   id: string;
   nom: string;
