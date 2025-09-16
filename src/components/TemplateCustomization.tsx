@@ -340,7 +340,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
               >
                 <div className="relative h-20 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-amber-400 transition-all duration-300">
                   <img
-                    src="https://images.pexels.com/photos/29895188/pexels-photo-29895188/free-photo-of-traditional-african-wedding-couple-embrace.jpeg?auto=compress&cs=tinysrgb&w=400"
+                    src="https://images.pexels.com/photos/29895188/pexels-photo-29895188/free-photo-of-traditional-african-wedding-couple-embrace.jpeg"
                     alt="Template 2"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
