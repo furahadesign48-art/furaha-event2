@@ -717,7 +717,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                   </div>
                 </div>
 
-                {/* RSVP Section */}
+                {/* RSVP Sections */}
                 <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
                   background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
                   borderColor: `${primaryColor}30`
