@@ -60,25 +60,6 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   const [showQRInfo, setShowQRInfo] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-React.useEffect(() => {
-  if (template.colors) {
-    setPrimaryColor(template.colors.primary || '#f59e0b');
-    setSecondaryColor(template.colors.secondary || '#d97706');
-    setAccentColor(template.colors.accent || '#f43f5e');
-
-    // ⚡ mettre à jour le customTemplate aussi
-    setCustomTemplate(prev => ({
-      ...prev,
-      colors: {
-        primary: template.colors?.primary || '#f59e0b',
-        secondary: template.colors?.secondary || '#d97706',
-        accent: template.colors?.accent || '#f43f5e'
-      }
-    }));
-  }
-}, [template]);
-
-
   const tabs = [
     { id: 'general', label: 'Général', icon: Type },
     { id: 'design', label: 'Design', icon: Palette },
