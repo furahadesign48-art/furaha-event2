@@ -335,12 +335,12 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
               </div>
 
               <div
-                onClick={() => handleInputChange('backgroundImage', 'https://t4.ftcdn.net/jpg/10/28/73/29/360_F_1028732915_05MgOHVTTDBeJsNtmLuM03CXertLqxD5.jpg')}
+                onClick={() => handleInputChange('backgroundImage', 'https://png.pngtree.com/png-clipart/20240216/original/pngtree-happy-young-couple-looking-at-each-other-and-kissing-while-celebrating-png-image_14333389.png')}
                 className="cursor-pointer group"
               >
                 <div className="relative h-20 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-amber-400 transition-all duration-300">
                   <img
-                    src="https://t4.ftcdn.net/jpg/10/28/73/29/360_F_1028732915_05MgOHVTTDBeJsNtmLuM03CXertLqxD5.jpg"
+                    src="https://png.pngtree.com/png-clipart/20240216/original/pngtree-happy-young-couple-looking-at-each-other-and-kissing-while-celebrating-png-image_14333389.png"
                     alt="Template 2"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
