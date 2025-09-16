@@ -454,8 +454,9 @@ const renderOverview = () => {
             </div>
           </div>
         </div>
-  );
-};
+      </div>
+    </div>
+
 
 
         {/* Actions rapides */}
