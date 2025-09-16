@@ -1,4 +1,226 @@
-onst summaryData = [
+import React, { useState } from 'react';
+import { X, Download, FileText, FileSpreadsheet, Users, Table } from 'lucide-react';
+import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
+
+interface Guest {
+  id: string;
+  nom: string;
+  table: string;
+  etat: 'simple' | 'couple';
+  confirmed: boolean;
+}
+
+interface Table {
+  id: number;
+  name: string;
+  seats: number;
+  assignedGuests: any[];
+}
+
+interface GuestExportModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  guests: Guest[];
+  tables: Table[];
+}
+
+const GuestExportModal = ({ isOpen, onClose, guests, tables }: GuestExportModalProps) => {
+  const [selectedFormat, setSelectedFormat] = useState<'pdf' | 'excel'>('pdf');
+  const [selectedTable, setSelectedTable] = useState<string>('all');
+  const [isExporting, setIsExporting] = useState(false);
+
+  if (!isOpen) return null;
+
+  // Fonction pour obtenir les invités par table
+  const getGuestsByTable = (tableName: string) => {
+    return guests.filter(guest => guest.table === tableName);
+  };
+
+  // Fonction pour obtenir toutes les tables avec invités
+  const getTablesWithGuests = () => {
+    const tablesWithGuests = [];
+    
+    // Ajouter les tables définies
+    tables.forEach(table => {
+      const tableGuests = getGuestsByTable(table.name);
+      if (tableGuests.length > 0) {
+        tablesWithGuests.push({
+          name: table.name,
+          guests: tableGuests,
+          seats: table.seats
+        });
+      }
+    });
+
+    // Ajouter les invités sans table assignée
+    const unassignedGuests = guests.filter(guest => 
+      !guest.table || guest.table === '' || guest.table === 'Non assigné'
+    );
+    
+    if (unassignedGuests.length > 0) {
+      tablesWithGuests.push({
+        name: 'Non assignés',
+        guests: unassignedGuests,
+        seats: 0
+      });
+    }
+
+    return tablesWithGuests;
+  };
+
+  // Export PDF
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    let yPosition = 20;
+
+    // Titre principal
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Liste des Invités par Table', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 20;
+
+    // Date de génération
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')}`, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 20;
+
+    const tablesWithGuests = getTablesWithGuests();
+    const tablesToExport = selectedTable === 'all' 
+      ? tablesWithGuests 
+      : tablesWithGuests.filter(table => table.name === selectedTable);
+
+    tablesToExport.forEach((table, tableIndex) => {
+      // Vérifier si on a assez de place pour le titre de la table
+      if (yPosition > pageHeight - 60) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      // Titre de la table
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${table.name}`, 20, yPosition);
+      
+      // Informations de la table
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const occupiedSeats = table.guests.reduce((total, guest) => {
+        return total + (guest.etat === 'couple' ? 2 : 1);
+      }, 0);
+      
+      doc.text(`${table.guests.length} invité(s) - ${occupiedSeats} place(s) occupée(s)${table.seats > 0 ? ` / ${table.seats}` : ''}`, 20, yPosition + 10);
+      yPosition += 25;
+
+      // En-têtes du tableau
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Nom', 20, yPosition);
+      doc.text('Type', 100, yPosition);
+      doc.text('Places', 140, yPosition);
+      doc.text('Statut', 170, yPosition);
+      yPosition += 5;
+
+      // Ligne de séparation
+      doc.line(20, yPosition, pageWidth - 20, yPosition);
+      yPosition += 10;
+
+      // Liste des invités
+      doc.setFont('helvetica', 'normal');
+      table.guests.forEach((guest, guestIndex) => {
+        // Vérifier si on a assez de place
+        if (yPosition > pageHeight - 30) {
+          doc.addPage();
+          yPosition = 20;
+        }
+
+        doc.text(guest.nom, 20, yPosition);
+        doc.text(guest.etat === 'couple' ? 'Couple' : 'Simple', 100, yPosition);
+        doc.text(guest.etat === 'couple' ? '2' : '1', 140, yPosition);
+        doc.text(guest.confirmed ? 'Confirmé' : 'En attente', 170, yPosition);
+        yPosition += 15;
+      });
+
+      yPosition += 10;
+    });
+
+    // Résumé final
+    if (selectedTable === 'all') {
+      if (yPosition > pageHeight - 80) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Résumé Global', 20, yPosition);
+      yPosition += 20;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      const totalGuests = guests.length;
+      const confirmedGuests = guests.filter(g => g.confirmed).length;
+      const totalSeats = guests.reduce((total, guest) => {
+        return total + (guest.etat === 'couple' ? 2 : 1);
+      }, 0);
+
+      doc.text(`Total invités: ${totalGuests}`, 20, yPosition);
+      doc.text(`Invités confirmés: ${confirmedGuests}`, 20, yPosition + 15);
+      doc.text(`Total places occupées: ${totalSeats}`, 20, yPosition + 30);
+    }
+
+    // Télécharger le PDF
+    const fileName = selectedTable === 'all' 
+      ? 'liste-invites-toutes-tables.pdf'
+      : `liste-invites-${selectedTable.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+    
+    doc.save(fileName);
+  };
+
+  // Export Excel
+  const exportToExcel = () => {
+    const workbook = XLSX.utils.book_new();
+    const tablesWithGuests = getTablesWithGuests();
+    const tablesToExport = selectedTable === 'all' 
+      ? tablesWithGuests 
+      : tablesWithGuests.filter(table => table.name === selectedTable);
+
+    if (selectedTable === 'all') {
+      // Créer une feuille par table
+      tablesToExport.forEach(table => {
+        const worksheetData = [
+          [`Table: ${table.name}`],
+          [`Invités: ${table.guests.length} - Places occupées: ${table.guests.reduce((total, guest) => total + (guest.etat === 'couple' ? 2 : 1), 0)}${table.seats > 0 ? ` / ${table.seats}` : ''}`],
+          [], // Ligne vide
+          ['Nom', 'Type d\'invité', 'Places', 'Statut de confirmation'],
+          ...table.guests.map(guest => [
+            guest.nom,
+            guest.etat === 'couple' ? 'Couple' : 'Simple',
+            guest.etat === 'couple' ? 2 : 1,
+            guest.confirmed ? 'Confirmé' : 'En attente'
+          ])
+        ];
+
+        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        
+        // Ajuster la largeur des colonnes
+        worksheet['!cols'] = [
+          { width: 30 }, // Nom
+          { width: 15 }, // Type
+          { width: 10 }, // Places
+          { width: 15 }  // Statut
+        ];
+
+        const sheetName = table.name.length > 31 ? table.name.substring(0, 31) : table.name;
+        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+      });
+
+      // Ajouter une feuille de résumé
+      const summaryData = [
         ['Résumé Global'],
         [],
         ['Statistiques Générales'],
