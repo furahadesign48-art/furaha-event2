@@ -389,11 +389,36 @@ L'équipe organisatrice
     { id: 'tables', label: 'Tables', icon: Table },
     { id: 'messages', label: 'Messages & Boissons', icon: MessageCircle }
   ];
+
 const renderOverview = () => {
-  // Calcul du total en tenant compte des couples
-  const totalGuests = guests.reduce((sum, g) => sum + (g.isCouple ? 2 : 1), 0);
+  // renvoie le nombre de personnes pour un invité donné
+  const guestCount = (g: any) => {
+    // Cas classique booléen
+    if (g.isCouple === true) return 2;
+
+    // Cas où tu utilises "etat" comme dans ton exemple
+    if (typeof g.etat === 'string' && g.etat.toLowerCase() === 'couple') return 2;
+
+    // Cas générique si tu stockes directement un count
+    if (typeof g.count !== 'undefined') {
+      const n = Number(g.count);
+      if (!Number.isNaN(n) && n > 0) return n;
+    }
+
+    // Par défaut : 1 personne
+    return 1;
+  };
+
+  // normaliser la valeur de "confirmé"
+  const isConfirmed = (g: any) =>
+    g.confirmed === true ||
+    g.confirmed === 'true' ||
+    g.confirmed === 1 ||
+    (typeof g.status === 'string' && g.status.toLowerCase() === 'confirmed');
+
+  const totalGuests = guests.reduce((sum: number, g: any) => sum + guestCount(g), 0);
   const confirmedGuests = guests.reduce(
-    (sum, g) => sum + (g.confirmed ? (g.isCouple ? 2 : 1) : 0),
+    (sum: number, g: any) => sum + (isConfirmed(g) ? guestCount(g) : 0),
     0
   );
   const pendingGuests = totalGuests - confirmedGuests;
@@ -401,12 +426,11 @@ const renderOverview = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Statistiques principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Invités */}
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg hover:shadow-glow-amber transition-all duration-300">
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg">
           <div className="flex items-center">
-            <div className="p-3 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl shadow-glow-amber">
+            <div className="p-3 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl">
               <Users className="h-6 w-6 text-white" />
             </div>
             <div className="ml-4">
@@ -415,9 +439,9 @@ const renderOverview = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Confirmés */}
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg hover:shadow-lg transition-all duration-300">
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg">
           <div className="flex items-center">
             <div className="p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl">
               <User className="h-6 w-6 text-white" />
@@ -428,9 +452,9 @@ const renderOverview = () => {
             </div>
           </div>
         </div>
-        
+
         {/* En attente */}
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg hover:shadow-lg transition-all duration-300">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg">
           <div className="flex items-center">
             <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl">
               <Calendar className="h-6 w-6 text-white" />
@@ -441,9 +465,9 @@ const renderOverview = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Tables */}
-        <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200/50 shadow-lg hover:shadow-lg transition-all duration-300">
+        <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200/50 shadow-lg">
           <div className="flex items-center">
             <div className="p-3 bg-gradient-to-r from-rose-500 to-rose-600 rounded-xl">
               <Table className="h-6 w-6 text-white" />
@@ -455,6 +479,8 @@ const renderOverview = () => {
           </div>
         </div>
       </div>
+    </div>
+  
     
 
 
