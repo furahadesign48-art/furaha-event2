@@ -167,9 +167,12 @@ const Header = ({ onLogin }: HeaderProps) => {
             ) : (
               <button 
                 onClick={onLogin}
-                className="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 px-6 py-2 rounded-full hover:from-amber-600 hover:to-amber-700 transition-all duration-300 font-medium shadow-glow-amber hover:shadow-luxury transform hover:scale-105"
+               className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-slate-900 px-6 py-2 rounded-full hover:from-yellow-500 hover:via-amber-500 hover:to-yellow-600 transition-all duration-300 font-medium shadow-lg hover:shadow-2xl transform hover:scale-105 relative overflow-hidden group border border-yellow-300/50"
               >
+               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+               <span className="relative font-semibold">
                 {t('login') || 'Connexion'}
+               </span>
               </button>
             )}
           </nav>
@@ -264,9 +267,12 @@ const Header = ({ onLogin }: HeaderProps) => {
                     setIsMenuOpen(false);
                     onLogin?.();
                   }}
-                  className="bg-amber-500 text-slate-900 px-6 py-2 rounded-full hover:bg-amber-600 transition-all duration-300 font-medium shadow-lg mx-4"
+                 className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-slate-900 px-6 py-2 rounded-full hover:from-yellow-500 hover:via-amber-500 hover:to-yellow-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-2xl mx-4 border border-yellow-300/50 relative overflow-hidden group"
                 >
+                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                 <span className="relative">
                   {t('login') || 'Connexion'}
+                 </span>
                 </button>
               )}
             </nav>
