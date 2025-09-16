@@ -1,4 +1,3 @@
-
 onst summaryData = [
         ['Résumé Global'],
         [],
