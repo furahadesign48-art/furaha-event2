@@ -166,11 +166,9 @@ const GuestExportModal = ({ isOpen, onClose, guests, tables }: GuestExportModalP
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       
-      const totalGuests = guests.length;
-      const confirmedGuests = guests.filter(g => g.confirmed).length;
-      const totalSeats = guests.reduce((total, guest) => {
-        return total + (guest.etat === 'couple' ? 2 : 1);
-      }, 0);
+     const totalGuests = guests.reduce((sum, g) => sum + guestCount(g), 0);
+const confirmedGuests = guests.reduce((sum, g) => sum + (g.confirmed ? guestCount(g) : 0), 0);
+
 
       doc.text(`Total invités: ${totalGuests}`, 20, yPosition);
       doc.text(`Invités confirmés: ${confirmedGuests}`, 20, yPosition + 15);
