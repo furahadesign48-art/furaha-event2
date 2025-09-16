@@ -60,6 +60,19 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   const [showQRInfo, setShowQRInfo] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
+  // Initialiser les couleurs depuis le template au chargement
+  useEffect(() => {
+    if (template.colors) {
+      setPrimaryColor(template.colors.primary);
+      setSecondaryColor(template.colors.secondary);
+      setAccentColor(template.colors.accent);
+    } else if (template.customizations?.colors) {
+      setPrimaryColor(template.customizations.colors.primary);
+      setSecondaryColor(template.customizations.colors.secondary);
+      setAccentColor(template.customizations.colors.accent);
+    }
+  }, [template]);
+
   const tabs = [
     { id: 'general', label: 'Général', icon: Type },
     { id: 'design', label: 'Design', icon: Palette },
