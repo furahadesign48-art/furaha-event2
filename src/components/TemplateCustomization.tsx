@@ -350,12 +350,12 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
               </div>
 
               <div
-                onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/2253870/pexels-photo-2253870.jpeg?auto=compress&cs=tinysrgb&w=1200')}
+                onClick={() => handleInputChange('backgroundImage', 'https://i.pinimg.com/564x/c0/df/e5/c0dfe50322757f7143c6e2480c9c25df.jpg')}
                 className="cursor-pointer group"
               >
                 <div className="relative h-20 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-amber-400 transition-all duration-300">
                   <img
-                    src="https://images.pexels.com/photos/2253870/pexels-photo-2253870.jpeg?auto=compress&cs=tinysrgb&w=400"
+                    src="https://i.pinimg.com/564x/c0/df/e5/c0dfe50322757f7143c6e2480c9c25df.jpg"
                     alt="Template 3"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
