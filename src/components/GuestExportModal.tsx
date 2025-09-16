@@ -410,9 +410,15 @@ const confirmedGuests = guests.reduce((sum, g) => sum + (g.confirmed ? guestCoun
               {selectedTable === 'all' ? (
                 <div className="space-y-2 text-sm text-slate-600">
                   <div>• {tablesWithGuests.length} table{tablesWithGuests.length > 1 ? 's' : ''}</div>
-                  <div>• {guests.length} invité{guests.length > 1 ? 's' : ''} au total</div>
-                  <div>• {guests.filter(g => g.confirmed).length} confirmé{guests.filter(g => g.confirmed).length > 1 ? 's' : ''}</div>
-                </div>
+                  <div>
+  • {guests.reduce((sum, g) => sum + guestCount(g), 0)} invité
+  {guests.reduce((sum, g) => sum + guestCount(g), 0) > 1 ? 's' : ''} au total
+</div>
+<div>
+  • {guests.reduce((sum, g) => sum + (g.confirmed ? guestCount(g) : 0), 0)} confirmé
+  {guests.reduce((sum, g) => sum + (g.confirmed ? guestCount(g) : 0), 0) > 1 ? 's' : ''}
+</div>
+
               ) : (
                 (() => {
                   const selectedTableData = tablesWithGuests.find(t => t.name === selectedTable);
