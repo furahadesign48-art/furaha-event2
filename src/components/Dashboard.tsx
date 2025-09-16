@@ -389,65 +389,76 @@ L'équipe organisatrice
     { id: 'tables', label: 'Tables', icon: Table },
     { id: 'messages', label: 'Messages & Boissons', icon: MessageCircle }
   ];
+const renderOverview = () => {
+  // Calcul du total en tenant compte des couples
+  const totalGuests = guests.reduce((sum, g) => sum + (g.isCouple ? 2 : 1), 0);
+  const confirmedGuests = guests.reduce(
+    (sum, g) => sum + (g.confirmed ? (g.isCouple ? 2 : 1) : 0),
+    0
+  );
+  const pendingGuests = totalGuests - confirmedGuests;
+  const totalTables = tables.length;
 
-  const renderOverview = () => {
-    const totalGuests = guests.length;
-    const confirmedGuests = guests.filter(g => g.confirmed).length;
-    const pendingGuests = totalGuests - confirmedGuests;
-    const totalTables = tables.length;
-
-    return (
-      <div className="space-y-8 animate-fade-in">
-        {/* Statistiques principales */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg hover:shadow-glow-amber transition-all duration-300">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl shadow-glow-amber">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-amber-700 text-sm font-medium">Total Invités</p>
-                <p className="text-3xl font-bold text-amber-900">{totalGuests}</p>
-              </div>
+  return (
+    <div className="space-y-8 animate-fade-in">
+      {/* Statistiques principales */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Total Invités */}
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200/50 shadow-lg hover:shadow-glow-amber transition-all duration-300">
+          <div className="flex items-center">
+            <div className="p-3 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl shadow-glow-amber">
+              <Users className="h-6 w-6 text-white" />
             </div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg hover:shadow-lg transition-all duration-300">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl">
-                <User className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-emerald-700 text-sm font-medium">Confirmés</p>
-                <p className="text-3xl font-bold text-emerald-900">{confirmedGuests}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg hover:shadow-lg transition-all duration-300">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl">
-                <Calendar className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-purple-700 text-sm font-medium">En attente</p>
-                <p className="text-3xl font-bold text-purple-900">{pendingGuests}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200/50 shadow-lg hover:shadow-lg transition-all duration-300">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-r from-rose-500 to-rose-600 rounded-xl">
-                <Table className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-rose-700 text-sm font-medium">Tables</p>
-                <p className="text-3xl font-bold text-rose-900">{totalTables}</p>
-              </div>
+            <div className="ml-4">
+              <p className="text-amber-700 text-sm font-medium">Total Invités</p>
+              <p className="text-3xl font-bold text-amber-900">{totalGuests}</p>
             </div>
           </div>
         </div>
+        
+        {/* Confirmés */}
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200/50 shadow-lg hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center">
+            <div className="p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl">
+              <User className="h-6 w-6 text-white" />
+            </div>
+            <div className="ml-4">
+              <p className="text-emerald-700 text-sm font-medium">Confirmés</p>
+              <p className="text-3xl font-bold text-emerald-900">{confirmedGuests}</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* En attente */}
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200/50 shadow-lg hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center">
+            <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl">
+              <Calendar className="h-6 w-6 text-white" />
+            </div>
+            <div className="ml-4">
+              <p className="text-purple-700 text-sm font-medium">En attente</p>
+              <p className="text-3xl font-bold text-purple-900">{pendingGuests}</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Tables */}
+        <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200/50 shadow-lg hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center">
+            <div className="p-3 bg-gradient-to-r from-rose-500 to-rose-600 rounded-xl">
+              <Table className="h-6 w-6 text-white" />
+            </div>
+            <div className="ml-4">
+              <p className="text-rose-700 text-sm font-medium">Tables</p>
+              <p className="text-3xl font-bold text-rose-900">{totalTables}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
         {/* Actions rapides */}
         <div className="bg-white rounded-2xl shadow-luxury border border-neutral-200/50 p-6">
