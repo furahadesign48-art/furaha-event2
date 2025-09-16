@@ -601,10 +601,13 @@ const InvitationPreview = () => {
                       {allGuestMessages.length > 0 && (
                         <button 
                           onClick={() => setShowAllMessages(true)}
-                          className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-4 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-500 font-semibold text-base sm:text-lg shadow-lg transform hover:scale-110 hover:shadow-2xl hover:animate-pulse"
+                          className="w-full bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 text-slate-900 py-4 rounded-xl hover:from-yellow-500 hover:via-amber-600 hover:to-yellow-700 transition-all duration-500 font-bold text-base sm:text-lg shadow-glow-amber transform hover:scale-110 hover:shadow-2xl relative overflow-hidden group border border-yellow-300/50"
                         >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                          <span className="relative flex items-center justify-center">
                           <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 inline mr-3" />
                           Lire les messages des invités ({allGuestMessages.length})
+                          </span>
                         </button>
                       )}
                     </div>
@@ -665,42 +668,44 @@ const InvitationPreview = () => {
       {/* Modal pour afficher tous les messages des invités */}
       {showAllMessages && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-3xl shadow-luxury max-w-2xl w-full max-h-[85vh] overflow-hidden animate-slide-up">
+          <div className="bg-gradient-to-br from-white via-amber-50/30 to-yellow-50/20 rounded-3xl shadow-luxury max-w-2xl w-full max-h-[85vh] overflow-hidden animate-slide-up border border-amber-200/50 backdrop-blur-xl">
             {/* Header */}
             <div 
-              className="p-6 border-b border-neutral-200/50 relative overflow-hidden"
+              className="p-6 border-b border-amber-200/50 relative overflow-hidden bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-100/80"
               style={{ 
-                background: `linear-gradient(to right, ${colors.primary}10, ${colors.secondary}10)`
+                background: `linear-gradient(to right, ${colors.primary}15, ${colors.secondary}15, #fbbf2420)`
               }}
             >
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-300/20 to-yellow-300/20 rounded-full blur-xl"></div>
+              <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-yellow-300/20 to-amber-300/20 rounded-full blur-xl"></div>
+              
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
                   <div className="relative mr-4">
                     <BookOpen 
-                      className="h-8 w-8 animate-glow drop-shadow-lg" 
-                      style={{ color: colors.primary }}
+                      className="h-8 w-8 text-amber-600 animate-glow drop-shadow-lg" 
                     />
                     <div className="absolute inset-0 animate-pulse">
                       <BookOpen 
-                        className="h-8 w-8 opacity-30" 
-                        style={{ color: colors.accent }}
+                        className="h-8 w-8 text-yellow-400 opacity-40" 
                       />
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-800 via-yellow-700 to-amber-900 bg-clip-text text-transparent">
                       Messages des Invités
                     </h2>
-                    <p className="text-slate-600">
+                    <p className="text-amber-700/80">
                       {allGuestMessages.length} message{allGuestMessages.length > 1 ? 's' : ''} de vœux
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowAllMessages(false)}
-                  className="p-2 hover:bg-neutral-100 rounded-lg transition-colors duration-200"
+                  className="p-2 hover:bg-amber-100/50 rounded-xl transition-all duration-300 transform hover:scale-110"
                 >
-                  <X className="h-6 w-6 text-neutral-500" />
+                  <X className="h-6 w-6 text-amber-600" />
                 </button>
               </div>
             </div>
@@ -720,14 +725,13 @@ const InvitationPreview = () => {
                     <div className="flex items-center justify-between mb-6">
                       <button
                         onClick={prevMessage}
-                        className="p-3 rounded-full bg-gradient-to-r from-neutral-100 to-neutral-200 hover:from-neutral-200 hover:to-neutral-300 transition-all duration-300 shadow-lg transform hover:scale-110"
-                        style={{ color: colors.primary }}
+                        className="p-3 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 hover:from-amber-200 hover:to-yellow-200 transition-all duration-300 shadow-lg transform hover:scale-110 border border-amber-200/50"
                       >
-                        <ChevronLeft className="h-5 w-5" />
+                        <ChevronLeft className="h-5 w-5 text-amber-700" />
                       </button>
                       
                       <div className="text-center">
-                        <p className="text-sm font-medium text-slate-600">
+                        <p className="text-sm font-semibold text-amber-800">
                           Message {currentMessageIndex + 1} sur {allGuestMessages.length}
                         </p>
                         <div className="flex justify-center space-x-2 mt-2">
@@ -741,7 +745,7 @@ const InvitationPreview = () => {
                                   : 'hover:scale-125'
                               }`}
                               style={{ 
-                                backgroundColor: index === currentMessageIndex ? colors.primary : '#d1d5db'
+                                backgroundColor: index === currentMessageIndex ? '#f59e0b' : '#d1d5db'
                               }}
                             />
                           ))}
@@ -750,10 +754,9 @@ const InvitationPreview = () => {
                       
                       <button
                         onClick={nextMessage}
-                        className="p-3 rounded-full bg-gradient-to-r from-neutral-100 to-neutral-200 hover:from-neutral-200 hover:to-neutral-300 transition-all duration-300 shadow-lg transform hover:scale-110"
-                        style={{ color: colors.primary }}
+                        className="p-3 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 hover:from-amber-200 hover:to-yellow-200 transition-all duration-300 shadow-lg transform hover:scale-110 border border-amber-200/50"
                       >
-                        <ChevronRight className="h-5 w-5" />
+                        <ChevronRight className="h-5 w-5 text-amber-700" />
                       </button>
                     </div>
                   )}
@@ -761,26 +764,25 @@ const InvitationPreview = () => {
                   {/* Message actuel */}
                   {allGuestMessages[currentMessageIndex] && (
                     <div 
-                      className="rounded-2xl p-6 border shadow-lg animate-slide-up"
+                      className="rounded-2xl p-6 border shadow-luxury animate-slide-up bg-gradient-to-br from-white via-amber-50/20 to-yellow-50/10 backdrop-blur-sm"
                       style={{ 
-                        background: `linear-gradient(to right, ${colors.primary}05, ${colors.secondary}05)`,
-                        borderColor: `${colors.primary}20`
+                        borderColor: '#f59e0b30'
                       }}
                     >
                       <div className="flex items-center mb-4">
                         <div 
-                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-lg mr-4"
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-glow-amber mr-4"
                           style={{ 
-                            background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`
+                            background: 'linear-gradient(to right, #f59e0b, #d97706)'
                           }}
                         >
                           {allGuestMessages[currentMessageIndex].nom.split(' ').map(n => n[0]).join('').substring(0, 2)}
                         </div>
                         <div>
-                          <h4 className="text-lg font-bold text-slate-900">
+                          <h4 className="text-lg font-bold bg-gradient-to-r from-amber-800 to-amber-900 bg-clip-text text-transparent">
                             {allGuestMessages[currentMessageIndex].nom}
                           </h4>
-                          <p className="text-sm text-slate-600">
+                          <p className="text-sm text-amber-700/80">
                             {new Date(allGuestMessages[currentMessageIndex].timestamp || '').toLocaleDateString('fr-FR', {
                               day: 'numeric',
                               month: 'long',
@@ -791,15 +793,14 @@ const InvitationPreview = () => {
                         </div>
                       </div>
                       
-                      <div className="bg-white rounded-xl p-4 border border-neutral-200/50 shadow-sm">
+                      <div className="bg-gradient-to-br from-white to-amber-50/30 rounded-xl p-4 border border-amber-200/50 shadow-lg backdrop-blur-sm">
                         <div className="flex items-center mb-3">
                           <MessageCircle 
-                            className="h-4 w-4 mr-2" 
-                            style={{ color: colors.primary }}
+                            className="h-4 w-4 mr-2 text-amber-600" 
                           />
-                          <span className="text-sm font-medium text-slate-700">Message de vœux</span>
+                          <span className="text-sm font-semibold text-amber-800">Message de vœux</span>
                         </div>
-                        <p className="text-slate-800 leading-relaxed whitespace-pre-wrap">
+                        <p className="text-slate-900 leading-relaxed whitespace-pre-wrap font-medium">
                           {allGuestMessages[currentMessageIndex].message}
                         </p>
                       </div>
@@ -865,20 +866,23 @@ const InvitationPreview = () => {
 
             {/* Footer */}
             <div 
-              className="p-6 border-t border-neutral-200/50"
+              className="p-6 border-t border-amber-200/50 bg-gradient-to-r from-amber-50/50 via-yellow-50/30 to-amber-50/50"
               style={{ 
-                background: `linear-gradient(to right, ${colors.primary}05, ${colors.secondary}05)`
+                background: 'linear-gradient(to right, #f59e0b08, #d9770608, #fbbf2408)'
               }}
             >
               <button
                 onClick={() => setShowAllMessages(false)}
-                className="w-full py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg transform hover:scale-105"
+                className="w-full py-3 rounded-xl font-bold transition-all duration-500 shadow-glow-amber transform hover:scale-105 relative overflow-hidden group border border-amber-300/50"
                 style={{ 
-                  background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
+                  background: 'linear-gradient(to right, #f59e0b, #d97706)',
                   color: '#1e293b'
                 }}
               >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                <span className="relative">
                 Fermer
+                </span>
               </button>
             </div>
           </div>
