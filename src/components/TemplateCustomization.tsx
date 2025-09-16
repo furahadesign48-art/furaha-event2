@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../config/firebase';
 import { useAuth } from './AuthContext';
@@ -288,7 +288,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                   </button>
                   
                   <button
-                    onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/29895188/pexels-photo-29895188/free-photo-of-traditional-african-wedding-couple-embrace.jpeg')}
+                    onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=1200')}
                     className="flex-1 bg-neutral-500 text-white px-4 py-3 rounded-xl hover:bg-neutral-600 transition-all duration-300 font-semibold"
                   >
                     Image par défaut
@@ -320,7 +320,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div
-                onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/29895188/pexels-photo-29895188/free-photo-of-traditional-african-wedding-couple-embrace.jpeg')}
+                onClick={() => handleInputChange('backgroundImage', 'https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=1200')}
                 className="cursor-pointer group"
               >
                 <div className="relative h-20 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-amber-400 transition-all duration-300">
@@ -340,7 +340,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
               >
                 <div className="relative h-20 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-amber-400 transition-all duration-300">
                   <img
-                    src="https://images.pexels.com/photos/1488482/pexels-photo-1488482.jpeg?auto=compress&cs=tinysrgb&w=400"
+                    src="https://images.pexels.com/photos/29895188/pexels-photo-29895188/free-photo-of-traditional-african-wedding-couple-embrace.jpeg?auto=compress&cs=tinysrgb&w=400"
                     alt="Template 2"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
