@@ -384,7 +384,7 @@ const InvitationPreview = () => {
   src={userModel.backgroundImage}
   alt="Event Background Blurred"
   className="w-full h-full object-cover scale-110"
-  style={{ filter: 'blur(18px)' }} // Ajuste la valeur (ex: 10px, 15px, 18px)
+  style={{ filter: 'blur(14px)' }} // Ajuste la valeur (ex: 10px, 15px, 18px)
  />
 
 
