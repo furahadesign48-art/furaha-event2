@@ -485,13 +485,7 @@ L'équipe organisatrice
                   >
                     <Eye className="h-4 w-4" />
                   </button>
-                  <button
-                    onClick={() => sendTableInvitations(table)}
-                    className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                    title="Envoyer invitations WhatsApp"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                  </button>
+                 
                   <button
                     onClick={() => sendTableEmailInvitations(table)}
                     className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
