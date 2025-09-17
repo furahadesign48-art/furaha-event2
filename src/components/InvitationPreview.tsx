@@ -380,16 +380,12 @@ const InvitationPreview = () => {
 
   {/* Bas avec l'image floutée + overlay sombre */}
   <div className="absolute w-full top-[550px] sm:top-[650px] md:top-[750px] lg:top-[850px] bottom-0 overflow-hidden">
-    <img
-      src={userModel.backgroundImage}
-      alt="Event Background Blurred"
-      className="w-full h-full object-cover blur-2xl scale-110"<img
+   <img
   src={userModel.backgroundImage}
   alt="Event Background Blurred"
   className="w-full h-full object-cover blur-lg scale-110"
 />
 
-    />
     {/* Overlay sombre pour lisibilité */}
     <div className="absolute inset-0 bg-black/60"></div>
   </div>
