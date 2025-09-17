@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Users, X, Eye, Download, MessageSquare, Mail, Send } from 'lucide-react';
 import { useTemplates } from '../hooks/useTemplates';
 import { useAuth } from './AuthContext';
 import GuestExportModal from './GuestExportModal';
