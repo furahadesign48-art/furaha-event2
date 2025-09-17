@@ -492,13 +492,7 @@ L'équipe organisatrice
                   >
                     <MessageSquare className="h-4 w-4" />
                   </button>
-                  <button
-                    onClick={() => sendTableEmailInvitations(table)}
-                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                    title="Envoyer invitations Email"
-                  >
-                    <Mail className="h-4 w-4" />
-                  </button>
+                  
                   <button
                     onClick={() => openModal(table)}
                     className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all duration-200 transform hover:scale-110"
