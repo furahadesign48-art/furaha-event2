@@ -11,6 +11,7 @@ interface Guest {
 }
 
 interface Table {
+  firestoreId: string;
   id: number;
   name: string;
   seats: number;
@@ -64,6 +65,12 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
       return total + (guest.etat === 'couple' ? 2 : 1);
     }, 0);
   };
+
+  const snapshot = await getDocs(collection(db, "tables"));
+const tables = snapshot.docs.map(doc => ({
+  firestoreId: doc.id, // ID Firestore
+  ...doc.data()
+}));
 
   const openModal = (table?: Table) => {
     if (table) {
@@ -128,11 +135,12 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
         if (onSaveTable) {
           await onSaveTable(updatedTable);
         } else {
-          const success = await updateTable(editingTable.id.toString(), {
-            name: formData.name,
-            seats: formData.seats,
-            assignedGuests: editingTable.assignedGuests || []
-          });
+          const success = await updateTable(editingTable.firestoreId, {
+  name: formData.name,
+  seats: formData.seats,
+  assignedGuests: editingTable.assignedGuests || []
+});
+
         
           if (!success) {
             alert('Erreur lors de la modification de la table');
@@ -180,38 +188,37 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
     closeModal();
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette table ?')) {
-      if (!user) {
-        alert('Vous devez être connecté pour supprimer une table');
-        return;
-      }
-      
-      try {
-        setIsSaving(true);
-        
-        // Utiliser la fonction onDeleteTable si elle existe, sinon utiliser le hook
-        if (onDeleteTable) {
-          await onDeleteTable(id);
-        } else {
-          const success = await deleteTable(table.firestoreId);   // ✅ le vrai ID Firestore
-
-        
-          if (!success) {
-            alert('Erreur lors de la suppression de la table');
-            return;
-          }
-        }
-        
-        setTables(tables.filter(table => table.id !== id));
-      } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
-        alert('Erreur lors de la suppression de la table');
-      } finally {
-        setIsSaving(false);
-      }
+const handleDelete = async (id: string) => {
+  if (window.confirm('Êtes-vous sûr de vouloir supprimer cette table ?')) {
+    if (!user) {
+      alert('Vous devez être connecté pour supprimer une table');
+      return;
     }
-  };
+
+    try {
+      setIsSaving(true);
+
+      if (onDeleteTable) {
+        await onDeleteTable(id);
+      } else {
+        const success = await deleteTable(id); // <--- passer firestoreId directement
+
+        if (!success) {
+          alert('Erreur lors de la suppression de la table');
+          return;
+        }
+      }
+
+      setTables(tables.filter(table => table.firestoreId !== id));
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      alert('Erreur lors de la suppression de la table');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+};
+
 
   const sendTableInvitations = (table: Table) => {
     const tableGuests = getGuestsForTable(table.name);
@@ -574,7 +581,7 @@ L'équipe organisatrice
                     Modifier
                   </button>
                   <button
-                    onClick={() => handleDelete(table.id)}
+                    onClick={() => handleDelete(table.firestoreId)}
                     className="bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
