@@ -458,7 +458,7 @@ const InvitationPreview = () => {
   {invite.etat === "couple" && (
     <span className="text-lg font-normal mr-2">couple</span> )} {invite.nom}</p>
     <p className="text-base sm:text-lg mt-3" style={{ color: `${colors.primary}dd` }}>
-      {userModel.category === 'graduation' ? 'Place' : 'Table'} n° {invite.table || 'Non assigné'}
+      {userModel.category === 'graduation' ? 'Place' : 'Table'}  {invite.table || 'Non assigné'}
     </p>
   </div>
 </div>
