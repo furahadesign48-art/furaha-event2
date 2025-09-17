@@ -565,14 +565,6 @@ L'équipe organisatrice
                     Invités
                   </button>
                   <button
-                    onClick={() => sendTableInvitations(table)}
-                    className="bg-green-100 text-green-700 px-3 py-2 rounded-lg hover:bg-green-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-                  >
-                    <MessageSquare className="h-4 w-4 mr-1" />
-                    WhatsApp
-                  </button>
-               
-                  <button
                     onClick={() => openModal(table)}
                     className="bg-amber-100 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
                   >
