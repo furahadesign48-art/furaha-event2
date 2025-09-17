@@ -11,7 +11,6 @@ interface Guest {
 }
 
 interface Table {
-  firestoreId: string;
   id: number;
   name: string;
   seats: number;
@@ -50,25 +49,6 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [formData, setFormData] = useState<TableFormData>({ name: '', seats: 8 });
 
-  // Charger les tables Firestore
-  useEffect(() => {
-    const fetchTables = async () => {
-      try {
-        const snapshot = await getDocs(collection(db, "tables"));
-        const firestoreTables = snapshot.docs.map(doc => ({
-          firestoreId: doc.id,
-          ...doc.data()
-        })) as Table[];
-
-        setTables(firestoreTables);
-      } catch (error) {
-        console.error("Erreur lors du chargement des tables :", error);
-      }
-    };
-
-    fetchTables();
-  }, [setTables, user]);
-  
   // Utiliser les invités réels depuis le hook
   const realGuests = userInvites.length > 0 ? userInvites : guests;
 
@@ -148,12 +128,11 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
         if (onSaveTable) {
           await onSaveTable(updatedTable);
         } else {
-          const success = await updateTable(editingTable.firestoreId, {
-  name: formData.name,
-  seats: formData.seats,
-  assignedGuests: editingTable.assignedGuests || []
-});
-
+          const success = await updateTable(editingTable.id.toString(), {
+            name: formData.name,
+            seats: formData.seats,
+            assignedGuests: editingTable.assignedGuests || []
+          });
         
           if (!success) {
             alert('Erreur lors de la modification de la table');
@@ -201,37 +180,37 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
     closeModal();
   };
 
-const handleDelete = async (id: string) => {
-  if (window.confirm('Êtes-vous sûr de vouloir supprimer cette table ?')) {
-    if (!user) {
-      alert('Vous devez être connecté pour supprimer une table');
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-
-      if (onDeleteTable) {
-        await onDeleteTable(id);
-      } else {
-        const success = await deleteTable(id); // <--- passer firestoreId directement
-
-        if (!success) {
-          alert('Erreur lors de la suppression de la table');
-          return;
-        }
+  const handleDelete = async (id: number) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette table ?')) {
+      if (!user) {
+        alert('Vous devez être connecté pour supprimer une table');
+        return;
       }
-
-      setTables(tables.filter(table => table.firestoreId !== id));
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
-      alert('Erreur lors de la suppression de la table');
-    } finally {
-      setIsSaving(false);
+      
+      try {
+        setIsSaving(true);
+        
+        // Utiliser la fonction onDeleteTable si elle existe, sinon utiliser le hook
+        if (onDeleteTable) {
+          await onDeleteTable(id);
+        } else {
+          const success = await deleteTable(id.toString());
+        
+          if (!success) {
+            alert('Erreur lors de la suppression de la table');
+            return;
+          }
+        }
+        
+        setTables(tables.filter(table => table.id !== id));
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        alert('Erreur lors de la suppression de la table');
+      } finally {
+        setIsSaving(false);
+      }
     }
-  }
-};
-
+  };
 
   const sendTableInvitations = (table: Table) => {
     const tableGuests = getGuestsForTable(table.name);
@@ -506,7 +485,20 @@ L'équipe organisatrice
                   >
                     <Eye className="h-4 w-4" />
                   </button>
-                 
+                  <button
+                    onClick={() => sendTableInvitations(table)}
+                    className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Envoyer invitations WhatsApp"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => sendTableEmailInvitations(table)}
+                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Envoyer invitations Email"
+                  >
+                    <Mail className="h-4 w-4" />
+                  </button>
                   <button
                     onClick={() => openModal(table)}
                     className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all duration-200 transform hover:scale-110"
@@ -594,7 +586,7 @@ L'équipe organisatrice
                     Modifier
                   </button>
                   <button
-                    onClick={() => handleDelete(table.firestoreId)}
+                    onClick={() => handleDelete(table.id)}
                     className="bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
