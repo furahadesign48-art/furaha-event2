@@ -85,12 +85,6 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
     }, 0);
   };
 
-  const snapshot = await getDocs(collection(db, "tables"));
-const tables = snapshot.docs.map(doc => ({
-  firestoreId: doc.id, // ID Firestore
-  ...doc.data()
-}));
-
   const openModal = (table?: Table) => {
     if (table) {
       setEditingTable(table);
