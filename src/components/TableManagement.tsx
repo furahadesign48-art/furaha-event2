@@ -194,7 +194,8 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
         if (onDeleteTable) {
           await onDeleteTable(id);
         } else {
-          const success = await deleteTable(id.toString());
+          const success = await deleteTable(table.firestoreId);   // ✅ le vrai ID Firestore
+
         
           if (!success) {
             alert('Erreur lors de la suppression de la table');
