@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Plus, Edit, Trash2, Users, X, Eye, Download, MessageSquare, Mail, Send } from 'lucide-react';
 import { useTemplates } from '../hooks/useTemplates';
 import { useAuth } from './AuthContext';
 import GuestExportModal from './GuestExportModal';
@@ -476,56 +477,122 @@ L'équipe organisatrice
                         : 'Vide'}
                   </span>
                 </div>
-              <div className="flex justify-end space-x-2">
-  <button
-    onClick={() => openGuestModal(table)}
-    className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-    title="Voir invités"
-  >
-    <Eye className="h-4 w-4" />
-  </button>
-  <button
-    onClick={() => openModal(table)}
-    className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-    title="Modifier"
-  >
-    <Edit className="h-4 w-4" />
-  </button>
-  <button
-    onClick={() => handleDelete(table.id)}
-    className="p-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-    title="Supprimer"
-  >
-    <Trash2 className="h-4 w-4" />
-  </button>
-</div>
-
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => openGuestModal(table)}
+                    className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Voir invités"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => sendTableInvitations(table)}
+                    className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Envoyer invitations WhatsApp"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => sendTableEmailInvitations(table)}
+                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Envoyer invitations Email"
+                  >
+                    <Mail className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => openModal(table)}
+                    className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Modifier"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(table.id)}
+                    className="p-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
 
               {/* Version Mobile */}
-             <div className="grid grid-cols-3 gap-2">
-  <button
-    onClick={() => openGuestModal(table)}
-    className="bg-purple-100 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-  >
-    <Eye className="h-4 w-4 mr-1" />
-    Invités
-  </button>
-  <button
-    onClick={() => openModal(table)}
-    className="bg-amber-100 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-  >
-    <Edit className="h-4 w-4 mr-1" />
-    Modifier
-  </button>
-  <button
-    onClick={() => handleDelete(table.id)}
-    className="bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
-  >
-    <Trash2 className="h-4 w-4 mr-1" />
-    Supprimer
-  </button>
-</div>
-
+              <div className="md:hidden p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h4 className="font-medium text-slate-900 text-lg">{table.name}</h4>
+                    <div className="flex items-center mt-1 space-x-3">
+                      <div className="flex items-center">
+                        <Users className="h-4 w-4 text-amber-600 mr-1" />
+                        <span className="text-slate-600 text-sm">{table.seats} places</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className={`text-sm font-medium ${
+                          occupiedSeats > table.seats ? 'text-rose-600' : 'text-purple-600'
+                        }`}>
+                          {occupiedSeats} / {table.seats} occupées
+                        </span>
+                      </div>
+                      {tableGuests.length > 0 && (
+                        <div className="flex items-center">
+                          <span className="text-emerald-600 text-sm font-medium">
+                            {tableGuests.length} invité{tableGuests.length > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    occupiedSeats >= table.seats 
+                      ? 'bg-emerald-100 text-emerald-800' 
+                      : occupiedSeats > 0 
+                        ? 'bg-amber-100 text-amber-800' 
+                        : 'bg-neutral-100 text-neutral-800'
+                  }`}>
+                    {occupiedSeats >= table.seats 
+                      ? 'Complète' 
+                      : occupiedSeats > 0 
+                        ? `${availableSeats} libre${availableSeats > 1 ? 's' : ''}` 
+                        : 'Vide'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => openGuestModal(table)}
+                    className="bg-purple-100 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Invités
+                  </button>
+                  <button
+                    onClick={() => sendTableInvitations(table)}
+                    className="bg-green-100 text-green-700 px-3 py-2 rounded-lg hover:bg-green-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-1" />
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={() => sendTableEmailInvitations(table)}
+                    className="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <Mail className="h-4 w-4 mr-1" />
+                    Email
+                  </button>
+                  <button
+                    onClick={() => openModal(table)}
+                    className="bg-amber-100 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Modifier
+                  </button>
+                  <button
+                    onClick={() => handleDelete(table.id)}
+                    className="bg-rose-100 text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-200 transition-all duration-200 font-medium flex items-center justify-center text-sm"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Supprimer
+                  </button>
+                </div>
               </div>
             </div>
               );
