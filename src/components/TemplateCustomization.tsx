@@ -904,11 +904,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
                 <button className="flex items-center justify-center px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-all duration-300 text-xs font-medium">
                   <Eye className="h-3 w-3 mr-1" />
                   Aperçu
-                </button>
-                <button className="flex items-center justify-center px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-all duration-300 text-xs font-medium">
-                  <Download className="h-3 w-3 mr-1" />
-                  Export
-                </button>
+               
               </div>
             </div>
           </div>
