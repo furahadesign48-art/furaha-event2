@@ -50,6 +50,25 @@ const TableManagement = ({ tables, setTables, guests = [], onSaveTable, onDelete
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [formData, setFormData] = useState<TableFormData>({ name: '', seats: 8 });
 
+  // Charger les tables Firestore
+  useEffect(() => {
+    const fetchTables = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "tables"));
+        const firestoreTables = snapshot.docs.map(doc => ({
+          firestoreId: doc.id,
+          ...doc.data()
+        })) as Table[];
+
+        setTables(firestoreTables);
+      } catch (error) {
+        console.error("Erreur lors du chargement des tables :", error);
+      }
+    };
+
+    fetchTables();
+  }, [setTables, user]);
+  
   // Utiliser les invités réels depuis le hook
   const realGuests = userInvites.length > 0 ? userInvites : guests;
 
