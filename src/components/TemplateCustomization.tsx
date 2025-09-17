@@ -901,10 +901,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
             {/* Quick Actions */}
             <div className="p-3 border-t border-neutral-200/50 bg-gradient-to-r from-neutral-50 to-amber-50/30">
               <div className="grid grid-cols-2 gap-2">
-                <button className="flex items-center justify-center px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-all duration-300 text-xs font-medium">
-                  <Eye className="h-3 w-3 mr-1" />
-                  Aperçu
-                </button>
+                
                 
               </div>
             </div>
