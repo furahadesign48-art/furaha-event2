@@ -738,7 +738,7 @@ case 'fonts':
                     : (customTemplate.invitationText || "Texte de l'invitation...")}
                 </p>
               </div>
-
+ </div>
 
 
 
@@ -937,8 +937,6 @@ case 'fonts':
         </div>
       </div>
      </div>
-    </div>
-  </div>
     );
   };
 
