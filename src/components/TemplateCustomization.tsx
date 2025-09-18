@@ -695,210 +695,268 @@ case 'fonts':
   };
 
   const renderPreview = () => {
-    return (
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-luxury border border-amber-500/30 overflow-hidden sticky top-8">
-        <div className="p-4">
-          <div className="text-center mb-4">
-            <h3 className="text-lg font-semibold text-amber-400 mb-2">Aperçu en temps réel</h3>
-            <p className="text-neutral-300 text-sm">Vos modifications apparaissent instantanément</p>
-          </div>
-          <div className="relative bg-black rounded-2xl overflow-hidden shadow-inner mx-auto w-full max-w-xs">
-            {/* Invitation Content */}
-            <div className="relative h-[500px] overflow-y-auto">
-              {/* Background Image */}
-              <div className="absolute inset-0">
-                <img
-                  src={customTemplate.backgroundImage}
-                  alt="Wedding Background"
-                  className="w-full h-full object-cover transition-all duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-900/20 via-transparent to-amber-900/20" style={{ background: `linear-gradient(to right, ${primaryColor}20, transparent, ${primaryColor}20)` }}></div>
+  return (
+    <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-luxury border border-amber-500/30 overflow-hidden sticky top-8">
+      <div className="p-4">
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-semibold text-amber-400 mb-2">Aperçu en temps réel</h3>
+          <p className="text-neutral-300 text-sm">Vos modifications apparaissent instantanément</p>
+        </div>
+        <div className="relative bg-black rounded-2xl overflow-hidden shadow-inner mx-auto w-full max-w-xs">
+          {/* Invitation Content */}
+          <div className="relative h-[500px] overflow-y-auto">
+            {/* Background Image */}
+            <div className="absolute inset-0">
+              <img
+                src={customTemplate.backgroundImage}
+                alt="Wedding Background"
+                className="w-full h-full object-cover transition-all duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"></div>
+              <div
+                className="absolute inset-0 bg-gradient-to-r from-amber-900/20 via-transparent to-amber-900/20"
+                style={{
+                  background: `linear-gradient(to right, ${primaryColor}20, transparent, ${primaryColor}20)`,
+                }}
+              ></div>
+            </div>
+
+            {/* Content */}
+            <div className="relative z-10 p-4 text-center text-white">
+              {/* Decorative Header */}
+              <div className="mb-4">
+                <div className="flex justify-center items-center mb-3">
+                  <div className="relative">
+                    <Heart
+                      className="h-8 w-8 animate-glow drop-shadow-2xl"
+                      style={{ color: accentColor }}
+                    />
+                    <div className="absolute inset-0 animate-ping">
+                      <Heart
+                        className="h-8 w-8 opacity-30"
+                        style={{ color: accentColor }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className="w-16 h-px mx-auto mb-3"
+                  style={{
+                    background: `linear-gradient(to right, transparent, ${primaryColor}, transparent)`,
+                  }}
+                ></div>
+                <div className="flex justify-center space-x-1 mb-3">
+                  <Sparkles className="h-3 w-3 animate-pulse" style={{ color: primaryColor }} />
+                  <Sparkles
+                    className="h-2 w-2 animate-pulse"
+                    style={{ color: secondaryColor, animationDelay: "0.5s" }}
+                  />
+                  <Sparkles
+                    className="h-3 w-3 animate-pulse"
+                    style={{ color: primaryColor, animationDelay: "1s" }}
+                  />
+                </div>
               </div>
 
-              {/* Content */}
-              <div className="relative z-10 p-4 text-center text-white">
               {/* Title */}
               <h1
-                className="text-lg font-bold mb-4 drop-shadow-lg transition-all duration-300"
-                style={{ fontFamily: titleFont, color: primaryColor }}
+                className="text-lg font-bold mb-4 font-luxury drop-shadow-lg transition-all duration-300"
+                style={{ color: primaryColor }}
               >
-                {customTemplate.title || "Votre titre ici"}
+                {customTemplate.title}
               </h1>
-              <div className="relative z-10 p-4 text-center text-white">
-                {/* Decorative Header */}
-                <div className="mb-4">
-                  <div className="flex justify-center items-center mb-3">
-                    <div className="relative">
-                      <Heart className="h-8 w-8 animate-glow drop-shadow-2xl" style={{ color: accentColor }} />
-                      <div className="absolute inset-0 animate-ping">
-                        <Heart className="h-8 w-8 opacity-30" style={{ color: accentColor }} />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="w-16 h-px mx-auto mb-3" style={{ background: `linear-gradient(to right, transparent, ${primaryColor}, transparent)` }}></div>
-                  <div className="flex justify-center space-x-1 mb-3">
-                    <Sparkles className="h-3 w-3 animate-pulse" style={{ color: primaryColor }} />
-                    <Sparkles className="h-2 w-2 animate-pulse" style={{ color: secondaryColor, animationDelay: '0.5s' }} />
-                    <Sparkles className="h-3 w-3 animate-pulse" style={{ color: primaryColor, animationDelay: '1s' }} />
-                  </div>
-                </div>
 
-                {/* Title */}
-                <h1 className="text-lg font-bold mb-4 font-luxury drop-shadow-lg transition-all duration-300" style={{ color: primaryColor }}>
-                  {customTemplate.title}
-                </h1>
-
-                {/* Gueste Info */}
-                <div className="backdrop-blur-sm rounded-xl p-3 mb-4 border" style={{ 
+              {/* Guest Info */}
+              <div
+                className="backdrop-blur-sm rounded-xl p-3 mb-4 border"
+                style={{
                   background: `linear-gradient(to right, ${primaryColor}40, ${secondaryColor}40)`,
-                  borderColor: `${primaryColor}30`
-                }}>
-                  <p className="text-xs mb-1" style={{ color: `${primaryColor}cc` }}>Cher(e)</p>
-                  <p className="text-sm font-semibold text-white">[Nom de l'invité]</p>
-                  <p className="text-xs mt-1" style={{ color: `${primaryColor}dd` }}>Table n° [Numéro de table]</p>
-                </div>
+                  borderColor: `${primaryColor}30`,
+                }}
+              >
+                <p className="text-xs mb-1" style={{ color: `${primaryColor}cc` }}>
+                  Cher(e)
+                </p>
+                <p className="text-sm font-semibold text-white">[Nom de l'invité]</p>
+                <p className="text-xs mt-1" style={{ color: `${primaryColor}dd` }}>
+                  Table n° [Numéro de table]
+                </p>
+              </div>
 
-                {/* Invitation Text */}
-                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 mb-4 border" style={{ borderColor: `${primaryColor}20` }}>
-                  <p className="text-neutral-200 leading-relaxed text-xs transition-all duration-300">
-                    {customTemplate.invitationText.length > 120 
-                      ? customTemplate.invitationText.substring(0, 120) + '...'
-                      : customTemplate.invitationText}
-                  </p>
-                </div>
+              {/* Invitation Text */}
+              <div
+                className="bg-black/30 backdrop-blur-sm rounded-xl p-3 mb-4 border"
+                style={{ borderColor: `${primaryColor}20` }}
+              >
+                <p className="text-neutral-200 leading-relaxed text-xs transition-all duration-300">
+                  {customTemplate.invitationText.length > 120
+                    ? customTemplate.invitationText.substring(0, 120) + "..."
+                    : customTemplate.invitationText}
+                </p>
+              </div>
 
-                {/* Event Details */}
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center justify-center text-neutral-200">
-                    <Calendar className="h-3 w-3 mr-2" style={{ color: primaryColor }} />
-                    <div className="text-left">
-                      <p className="text-xs font-semibold transition-all duration-300">{customTemplate.eventDate}</p>
-                      <p className="text-xs transition-all duration-300" style={{ color: `${primaryColor}dd` }}>{customTemplate.eventTime}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-center text-neutral-200">
-                    <MapPin className="h-3 w-3 mr-2" style={{ color: primaryColor }} />
-                    <p className="text-xs transition-all duration-300">
-                      {customTemplate.eventLocation.length > 30 
-                        ? customTemplate.eventLocation.substring(0, 30) + '...'
-                        : customTemplate.eventLocation}
+              {/* Event Details */}
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center justify-center text-neutral-200">
+                  <Calendar className="h-3 w-3 mr-2" style={{ color: primaryColor }} />
+                  <div className="text-left">
+                    <p className="text-xs font-semibold transition-all duration-300">
+                      {customTemplate.eventDate}
+                    </p>
+                    <p
+                      className="text-xs transition-all duration-300"
+                      style={{ color: `${primaryColor}dd` }}
+                    >
+                      {customTemplate.eventTime}
                     </p>
                   </div>
                 </div>
 
-                {/* RSVP Section */}
-                <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
+                <div className="flex items-center justify-center text-neutral-200">
+                  <MapPin className="h-3 w-3 mr-2" style={{ color: primaryColor }} />
+                  <p className="text-xs transition-all duration-300">
+                    {customTemplate.eventLocation.length > 30
+                      ? customTemplate.eventLocation.substring(0, 30) + "..."
+                      : customTemplate.eventLocation}
+                  </p>
+                </div>
+              </div>
+
+              {/* RSVP Section */}
+              <div
+                className="backdrop-blur-sm rounded-xl p-3 mb-3 border"
+                style={{
                   background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
-                  borderColor: `${primaryColor}30`
-                }}>
-                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
-                    <Users className="h-3 w-3 mr-1" />
-                    Confirmation
-                  </h3>
+                  borderColor: `${primaryColor}30`,
+                }}
+              >
+                <h3
+                  className="text-xs font-semibold mb-2 flex items-center justify-center"
+                  style={{ color: `${primaryColor}cc` }}
+                >
+                  <Users className="h-3 w-3 mr-1" />
+                  Confirmation
+                </h3>
+                <button
+                  onClick={() => setIsConfirmed(!isConfirmed)}
+                  className="w-full py-2 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105"
+                  style={{
+                    background: isConfirmed
+                      ? "linear-gradient(to right, #10b981, #059669)"
+                      : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
+                    color: isConfirmed ? "white" : "#1e293b",
+                  }}
+                >
+                  {isConfirmed ? (
+                    <span className="flex items-center justify-center">
+                      <Check className="h-3 w-3 mr-1" />
+                      Présence confirmée
+                    </span>
+                  ) : (
+                    "Confirmer ma présence"
+                  )}
+                </button>
+              </div>
+
+              {/* Drink Selection */}
+              <div
+                className="backdrop-blur-sm rounded-xl p-3 mb-3 border"
+                style={{
+                  background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
+                  borderColor: `${primaryColor}30`,
+                }}
+              >
+                <h3
+                  className="text-xs font-semibold mb-2 flex items-center justify-center"
+                  style={{ color: `${primaryColor}cc` }}
+                >
+                  <Wine className="h-3 w-3 mr-1" />
+                  Choix de boisson
+                </h3>
+                <select
+                  value={selectedDrink}
+                  onChange={(e) => setSelectedDrink(e.target.value)}
+                  className="w-full bg-slate-800/80 text-white border rounded-lg px-2 py-1 text-xs focus:ring-1 transition-all duration-200"
+                  style={{
+                    borderColor: `${primaryColor}30`,
+                    focusRingColor: primaryColor,
+                  }}
+                >
+                  <option value="">Sélectionnez votre boisson</option>
+                  {customTemplate.drinkOptions.slice(0, 3).map((drink) => (
+                    <option key={drink} value={drink}>
+                      {drink}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Guest Book */}
+              <div
+                className="backdrop-blur-sm rounded-xl p-3 mb-3 border"
+                style={{
+                  background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
+                  borderColor: `${primaryColor}30`,
+                }}
+              >
+                <h3
+                  className="text-xs font-semibold mb-2 flex items-center justify-center"
+                  style={{ color: `${primaryColor}cc` }}
+                >
+                  <MessageCircle className="h-3 w-3 mr-1" />
+                  Livre d'or
+                </h3>
+                <textarea
+                  value={guestMessage}
+                  onChange={(e) => setGuestMessage(e.target.value)}
+                  placeholder="Laissez un message aux mariés..."
+                  className="w-full bg-slate-800/80 text-white border rounded-lg px-2 py-1 text-xs focus:ring-1 transition-all duration-200 resize-none"
+                  rows={2}
+                  style={{
+                    borderColor: `${primaryColor}30`,
+                    focusRingColor: primaryColor,
+                  }}
+                />
+                <div className="mt-2 grid grid-cols-2 gap-1">
                   <button
-                    onClick={() => setIsConfirmed(!isConfirmed)}
-                    className="w-full py-2 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105"
+                    onClick={() => {
+                      if (guestMessage.trim()) {
+                        alert("Message envoyé avec succès !");
+                        setGuestMessage("");
+                      } else {
+                        alert("Veuillez écrire un message avant d'envoyer.");
+                      }
+                    }}
+                    className="py-1 rounded-lg text-xs font-semibold shadow-lg transform hover:scale-105 relative overflow-hidden group transition-all duration-300"
                     style={{
-                      background: isConfirmed 
-                        ? 'linear-gradient(to right, #10b981, #059669)' 
-                        : `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
-                      color: isConfirmed ? 'white' : '#1e293b'
+                      background: "linear-gradient(to right, #10b981, #059669)",
+                      color: "white",
                     }}
                   >
-                    {isConfirmed ? (
-                      <span className="flex items-center justify-center">
-                        <Check className="h-3 w-3 mr-1" />
-                        Présence confirmée
-                      </span>
-                    ) : (
-                      'Confirmer ma présence'
-                    )}
+                    <MessageCircle className="h-3 w-3 inline mr-1" />
+                    Envoyer
                   </button>
-                </div>
-
-                {/* Drink Selection */}
-                <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
-                  background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
-                  borderColor: `${primaryColor}30`
-                }}>
-                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
-                    <Wine className="h-3 w-3 mr-1" />
-                    Choix de boisson
-                  </h3>
-                  <select
-                    value={selectedDrink}
-                    onChange={(e) => setSelectedDrink(e.target.value)}
-                    className="w-full bg-slate-800/80 text-white border rounded-lg px-2 py-1 text-xs focus:ring-1 transition-all duration-200"
-                    style={{ 
-                      borderColor: `${primaryColor}30`,
-                      focusRingColor: primaryColor
+                  <button
+                    className="py-1 rounded-lg text-xs font-semibold transition-all duration-300"
+                    style={{
+                      background: `linear-gradient(to right, ${secondaryColor}, ${primaryColor})`,
+                      color: "#1e293b",
                     }}
                   >
-                    <option value="">Sélectionnez votre boisson</option>
-                    {customTemplate.drinkOptions.slice(0, 3).map((drink) => (
-                      <option key={drink} value={drink}>{drink}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Guest Book - Simplified */}
-                <div className="backdrop-blur-sm rounded-xl p-3 mb-3 border" style={{ 
-                  background: `linear-gradient(to right, ${primaryColor}50, ${secondaryColor}50)`,
-                  borderColor: `${primaryColor}30`
-                }}>
-                  <h3 className="text-xs font-semibold mb-2 flex items-center justify-center" style={{ color: `${primaryColor}cc` }}>
-                    <MessageCircle className="h-3 w-3 mr-1" />
-                    Livre d'or
-                  </h3>
-                  <textarea
-                    value={guestMessage}
-                    onChange={(e) => setGuestMessage(e.target.value)}
-                    placeholder="Laissez un message aux mariés..."
-                    className="w-full bg-slate-800/80 text-white border rounded-lg px-2 py-1 text-xs focus:ring-1 transition-all duration-200 resize-none"
-                    rows={2}
-                    style={{ 
-                      borderColor: `${primaryColor}30`,
-                      focusRingColor: primaryColor
-                    }}
-                  />
-                  <div className="mt-2 grid grid-cols-2 gap-1">
-                    <button 
-                      onClick={() => {
-                        if (guestMessage.trim()) {
-                          alert('Message envoyé avec succès !');
-                          setGuestMessage('');
-                        } else {
-                          alert('Veuillez écrire un message avant d\'envoyer.');
-                        }
-                      }}
-                      className="py-1 rounded-lg text-xs font-semibold shadow-lg transform hover:scale-105 relative overflow-hidden group transition-all duration-300"
-                      style={{ background: 'linear-gradient(to right, #10b981, #059669)', color: 'white' }}
-                    >
-                      <MessageCircle className="h-3 w-3 inline mr-1" />
-                      Envoyer
-                    </button>
-                    <button 
-                      className="py-1 rounded-lg text-xs font-semibold transition-all duration-300"
-                      style={{ 
-                        background: `linear-gradient(to right, ${secondaryColor}, ${primaryColor})`,
-                        color: '#1e293b'
-                      }}
-                    >
-                      <Camera className="h-3 w-3 inline mr-1" />
-                      Photo
-                    </button>
-                  </div>
+                    <Camera className="h-3 w-3 inline mr-1" />
+                    Photo
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
+
 
   return (
     <div className="animate-fade-in">
