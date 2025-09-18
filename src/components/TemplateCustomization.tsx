@@ -182,47 +182,52 @@ const renderPreview = () => {
     handleInputChange('drinkOptions', newOptions);
   };
 
- const handleSave = async () => {
+const handleSave = async () => {
   if (!customTemplate.id || !user) return;
 
-  // Sauvegarder dans la collection UserModel de l'utilisateur
   const modelRef = doc(db, 'users', user.id, 'UserModel', customTemplate.id);
 
-try {
-  await setDoc(
-    modelRef,
-    {
-      ...customTemplate,
-      colors: {
-        primary: primaryColor,
-        secondary: secondaryColor,
-        accent: accentColor
-      },
-      customizations: {
+  try {
+    await setDoc(
+      modelRef,
+      {
+        ...customTemplate,
         colors: {
           primary: primaryColor,
           secondary: secondaryColor,
           accent: accentColor
         },
-        fonts: {
-          title: titleFont,
-          body: bodyFont
+        customizations: {
+          colors: {
+            primary: primaryColor,
+            secondary: secondaryColor,
+            accent: accentColor
+          },
+          fonts: {
+            title: titleFont,
+            body: bodyFont
+          },
+          layout: 'default'
         },
-        layout: 'default'
+        updatedAt: new Date()
       },
-      updatedAt: new Date()
-    },
-    { merge: true }
-  );
+      { merge: true }
+    );
 
-  // Appeler la fonction onSave pour mettre à jour l'état parent
-  onSave(customTemplate);
+    onSave(customTemplate);
+    alert('Template sauvegardé avec succès !');
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde du template:', error);
+    alert('Erreur lors de la sauvegarde du template. Vérifiez la console.');
+  }
+};  // 👈 ici tu fermes bien la fonction
 
-  alert('Template sauvegardé avec succès !');
-} catch (error) {
-  console.error('Erreur lors de la sauvegarde du template:', error);
-  alert('Erreur lors de la sauvegarde du template. Vérifiez la console.');
-}
+const renderTabContent = () => {
+  switch (activeTab) {
+    ...
+  }
+};
+
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -1012,6 +1017,7 @@ case 'fonts':
         </div>
       </div>
     </div>
+  );
 };
 
 export default TemplateCustomization;
