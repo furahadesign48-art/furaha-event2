@@ -518,6 +518,49 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
           </div>
         );
 
+case 'fonts':
+  return (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Police du titre
+        </label>
+        <select
+          value={titleFont}
+          onChange={(e) => setTitleFont(e.target.value)}
+          className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+        >
+          <option value="Playfair Display">Playfair Display</option>
+          <option value="Roboto">Roboto</option>
+          <option value="Lobster">Lobster</option>
+          <option value="Montserrat">Montserrat</option>
+          <option value="Dancing Script">Dancing Script</option>
+        </select>
+        <p className="text-sm text-slate-500 mt-2">Police utilisée pour le titre principal.</p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Police du corps de texte
+        </label>
+        <select
+          value={bodyFont}
+          onChange={(e) => setBodyFont(e.target.value)}
+          className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+        >
+          <option value="Inter">Inter</option>
+          <option value="Roboto">Roboto</option>
+          <option value="Open Sans">Open Sans</option>
+          <option value="Poppins">Poppins</option>
+          <option value="Lora">Lora</option>
+        </select>
+        <p className="text-sm text-slate-500 mt-2">Police utilisée pour le texte de l'invitation.</p>
+      </div>
+    </div>
+  );
+
+        
+
       case 'event':
         return (
           <div className="space-y-6">
