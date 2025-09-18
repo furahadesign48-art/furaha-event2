@@ -696,7 +696,7 @@ case 'fonts':
 
   const renderPreview = () => {
     return (
-  <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-luxury border border-amber-500/30 overflow-hidden sticky top-8"
+ <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-luxury border border-amber-500/30 overflow-hidden sticky top-8"
          style={{ fontFamily: bodyFont }}>
       <div className="p-4">
         <div className="text-center mb-4">
@@ -738,10 +738,6 @@ case 'fonts':
                     : (customTemplate.invitationText || "Texte de l'invitation...")}
                 </p>
               </div>
- </div>
-
-
-
       
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-luxury border border-amber-500/30 overflow-hidden sticky top-8">
         <div className="p-4">
@@ -936,7 +932,6 @@ case 'fonts':
           </div>
         </div>
       </div>
-     </div>
     );
   };
 
