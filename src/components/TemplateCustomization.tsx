@@ -89,6 +89,10 @@ useEffect(() => {
     setAccentColor(template.customizations.colors.accent);
   }
 
+  if (template.customizations?.fonts?.titleSize) {
+  setTitleFontSize(template.customizations.fonts.titleSize);
+}
+
   // Polices : chercher dans plusieurs emplacements possibles
   const savedTitleFont =
     template.titleFont ??
