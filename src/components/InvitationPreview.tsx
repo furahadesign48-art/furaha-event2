@@ -46,6 +46,8 @@ const InvitationPreview = () => {
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showQRInfo, setShowQRInfo] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  const [titleFont, setTitleFont] = useState('Playfair Display');
+  const [bodyFont, setBodyFont] = useState('Inter');
 
   useEffect(() => {
     const loadInvitationData = async () => {
@@ -438,11 +440,19 @@ const InvitationPreview = () => {
 
                   {/* Title */}
                   <h1 
-                    className="text-3xl sm:text-4xl lg:text-5xl font-bold font-luxury drop-shadow-lg group hover:scale-105 hover:drop-shadow-2xl transition-all duration-500 cursor-default" 
-                    style={{ color: colors.primary }}
-                  >
-                    {userModel.title}
-                  </h1>
+  className="text-3xl sm:text-4xl lg:text-5xl font-bold drop-shadow-lg group hover:scale-105 hover:drop-shadow-2xl transition-all duration-500 cursor-default" 
+  style={{ color: colors.primary, fontFamily: titleFont }}
+>
+  {userModel.title}
+</h1>
+
+<p 
+  className="text-neutral-200 leading-relaxed text-base sm:text-lg"
+  style={{ fontFamily: bodyFont }}
+>
+  {userModel.invitationText}
+</p>
+
 
                  <div className="text-center text-white space-y-6 sm:space-y-8 mt-12 sm:mt-16 md:mt-20">
   {/* Guest Info Section */}
