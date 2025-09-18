@@ -175,40 +175,44 @@ const handleSave = async () => {
 
   const modelRef = doc(db, 'users', user.id, 'UserModel', customTemplate.id);
 
-  try {
-    await setDoc(
-      modelRef,
-      {
-        ...customTemplate,
-        colors: {
-          primary: primaryColor,
-          secondary: secondaryColor,
-          accent: accentColor
-        },
-        customizations: {
-          colors: {
-            primary: primaryColor,
-            secondary: secondaryColor,
-            accent: accentColor
-          },
-          fonts: {
-            title: titleFont,
-            body: bodyFont
-          },
-          layout: 'default'
-        },
-        updatedAt: new Date()
+  // Construire la version à sauvegarder (on inclut fonts sous customizations.fonts)
+  const updatedTemplate = {
+    ...customTemplate,
+    colors: {
+      primary: primaryColor,
+      secondary: secondaryColor,
+      accent: accentColor
+    },
+    customizations: {
+      ...(customTemplate.customizations || {}),
+      colors: {
+        primary: primaryColor,
+        secondary: secondaryColor,
+        accent: accentColor
       },
-      { merge: true }
-    );
+      fonts: {
+        title: titleFont,
+        body: bodyFont
+      },
+      layout: 'default'
+    },
+    updatedAt: new Date()
+  };
 
-    onSave(customTemplate);
+  try {
+    await setDoc(modelRef, updatedTemplate, { merge: true });
+
+    // Mettre à jour l'état local et informer le parent avec la version complète
+    setCustomTemplate(updatedTemplate);
+    onSave(updatedTemplate);
+
     alert('Template sauvegardé avec succès !');
   } catch (error) {
     console.error('Erreur lors de la sauvegarde du template:', error);
     alert('Erreur lors de la sauvegarde du template. Vérifiez la console.');
   }
-};  // 👈 ici tu fermes bien la fonction
+};
+
 
   const renderTabContent = () => {
     switch (activeTab) {
