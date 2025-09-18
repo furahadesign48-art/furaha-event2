@@ -79,11 +79,32 @@ useEffect(() => {
   }
 
   // 🔥 Gestion des polices
-  if (template.titleFont) {
-    setTitleFont(template.titleFont);
-  } else if (template.customizations?.titleFont) {
-    setTitleFont(template.customizations.titleFont);
+  if (template.colors) {
+    setPrimaryColor(template.colors.primary);
+    setSecondaryColor(template.colors.secondary);
+    setAccentColor(template.colors.accent);
+  } else if (template.customizations?.colors) {
+    setPrimaryColor(template.customizations.colors.primary);
+    setSecondaryColor(template.customizations.colors.secondary);
+    setAccentColor(template.customizations.colors.accent);
   }
+
+  // Polices : chercher dans plusieurs emplacements possibles
+  const savedTitleFont =
+    template.titleFont ??
+    template.customizations?.fonts?.title ??
+    template.customizations?.titleFont ??
+    template.customizations?.fonts?.fontTitle; // fallback si tu as d'autres formes
+
+  const savedBodyFont =
+    template.bodyFont ??
+    template.customizations?.fonts?.body ??
+    template.customizations?.bodyFont ??
+    template.customizations?.fonts?.fontBody;
+
+  if (savedTitleFont) setTitleFont(savedTitleFont);
+  if (savedBodyFont) setBodyFont(savedBodyFont);
+}, [template]);
 
   if (template.bodyFont) {
     setBodyFont(template.bodyFont);
