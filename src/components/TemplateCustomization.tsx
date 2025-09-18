@@ -4,6 +4,9 @@ import { storage } from '../config/firebase';
 import { useAuth } from './AuthContext';
 import { db } from '../config/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+const [titleFont, setTitleFont] = useState('Playfair Display'); 
+const [bodyFont, setBodyFont] = useState('Inter');
+
 import { 
   ArrowLeft, 
   Save, 
