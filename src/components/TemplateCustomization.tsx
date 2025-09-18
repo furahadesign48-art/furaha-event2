@@ -185,8 +185,10 @@ const renderPreview = () => {
   // Sauvegarder dans la collection UserModel de l'utilisateur
   const modelRef = doc(db, 'users', user.id, 'UserModel', customTemplate.id);
 
-  try {
-    await setDoc(modelRef, {
+try {
+  await setDoc(
+    modelRef,
+    {
       ...customTemplate,
       colors: {
         primary: primaryColor,
@@ -199,31 +201,25 @@ const renderPreview = () => {
           secondary: secondaryColor,
           accent: accentColor
         },
-      customizations: {
-  colors: {
-    primary: primaryColor,
-    secondary: secondaryColor,
-    accent: accentColor
-  },
-  fonts: {
-    title: titleFont,
-    body: bodyFont
-  },
-  layout: 'default'
-},
-
+        fonts: {
+          title: titleFont,
+          body: bodyFont
+        },
+        layout: 'default'
+      },
       updatedAt: new Date()
-    }, { merge: true });
+    },
+    { merge: true }
+  );
 
-    // Appeler la fonction onSave pour mettre à jour l'état parent
-    onSave(customTemplate);
-    
-    alert('Template sauvegardé avec succès !');
-  } catch (error) {
-    console.error('Erreur lors de la sauvegarde du template:', error);
-    alert('Erreur lors de la sauvegarde du template. Vérifiez la console.');
-  }
-};
+  // Appeler la fonction onSave pour mettre à jour l'état parent
+  onSave(customTemplate);
+
+  alert('Template sauvegardé avec succès !');
+} catch (error) {
+  console.error('Erreur lors de la sauvegarde du template:', error);
+  alert('Erreur lors de la sauvegarde du template. Vérifiez la console.');
+}
 
   const renderTabContent = () => {
     switch (activeTab) {
