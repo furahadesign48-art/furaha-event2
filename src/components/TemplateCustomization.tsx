@@ -799,6 +799,18 @@ case 'fonts':
   {customTemplate.title}
 </h1>
 
+              <h1
+  className="font-bold mb-4 drop-shadow-lg transition-all duration-300"
+  style={{
+    color: primaryColor,
+    fontFamily: formatFontFamily(titleFont, 'serif'),
+    fontSize: `${titleFontSize}px`
+  }}
+>
+  {customTemplate.title}
+</h1>
+
+
 
               {/* Guest Info */}
               <div
