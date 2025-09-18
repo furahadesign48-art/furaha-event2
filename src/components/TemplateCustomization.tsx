@@ -67,17 +67,31 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
 
 
   // Initialiser les couleurs depuis le template au chargement
-  useEffect(() => {
-    if (template.colors) {
-      setPrimaryColor(template.colors.primary);
-      setSecondaryColor(template.colors.secondary);
-      setAccentColor(template.colors.accent);
-    } else if (template.customizations?.colors) {
-      setPrimaryColor(template.customizations.colors.primary);
-      setSecondaryColor(template.customizations.colors.secondary);
-      setAccentColor(template.customizations.colors.accent);
-    }
-  }, [template]);
+useEffect(() => {
+  if (template.colors) {
+    setPrimaryColor(template.colors.primary);
+    setSecondaryColor(template.colors.secondary);
+    setAccentColor(template.colors.accent);
+  } else if (template.customizations?.colors) {
+    setPrimaryColor(template.customizations.colors.primary);
+    setSecondaryColor(template.customizations.colors.secondary);
+    setAccentColor(template.customizations.colors.accent);
+  }
+
+  // 🔥 Gestion des polices
+  if (template.titleFont) {
+    setTitleFont(template.titleFont);
+  } else if (template.customizations?.titleFont) {
+    setTitleFont(template.customizations.titleFont);
+  }
+
+  if (template.bodyFont) {
+    setBodyFont(template.bodyFont);
+  } else if (template.customizations?.bodyFont) {
+    setBodyFont(template.customizations.bodyFont);
+  }
+}, [template]);
+
 
   const tabs = [
     { id: 'general', label: 'Général', icon: Type },
