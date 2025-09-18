@@ -51,7 +51,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   
   const [titleFont, setTitleFont] = useState('Playfair Display');
   const [bodyFont, setBodyFont] = useState('Inter');
-  const [titleFontSize, setTitleFontSize] = useState(24); // valeur par défaut en px
+  const [titleFontSize, setTitleFontSize] = useState(32); // valeur par défaut
 
   const [customTemplate, setCustomTemplate] = useState<TemplateData>(template);
   const [activeTab, setActiveTab] = useState('general');
