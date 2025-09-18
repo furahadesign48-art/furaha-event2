@@ -738,12 +738,6 @@ case 'fonts':
                     : (customTemplate.invitationText || "Texte de l'invitation...")}
                 </p>
               </div>
-      
-        <div className="p-4">
-          <div className="text-center mb-4">
-            <h3 className="text-lg font-semibold text-amber-400 mb-2">Aperçu en temps réel</h3>
-            <p className="text-neutral-300 text-sm">Vos modifications apparaissent instantanément</p>
-          </div>
           <div className="relative bg-black rounded-2xl overflow-hidden shadow-inner mx-auto w-full max-w-xs">
             {/* Invitation Content */}
             <div className="relative h-[500px] overflow-y-auto">
@@ -931,8 +925,7 @@ case 'fonts':
           </div>
         </div>
       </div>
-     </div>
-    </div>
+            
     );
   };
 
