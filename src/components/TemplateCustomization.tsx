@@ -222,21 +222,6 @@ const handleSave = async () => {
   }
 };  // 👈 ici tu fermes bien la fonction
 
-const renderTabContent = () => {
-  switch (activeTab) {
-    case "colors":
-      return <div>Éditeur des couleurs</div>;
-    case "fonts":
-      return <div>Éditeur des polices</div>;
-    case "layout":
-      return <div>Éditeur de mise en page</div>;
-    default:
-      return <div>Sélectionnez un onglet</div>;
-  }
-};
-
-
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'general':
