@@ -790,11 +790,15 @@ case 'fonts':
                 className="bg-black/30 backdrop-blur-sm rounded-xl p-3 mb-4 border"
                 style={{ borderColor: `${primaryColor}20` }}
               >
-                <p className="text-neutral-200 leading-relaxed text-xs transition-all duration-300">
-                  {customTemplate.invitationText.length > 120
-                    ? customTemplate.invitationText.substring(0, 120) + "..."
-                    : customTemplate.invitationText}
-                </p>
+                <p
+  className="text-neutral-200 leading-relaxed text-xs transition-all duration-300"
+  style={{ fontFamily: bodyFont }}
+>
+  {customTemplate.invitationText.length > 120
+    ? customTemplate.invitationText.substring(0, 120) + "..."
+    : customTemplate.invitationText}
+</p>
+
               </div>
 
               {/* Event Details */}
