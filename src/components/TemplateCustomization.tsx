@@ -206,7 +206,8 @@ const handleSave = async () => {
       },
       fonts: {
         title: titleFont,
-        body: bodyFont
+        body: bodyFont,
+        titleSize: titleFontSize
       },
       layout: 'default'
     },
