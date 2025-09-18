@@ -141,6 +141,32 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
     }
   };
 
+const renderPreview = () => {
+  return (
+    <div
+      className="p-6 rounded-xl border border-neutral-200 bg-white shadow-lg"
+      style={{
+        fontFamily: bodyFont
+      }}
+    >
+      <h1
+        className="text-3xl font-bold mb-4"
+        style={{
+          fontFamily: titleFont,
+          color: primaryColor
+        }}
+      >
+        {customTemplate.title || "Votre titre ici"}
+      </h1>
+      <p className="text-base text-slate-700">
+        {customTemplate.invitationText || "Texte de l'invitation..."}
+      </p>
+    </div>
+  );
+};
+
+
+  
   const addDrinkOption = () => {
     if (newDrink.trim() && !customTemplate.drinkOptions.includes(newDrink.trim())) {
       handleInputChange('drinkOptions', [...customTemplate.drinkOptions, newDrink.trim()]);
