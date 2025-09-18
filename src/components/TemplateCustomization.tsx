@@ -4,9 +4,6 @@ import { storage } from '../config/firebase';
 import { useAuth } from './AuthContext';
 import { db } from '../config/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-const [titleFont, setTitleFont] = useState('Playfair Display'); 
-const [bodyFont, setBodyFont] = useState('Inter');
-
 import { 
   ArrowLeft, 
   Save, 
@@ -50,6 +47,11 @@ interface TemplateCustomizationProps {
 
 const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizationProps) => {
   const { user } = useAuth();
+
+  // ✅ Déplacer les hooks ici
+  const [titleFont, setTitleFont] = useState('Playfair Display');
+  const [bodyFont, setBodyFont] = useState('Inter');
+
   const [customTemplate, setCustomTemplate] = useState<TemplateData>(template);
   const [activeTab, setActiveTab] = useState('general');
   const [selectedDrink, setSelectedDrink] = useState('');
@@ -62,6 +64,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showQRInfo, setShowQRInfo] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+
 
   // Initialiser les couleurs depuis le template au chargement
   useEffect(() => {
