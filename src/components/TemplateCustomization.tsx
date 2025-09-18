@@ -717,13 +717,14 @@ case 'fonts':
               </div>
 
               {/* Content */}
-
-               <div className="relative z-10 p-4 text-center text-white">
+              <div className="relative z-10 p-4 text-center text-white">
               {/* Title */}
               <h1
                 className="text-lg font-bold mb-4 drop-shadow-lg transition-all duration-300"
                 style={{ fontFamily: titleFont, color: primaryColor }}
               >
+                {customTemplate.title || "Votre titre ici"}
+              </h1>
               <div className="relative z-10 p-4 text-center text-white">
                 {/* Decorative Header */}
                 <div className="mb-4">
@@ -896,7 +897,6 @@ case 'fonts':
           </div>
         </div>
       </div>
-    </div>
     );
   };
 
