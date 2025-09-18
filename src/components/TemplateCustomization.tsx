@@ -562,6 +562,7 @@ const handleSave = async () => {
 case 'fonts':
   return (
     <div className="space-y-6">
+      {/* Sélecteur Police du Titre */}
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-2">
           Police du titre
@@ -577,9 +578,31 @@ case 'fonts':
           <option value="Montserrat">Montserrat</option>
           <option value="Dancing Script">Dancing Script</option>
         </select>
-        <p className="text-sm text-slate-500 mt-2">Police utilisée pour le titre principal.</p>
+        <p className="text-sm text-slate-500 mt-2">
+          Police utilisée pour le titre principal.
+        </p>
       </div>
 
+      {/* 🔥 Slider Taille de police du titre */}
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Taille du titre
+        </label>
+        <input
+          type="range"
+          min="12"
+          max="72"
+          step="1"
+          value={titleFontSize}
+          onChange={(e) => setTitleFontSize(Number(e.target.value))}
+          className="w-full accent-amber-500"
+        />
+        <p className="text-sm text-slate-500 mt-2">
+          Taille actuelle : <span className="font-semibold">{titleFontSize}px</span>
+        </p>
+      </div>
+
+      {/* Sélecteur Police du Corps */}
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-2">
           Police du corps de texte
@@ -595,7 +618,9 @@ case 'fonts':
           <option value="Poppins">Poppins</option>
           <option value="Lora">Lora</option>
         </select>
-        <p className="text-sm text-slate-500 mt-2">Police utilisée pour le texte de l'invitation.</p>
+        <p className="text-sm text-slate-500 mt-2">
+          Police utilisée pour le texte de l'invitation.
+        </p>
       </div>
     </div>
   );
