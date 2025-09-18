@@ -739,7 +739,6 @@ case 'fonts':
                 </p>
               </div>
       
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-luxury border border-amber-500/30 overflow-hidden sticky top-8">
         <div className="p-4">
           <div className="text-center mb-4">
             <h3 className="text-lg font-semibold text-amber-400 mb-2">Aperçu en temps réel</h3>
