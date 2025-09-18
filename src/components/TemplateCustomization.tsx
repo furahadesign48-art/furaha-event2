@@ -78,8 +78,7 @@ useEffect(() => {
     setAccentColor(template.customizations.colors.accent);
   }
 
-  // 🔥 Gestion des polices
-  if (template.colors) {
+ if (template.colors) {
     setPrimaryColor(template.colors.primary);
     setSecondaryColor(template.colors.secondary);
     setAccentColor(template.colors.accent);
@@ -104,13 +103,6 @@ useEffect(() => {
 
   if (savedTitleFont) setTitleFont(savedTitleFont);
   if (savedBodyFont) setBodyFont(savedBodyFont);
-}, [template]);
-
-  if (template.bodyFont) {
-    setBodyFont(template.bodyFont);
-  } else if (template.customizations?.bodyFont) {
-    setBodyFont(template.customizations.bodyFont);
-  }
 }, [template]);
 
 
