@@ -761,11 +761,12 @@ case 'fonts':
 
               {/* Title */}
               <h1
-                className="text-lg font-bold mb-4 font-luxury drop-shadow-lg transition-all duration-300"
-                style={{ color: primaryColor }}
-              >
-                {customTemplate.title}
-              </h1>
+  className="text-lg font-bold mb-4 drop-shadow-lg transition-all duration-300"
+  style={{ color: primaryColor, fontFamily: titleFont }}
+>
+  {customTemplate.title}
+</h1>
+
 
               {/* Guest Info */}
               <div
