@@ -80,6 +80,7 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
     { id: 'general', label: 'Général', icon: Type },
     { id: 'design', label: 'Design', icon: Palette },
     { id: 'colors', label: 'Couleurs', icon: Palette },
+    { id: 'fonts', label: 'Typographie', icon: Type },
     { id: 'event', label: 'Événement', icon: Calendar },
     { id: 'options', label: 'Options', icon: Wine }
   ];
