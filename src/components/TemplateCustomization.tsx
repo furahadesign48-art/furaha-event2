@@ -931,6 +931,7 @@ case 'fonts':
           </div>
         </div>
       </div>
+     </div>
     );
   };
 
