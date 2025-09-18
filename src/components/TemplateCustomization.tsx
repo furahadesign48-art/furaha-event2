@@ -1013,6 +1013,6 @@ case 'fonts':
       </div>
     </div>
   );
-};
+
 
 export default TemplateCustomization;
