@@ -696,48 +696,12 @@ case 'fonts':
 
   const renderPreview = () => {
     return (
- <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-luxury border border-amber-500/30 overflow-hidden sticky top-8"
-         style={{ fontFamily: bodyFont }}>
-      <div className="p-4">
-        <div className="text-center mb-4">
-          <h3 className="text-lg font-semibold text-amber-400 mb-2">Aperçu en temps réel</h3>
-          <p className="text-neutral-300 text-sm">Vos modifications apparaissent instantanément</p>
-        </div>
-
-        <div className="relative bg-black rounded-2xl overflow-hidden shadow-inner mx-auto w-full max-w-xs">
-          {/* Invitation Content */}
-          <div className="relative h-[500px] overflow-y-auto">
-            {/* Background Image */}
-            <div className="absolute inset-0">
-              <img
-                src={customTemplate.backgroundImage}
-                alt="Wedding Background"
-                className="w-full h-full object-cover transition-all duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"></div>
-              <div className="absolute inset-0 bg-gradient-to-r"
-                   style={{ background: `linear-gradient(to right, ${primaryColor}20, transparent, ${primaryColor}20)` }}></div>
-            </div>
-
-            {/* Content */}
-            <div className="relative z-10 p-4 text-center text-white">
-              {/* Title */}
-              <h1
-                className="text-lg font-bold mb-4 drop-shadow-lg transition-all duration-300"
-                style={{ fontFamily: titleFont, color: primaryColor }}
-              >
-                {customTemplate.title || "Votre titre ici"}
-              </h1>
-
-              {/* Invitation Text */}
-              <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 mb-4 border"
-                   style={{ borderColor: `${primaryColor}20` }}>
-                <p className="text-neutral-200 leading-relaxed text-xs transition-all duration-300">
-                  {customTemplate.invitationText && customTemplate.invitationText.length > 120
-                    ? customTemplate.invitationText.substring(0, 120) + '...'
-                    : (customTemplate.invitationText || "Texte de l'invitation...")}
-                </p>
-              </div>
+      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-luxury border border-amber-500/30 overflow-hidden sticky top-8">
+        <div className="p-4">
+          <div className="text-center mb-4">
+            <h3 className="text-lg font-semibold text-amber-400 mb-2">Aperçu en temps réel</h3>
+            <p className="text-neutral-300 text-sm">Vos modifications apparaissent instantanément</p>
+          </div>
           <div className="relative bg-black rounded-2xl overflow-hidden shadow-inner mx-auto w-full max-w-xs">
             {/* Invitation Content */}
             <div className="relative h-[500px] overflow-y-auto">
@@ -778,7 +742,7 @@ case 'fonts':
                   {customTemplate.title}
                 </h1>
 
-                {/* Guest Info */}
+                {/* Gueste Info */}
                 <div className="backdrop-blur-sm rounded-xl p-3 mb-4 border" style={{ 
                   background: `linear-gradient(to right, ${primaryColor}40, ${secondaryColor}40)`,
                   borderColor: `${primaryColor}30`
@@ -925,7 +889,6 @@ case 'fonts':
           </div>
         </div>
       </div>
-            
     );
   };
 
