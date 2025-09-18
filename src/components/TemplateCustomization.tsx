@@ -224,7 +224,6 @@ const handleSave = async () => {
 
 const renderTabContent = () => {
   switch (activeTab) {
-    ...
   }
 };
 
