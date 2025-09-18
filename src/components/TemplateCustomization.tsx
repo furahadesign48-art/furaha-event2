@@ -48,7 +48,7 @@ interface TemplateCustomizationProps {
 const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizationProps) => {
   const { user } = useAuth();
 
-  // ✅ Déplacer les hooks ici
+  
   const [titleFont, setTitleFont] = useState('Playfair Display');
   const [bodyFont, setBodyFont] = useState('Inter');
 
