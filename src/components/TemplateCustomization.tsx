@@ -173,12 +173,19 @@ const TemplateCustomization = ({ template, onBack, onSave }: TemplateCustomizati
           secondary: secondaryColor,
           accent: accentColor
         },
-        fonts: {
-          title: 'Playfair Display',
-          body: 'Inter'
-        },
-        layout: 'default'
-      },
+      customizations: {
+  colors: {
+    primary: primaryColor,
+    secondary: secondaryColor,
+    accent: accentColor
+  },
+  fonts: {
+    title: titleFont,
+    body: bodyFont
+  },
+  layout: 'default'
+},
+
       updatedAt: new Date()
     }, { merge: true });
 
