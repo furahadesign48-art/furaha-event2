@@ -49,60 +49,60 @@ const InvitationPreview = () => {
   const [titleFont, setTitleFont] = useState('Playfair Display');
   const [bodyFont, setBodyFont] = useState('Inter');
 
-useEffect(() => {
-  const loadInvitationData = async () => {
-    if (!inviteId) {
-      setError("ID d'invitation manquant");
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      const inviteData = await InviteService.getInviteGlobal(inviteId);
-
-      if (!inviteData) {
-        setError("Invitation non trouvée");
+  useEffect(() => {
+    const loadInvitationData = async () => {
+      if (!inviteId) {
+        setError('ID d\'invitation manquant');
         setIsLoading(false);
         return;
       }
 
-      setInvite(inviteData);
-      setIsConfirmed(inviteData.confirmed);
-
-      const userModels = await UserModelService.getUserModels(inviteData.userId);
-
-      if (userModels.length > 0) {
-        const model = userModels[0];
-        setUserModel(model);
-
-        // 🎨 Définir les polices personnalisées si elles existent
-        if (model.customizations?.fonts) {
-          setTitleFont(model.customizations.fonts.titleFont || "Playfair Display");
-          setBodyFont(model.customizations.fonts.bodyFont || "Inter");
-        } else {
-          setTitleFont("Playfair Display");
-          setBodyFont("Inter");
+      try {
+        setIsLoading(true);
+        console.log('Chargement de l\'invitation:', inviteId);
+        
+        // Utiliser la méthode globale pour récupérer l'invitation
+        const inviteData = await InviteService.getInviteGlobal(inviteId);
+        console.log('Données d\'invitation récupérées:', inviteData);
+        
+        if (!inviteData) {
+          setError('Invitation non trouvée');
+          setIsLoading(false);
+          return;
         }
-
-        // ✅ Ces deux fonctions doivent rester dans le if
-        await generateQRCode(inviteData, model);
-        await loadAllGuestMessages(inviteData.userId);
-      } else {
-        setError("Modèle d'invitation non trouvé");
+        
+        setInvite(inviteData);
+        setIsConfirmed(inviteData.confirmed);
+        console.log('Invitation définie:', inviteData);
+        
+        // Récupérer le modèle utilisateur associé
+        console.log('Récupération des modèles pour l\'utilisateur:', inviteData.userId);
+        const userModels = await UserModelService.getUserModels(inviteData.userId);
+        console.log('Modèles utilisateur récupérés:', userModels);
+        
+        if (userModels.length > 0) {
+          setUserModel(userModels[0]); // Prendre le premier modèle
+          console.log('Modèle utilisateur défini:', userModels[0]);
+          
+          // Générer le QR code avec les informations de l'invité
+          await generateQRCode(inviteData, userModels[0]);
+          
+          // Charger tous les messages des autres invités
+          await loadAllGuestMessages(inviteData.userId);
+        } else {
+          setError('Modèle d\'invitation non trouvé');
+        }
+        
+      } catch (err) {
+        console.error('Erreur lors du chargement de l\'invitation:', err);
+        setError('Erreur lors du chargement de l\'invitation');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.error("Erreur lors du chargement de l'invitation:", err);
-      setError("Erreur lors du chargement de l'invitation");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  loadInvitationData();
-}, [inviteId]);
-
+    loadInvitationData();
+  }, [inviteId]);
 
   // Charger tous les messages des invités pour cet événement
   const loadAllGuestMessages = async (userId: string) => {
@@ -362,12 +362,6 @@ useEffect(() => {
   const IconComponent = getIconForCategory(userModel.category);
   // Utiliser les couleurs personnalisées si elles existent, sinon les couleurs par défaut
   const colors = userModel.colors || userModel.customizations?.colors || getColorScheme(userModel.category);
-
-  // Utiliser les polices définies plus haut
-const fonts = userModel.customizations?.fonts || {
-  titleFont: "Playfair Display",
-  bodyFont: "Inter",
-};
 
   return (
 <div className="min-h-screen relative overflow-hidden">
