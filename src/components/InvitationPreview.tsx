@@ -83,6 +83,15 @@ const InvitationPreview = () => {
         if (userModels.length > 0) {
           setUserModel(userModels[0]); // Prendre le premier modèle
           console.log('Modèle utilisateur défini:', userModels[0]);
+
+            // 🔹 Charger les polices depuis Firebase si elles existent
+  if (model.fonts) {
+    setTitleFont(model.fonts.title || 'Playfair Display');
+    setBodyFont(model.fonts.body || 'Inter');
+  } else if (model.customizations?.fonts) {
+    setTitleFont(model.customizations.fonts.title || 'Playfair Display');
+    setBodyFont(model.customizations.fonts.body || 'Inter');
+  }
           
           // Générer le QR code avec les informations de l'invité
           await generateQRCode(inviteData, userModels[0]);
