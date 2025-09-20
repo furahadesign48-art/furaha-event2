@@ -363,6 +363,22 @@ const InvitationPreview = () => {
   // Utiliser les couleurs personnalisées si elles existent, sinon les couleurs par défaut
   const colors = userModel.colors || userModel.customizations?.colors || getColorScheme(userModel.category);
 
+  const fontsFromModel = userModel?.fonts || userModel?.customizations?.fonts || {};
+const titleFontName = fontsFromModel.title || 'Playfair Display';
+const bodyFontName  = fontsFromModel.body  || 'Inter';
+
+// Construire une valeur CSS "font-family" avec guillemets si nécessaire + fallback raisonnable
+const makeFamily = (name: string, fallback: string) => {
+  const safe = (name || fallback).trim();
+  const needsQuotes = /\s/.test(safe); // si espace dans le nom -> quotes
+  return needsQuotes ? `"${safe}", ${fallback}` : `${safe}, ${fallback}`;
+};
+
+const titleFontCss = makeFamily(titleFontName, 'serif');
+const bodyFontCss  = makeFamily(bodyFontName, 'sans-serif');
+
+console.log('Fonts résolues:', { titleFontName, bodyFontName, titleFontCss, bodyFontCss });
+
   return (
 <div className="min-h-screen relative overflow-hidden">
   {/* Haut avec l'image nette (agrandie + overlay sombre) */}
