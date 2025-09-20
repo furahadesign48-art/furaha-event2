@@ -373,6 +373,12 @@ const InvitationPreview = () => {
   // Utiliser les couleurs personnalisées si elles existent, sinon les couleurs par défaut
   const colors = userModel.colors || userModel.customizations?.colors || getColorScheme(userModel.category);
 
+  // Utiliser les polices définies plus haut
+const fonts = userModel.customizations?.fonts || {
+  titleFont: "Playfair Display",
+  bodyFont: "Inter",
+};
+
   return (
 <div className="min-h-screen relative overflow-hidden">
   {/* Haut avec l'image nette (agrandie + overlay sombre) */}
