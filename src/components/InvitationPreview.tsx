@@ -75,66 +75,34 @@ const InvitationPreview = () => {
         setIsConfirmed(inviteData.confirmed);
         console.log('Invitation définie:', inviteData);
         
-       // Récupérer le modèle utilisateur associé
-console.log('Récupération des modèles pour l\'utilisateur:', inviteData.userId);
-const userModels = await UserModelService.getUserModels(inviteData.userId);
-console.log('Modèles utilisateur récupérés:', userModels);
-
-if (userModels.length > 0) {
-  const model = userModels[0];
-  setUserModel(model); // Prendre le premier modèle
-  console.log('Modèle utilisateur défini:', model);
-
-  // -----------------------------
-  // ⚠️ Chargement et application des fonts
-  // -----------------------------
-  try {
-    // Priorité : customizations.fonts -> model.fonts -> fallback
-    const customFonts = model?.customizations?.fonts;
-    const rootFonts = (model as any)?.fonts;
-    const titleFromModel = customFonts?.title || rootFonts?.title || 'Playfair Display';
-    const bodyFromModel  = customFonts?.body  || rootFonts?.body  || 'Inter';
-
-    // Option : ajouter des fallback families (tu peux adapter)
-    const titleCss = titleFromModel.includes(' ') ? `"${titleFromModel}", cursive` : `${titleFromModel}, serif`;
-    const bodyCss  = bodyFromModel.includes(' ')  ? `"${bodyFromModel}", sans-serif` : `${bodyFromModel}, sans-serif`;
-
-    setTitleFont(titleCss);
-    setBodyFont(bodyCss);
-
-    console.log('Fonts appliquées:', { title: titleCss, body: bodyCss });
-
-    // (Optionnel) charger dynamiquement la Google Font si elle vient de Google
-    const loadGoogleFont = (family: string) => {
-      if (!family) return;
-      const id = `gf-${family.replace(/\s+/g, '-').toLowerCase()}`;
-      if (document.getElementById(id)) return;
-      const link = document.createElement('link');
-      link.id = id;
-      link.rel = 'stylesheet';
-      // encodeURIComponent convertira correctement les espaces en + (ou %20)
-      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@400;700&display=swap`;
-      document.head.appendChild(link);
+        // Récupérer le modèle utilisateur associé
+        console.log('Récupération des modèles pour l\'utilisateur:', inviteData.userId);
+        const userModels = await UserModelService.getUserModels(inviteData.userId);
+        console.log('Modèles utilisateur récupérés:', userModels);
+        
+        if (userModels.length > 0) {
+          setUserModel(userModels[0]); // Prendre le premier modèle
+          console.log('Modèle utilisateur défini:', userModels[0]);
+       
+          // Générer le QR code avec les informations de l'invité
+          await generateQRCode(inviteData, userModels[0]);
+          
+          // Charger tous les messages des autres invités
+          await loadAllGuestMessages(inviteData.userId);
+        } else {
+          setError('Modèle d\'invitation non trouvé');
+        }
+        
+      } catch (err) {
+        console.error('Erreur lors du chargement de l\'invitation:', err);
+        setError('Erreur lors du chargement de l\'invitation');
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    // Décommenter si tu veux charger les fonts automatiquement (utile si tu utilises Google Fonts)
-    // loadGoogleFont(titleFromModel);
-    // loadGoogleFont(bodyFromModel);
-
-  } catch (fontErr) {
-    console.warn('Erreur lors de l\'application des polices :', fontErr);
-    // on laisse les valeurs par défaut (Playfair Display / Inter)
-  }
-  // -----------------------------
-
-  // Générer le QR code avec les informations de l'invité
-  await generateQRCode(inviteData, model);
-
-  // Charger tous les messages des autres invités
-  await loadAllGuestMessages(inviteData.userId);
-} else {
-  setError('Modèle d\'invitation non trouvé');
-}
+    loadInvitationData();
+  }, [inviteId]);
 
   // Charger tous les messages des invités pour cet événement
   const loadAllGuestMessages = async (userId: string) => {
