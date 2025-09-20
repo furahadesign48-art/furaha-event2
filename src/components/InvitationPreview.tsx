@@ -83,7 +83,7 @@ const InvitationPreview = () => {
         if (userModels.length > 0) {
           setUserModel(userModels[0]); // Prendre le premier modèle
           console.log('Modèle utilisateur défini:', userModels[0]);
-       
+          
           // Générer le QR code avec les informations de l'invité
           await generateQRCode(inviteData, userModels[0]);
           
@@ -363,38 +363,22 @@ const InvitationPreview = () => {
   // Utiliser les couleurs personnalisées si elles existent, sinon les couleurs par défaut
   const colors = userModel.colors || userModel.customizations?.colors || getColorScheme(userModel.category);
 
-  const fontsFromModel = userModel?.fonts || userModel?.customizations?.fonts || {};
-const titleFontName = fontsFromModel.title || 'Playfair Display';
-const bodyFontName  = fontsFromModel.body  || 'Inter';
-
-// Construire une valeur CSS "font-family" avec guillemets si nécessaire + fallback raisonnable
-const makeFamily = (name: string, fallback: string) => {
-  const safe = (name || fallback).trim();
-  const needsQuotes = /\s/.test(safe); // si espace dans le nom -> quotes
-  return needsQuotes ? `"${safe}", ${fallback}` : `${safe}, ${fallback}`;
-};
-
-const titleFontCss = makeFamily(titleFontName, 'serif');
-const bodyFontCss  = makeFamily(bodyFontName, 'sans-serif');
-
-console.log('Fonts résolues:', { titleFontName, bodyFontName, titleFontCss, bodyFontCss });
-
   return (
 <div className="min-h-screen relative overflow-hidden">
   {/* Haut avec l'image nette (agrandie + overlay sombre) */}
-<div className="absolute top-0 left-0 w-full">
-  <img
-    src={userModel.backgroundImage}
-    alt="Event Background"
-    className="w-full object-cover 
-               h-[600px] sm:h-[700px] md:h-[800px] lg:h-[900px] 
-               scale-110 animate-zoom-out-slow"
-  />
-  {/* Overlay sombre fixe pour lisibilité */}
-  <div className="absolute inset-0 bg-black/40"></div>
-  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-transparent"></div>
-</div>
-
+  <div className="absolute top-0 left-0 w-full">
+    <img
+      src={userModel.backgroundImage}
+      alt="Event Background"
+      className="w-full object-cover 
+                 h-[600px] sm:h-[700px] md:h-[800px] lg:h-[900px] 
+                 scale-110"
+    />
+    {/* Overlay sombre fixe pour lisibilité */}
+    <div className="absolute inset-0 bg-black/40"></div>
+    {/* Gradient pour fondre avec le flou */}
+    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-transparent"></div>
+  </div>
 
   {/* Bas avec l'image floutée + overlay sombre */}
   <div className="absolute w-full top-[550px] sm:top-[650px] md:top-[750px] lg:top-[850px] bottom-0 overflow-hidden">
