@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Mail, Lock, User, Eye, EyeOff, Crown, Sparkles, Check } from 'lucide-react';
+import { X, Mail, Lock, User, Eye, EyeOff, Crown, Sparkles, Check, Chrome } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
 interface AuthModalProps {
@@ -9,7 +9,7 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
-  const { login, register, resetPassword, resendEmailVerification, checkEmailVerification, error, clearError, emailVerificationSent } = useAuth();
+  const { login, loginWithGoogle, register, resetPassword, resendEmailVerification, checkEmailVerification, error, clearError, emailVerificationSent } = useAuth();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -256,6 +256,26 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
     } catch (error) {
       console.error('Erreur dans handleSubmit:', error);
       setErrors({ general: 'Une erreur est survenue. Veuillez réessayer.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    clearError();
+    
+    try {
+      const result = await loginWithGoogle();
+      if (result.success) {
+        onSuccess();
+        onClose();
+      } else {
+        setErrors({ general: result.error || 'Erreur de connexion avec Google' });
+      }
+    } catch (error) {
+      console.error('Erreur dans handleGoogleLogin:', error);
+      setErrors({ general: 'Une erreur est survenue avec Google. Veuillez réessayer.' });
     } finally {
       setIsLoading(false);
     }
@@ -585,6 +605,36 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                     <Sparkles className="h-5 w-5 mr-2" />
                     {isLoginMode ? 'Se connecter' : 'Créer mon compte'}
                   </span>
+                </>
+              )}
+            </button>
+
+            {/* Séparateur */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-neutral-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-neutral-500">ou</span>
+              </div>
+            </div>
+
+            {/* Bouton Google */}
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+              className="w-full bg-white border-2 border-neutral-300 text-slate-700 py-3 rounded-xl hover:bg-neutral-50 hover:border-neutral-400 transition-all duration-300 font-semibold flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-slate-700/30 border-t-slate-700 rounded-full animate-spin mr-2"></div>
+                  Connexion...
+                </div>
+              ) : (
+                <>
+                  <Chrome className="h-5 w-5 mr-2 text-blue-500" />
+                  {isLoginMode ? 'Continuer avec Google' : 'S\'inscrire avec Google'}
                 </>
               )}
             </button>
