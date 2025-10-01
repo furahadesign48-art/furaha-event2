@@ -3,6 +3,7 @@ import {
   User,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   onAuthStateChanged,
   updateProfile,
@@ -12,7 +13,7 @@ import {
   browserLocalPersistence
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import { auth, db, googleProvider } from '../config/firebase';
 
 export interface UserData {
   id: string;
@@ -282,6 +283,62 @@ export const useAuth = () => {
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      setError(null);
+      setIsLoading(true);
+      console.log('Début de la connexion Google');
+
+      // S'assurer que la persistance est configurée avant la connexion
+      await setPersistence(auth, browserLocalPersistence);
+      
+      const result = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = result.user;
+      console.log('Connexion Google réussie pour:', firebaseUser.email);
+      
+      // Vérifier si c'est un nouvel utilisateur
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (!userDoc.exists()) {
+        // Nouvel utilisateur, créer le profil
+        const userData = {
+          email: firebaseUser.email || '',
+          firstName: firebaseUser.displayName?.split(' ')[0] || 'Utilisateur',
+          lastName: firebaseUser.displayName?.split(' ')[1] || '',
+          createdAt: new Date().toISOString()
+        };
+        
+        if (firebaseUser.photoURL) {
+          (userData as any).photoURL = firebaseUser.photoURL;
+        }
+        
+        await setDoc(userDocRef, userData);
+        console.log('Profil Google créé dans Firestore');
+      }
+      
+      // L'utilisateur sera automatiquement défini via onAuthStateChanged
+      return { success: true };
+    } catch (error: any) {
+      console.error('Erreur lors de la connexion Google:', error);
+      
+      // Gestion des erreurs spécifiques à Google
+      let errorMessage = 'Erreur lors de la connexion avec Google';
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Connexion annulée par l\'utilisateur';
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMessage = 'Popup bloquée par le navigateur. Veuillez autoriser les popups pour ce site';
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        errorMessage = 'Demande de connexion annulée';
+      }
+      
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
@@ -344,6 +401,7 @@ export const useAuth = () => {
     emailVerificationSent,
     register,
     login,
+    loginWithGoogle,
     logout,
     resetPassword,
     resendEmailVerification,
